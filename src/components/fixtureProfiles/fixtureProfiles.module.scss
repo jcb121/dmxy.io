@@ -1,0 +1,11 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  text-transform: capitalize;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
