@@ -12,36 +12,20 @@ export type FixtureProfile = {
 
 export enum ChannelSimpleFunction {
   unknow = "",
-  // colour = "Colour",
-
-
-  red = "Red",
-  green = "Green",
-  blue = "Blue",
-  white = "White",
+  colour = "Colour",
   brightness = "Brightness",
   strobe = "Strobe",
   function = "Function",
   speed = "Speed",
   sound = "Sound",
-
-  // on = "On",
-  // multi = "Multi"
 }
 
-// export const visibleColours = {
-
-// }
-
-
-export const visibleChannelFunctions = [
-  ChannelSimpleFunction.red,
-  ChannelSimpleFunction.blue,
-  ChannelSimpleFunction.brightness,
-  ChannelSimpleFunction.green,
-  ChannelSimpleFunction.strobe,
-  ChannelSimpleFunction.white,
-];
+export enum ColourMode {
+  rgba = "rgba",
+  rgb = "rgb",
+  fixed = "fixed",
+  single = "single",
+}
 
 export interface SubChannelFunction<
   T = ChannelSimpleFunction,
@@ -50,6 +34,7 @@ export interface SubChannelFunction<
 > {
   range: [low, high];
   function: T;
+  value?: string; // can be a HTML color code
 }
 
 export type ChannelFunction = Record<
@@ -61,6 +46,8 @@ export type ChannelFunctions = Record<number, ChannelFunction>;
 
 export enum FixtureShape {
   circle = "Circle",
+  square = "Square",
+  bar = "Bar",
 }
 
 export type Fixture = {
@@ -69,6 +56,8 @@ export type Fixture = {
   channels: number;
   channelFunctions: ChannelFunctions;
   fixtureShape: FixtureShape;
+  colourMode: ColourMode;
+  colour?: string;
 };
 
 export const FixtureContext = React.createContext<{

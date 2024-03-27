@@ -1,13 +1,19 @@
-import { ChannelFunction } from "../../context/fixtures";
+import { ChannelFunction, ChannelSimpleFunction } from "../../context/fixtures";
+
+import styles from "./channelSetting.module.scss";
 
 export const ChannelSetting = ({
   channel,
   channelValue,
   onChange,
+  onLabelChange,
+  labelValue,
 }: {
   onChange: (n: number) => void;
   channelValue: number;
   channel: ChannelFunction;
+  labelValue?: string;
+  onLabelChange?: (l: string) => void;
 }) => {
   return (
     <>
@@ -15,17 +21,26 @@ export const ChannelSetting = ({
         const func = channel[parseInt(functionIndex)];
 
         return (
-          <tr>
+          <tr key={func.function}>
             <td>
-              <span
+              <input
+                className={styles.input}
+                size={9}
                 style={{
-                  padding: "1px",
-                  margin: "1px",
-                  background: func.function,
+                  borderStyle: "solid",
+                  borderColor:
+                    func.function === ChannelSimpleFunction.colour
+                      ? `#${func.value}`
+                      : undefined,
                 }}
-              >
-                {func.function}
-              </span>
+                value={labelValue}
+                onChange={(e) => {
+                  onLabelChange && onLabelChange(e.target.value);
+                }}
+                // readOnly={true}
+                type="text"
+                placeholder={func.value ? `#${func.value}` : func.function}
+              />
               :
             </td>
             <td>
@@ -43,6 +58,20 @@ export const ChannelSetting = ({
                   //       [i]: parseInt(e.target.value),
                   //     };
                   //   });
+                }}
+              />
+            </td>
+            <td>
+              <input
+                className={styles.input}
+                size={3}
+                type="number"
+                min="0"
+                max="255"
+                step="1"
+                value={channelValue}
+                onChange={(e) => {
+                  onChange(parseInt(e.target.value));
                 }}
               />
             </td>

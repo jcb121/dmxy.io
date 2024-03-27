@@ -49,6 +49,7 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
       }
     });
   };
+
   const saveScene = async (scene: Scene) => {
     console.log("SAVING", scene);
     const database = await getDatabase();

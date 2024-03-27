@@ -11,6 +11,20 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+
+
+  --davys-gray: #4e5166ff;
+  --slate-gray: #7c90a0ff;
+  --khaki: #b5aa9dff;
+  --ash-gray: #b9b7a7ff;
+  --dim-gray: #747274ff;
+  --color-1: var(--davys-gray);
+  --color-2: var(--slate-gray);
+  --color-3: var(--khaki);
+  --color-4: var(--ash-gray);
+  --color-5: var(--dim-gray);
+
 }
 
 a {

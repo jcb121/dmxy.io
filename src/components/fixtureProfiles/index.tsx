@@ -16,6 +16,7 @@ export const FixtureProfiles = ({ fixtureId }: { fixtureId: string }) => {
     <div className={styles.root}>
       <div>Profiles</div>
       {fixtureProfiles.map((profile) => {
+        if (profile.fixtureId != fixture.id) return null;
         // const mode = fixtureProfiles[parseInt(profileId)];
         return (
           <div key={profile.id} className={styles.row}>

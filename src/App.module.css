@@ -51,9 +51,15 @@
   position: relative;
   padding: 16px;
   border-bottom: 1px solid black;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
 }
 
 .left {
+  /* display: none; */
+  /* width: 15vw; */
   /* position: absolute; */
   /* top: 0; */
   /* bottom: 0; */
@@ -73,6 +79,17 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 300px;
-  background-color: beige;
+  /* height: 300px; */
+  background-color: rgb(54, 54, 54);
+}
+
+.genericProfiles {
+  padding: 8px;
+  gap: 18px;
+  display: flex;
+  flex-direction: column  ;
+}
+
+.spacer {
+  flex: 1;
 }

@@ -62,6 +62,7 @@ export const Stage = ({ scene }: { scene: Scene }) => {
 
         return (
           <StageFixture
+            key={venueFixture.id}
             venue={venue}
             fixture={fixture}
             scene={scene}

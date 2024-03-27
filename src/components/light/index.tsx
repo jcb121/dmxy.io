@@ -1,71 +1,55 @@
-import { useMemo } from "react";
 import {
   ChannelSimpleFunction,
+  ColourMode,
   DMXValues,
   Fixture,
-  visibleChannelFunctions,
 } from "../../context/fixtures";
 import styles from "./light.module.scss";
+import { RGBA } from "./rgba";
+import { Simple } from "./simple";
+import { Strobe } from "./strobe";
 
-const mapNumbers = (A: number, B: number, X: number, C: number, D: number) =>
-  ((X - A) / (B - A)) * (D - C) + C;
+
 
 export const Light = ({
   fixture,
   dmxValues,
-  small,
 }: {
   fixture: Fixture;
   dmxValues?: DMXValues;
-  small?: boolean;
 }) => {
-  const { Red, Blue, Brightness, Green, Strobe, White } = useMemo<
-    Record<ChannelSimpleFunction, number>
-  >(() => {
-    return visibleChannelFunctions.reduce((all, option) => {
-      const channel = Object.keys(fixture.channelFunctions).find((i) => {
-        const channel = fixture.channelFunctions[parseInt(i)];
-
-        return Object.keys(channel).find((j) => {
-          const subChannel = channel[parseInt(j)];
-
-          if (subChannel.function == option) {
-            // console.log(option, channel, subChannel, dmxValues?.[parseInt(i)]);
-            return true;
-          }
-
-          return false;
-        });
-      });
-
-      const value = channel && dmxValues ? dmxValues[parseInt(channel)] : 0;
-
-      return {
-        ...all,
-        [option as ChannelSimpleFunction]: value,
-      };
-    }, {} as Record<ChannelSimpleFunction, number>);
-  }, [dmxValues, fixture]);
-
-  const cssBrightness = (!Red && !Green && !Blue ? 0 : Brightness) / 255;
-
-  const cssBrightnessWhite = (!White ? 0 : Brightness) / 255;
-
-  const cssStobeTime = Strobe === 0 ? 0 : mapNumbers(0, 255, Strobe, 1000, 0);
-
-  return (
-    <div
-      className={`${small ? styles.small : ""} ${styles[fixture.fixtureShape]}`}
-    >
-      <div
-        className={styles.inner}
-        style={{
-          // borderColor: `rgba(${Red},${Green},${Blue}, ${cssBrightness})`,
-          animationDuration: `${cssStobeTime}ms` || undefined,
-          borderColor: `rgba(${Red},${Green},${Blue}, ${cssBrightness})`,
-          background: `rgba(${White},${White},${White}, ${cssBrightnessWhite})`,
-        }}
-      ></div>
-    </div>
+  const funcs = Object.values(fixture.channelFunctions).reduce(
+    (funcs, channel) => {
+      return [
+        ...funcs,
+        ...Object.values(channel).reduce(
+          (_funcs, func) => [..._funcs, func.function],
+          [] as ChannelSimpleFunction[]
+        ),
+      ];
+    },
+    [] as ChannelSimpleFunction[]
   );
+
+  if (funcs.length === 1) {
+    if (funcs[0] === ChannelSimpleFunction.brightness) {
+      return <Simple fixture={fixture} dmxValues={dmxValues} />;
+    } else if (funcs[0] === ChannelSimpleFunction.strobe) {
+      return <Strobe fixture={fixture} dmxValues={dmxValues} />;
+    }
+  }
+
+  if (
+    fixture.colourMode === ColourMode.rgba ||
+    fixture.colourMode === ColourMode.rgb
+  ) {
+    return <RGBA fixture={fixture} dmxValues={dmxValues} />;
+  }
+
+  return <div>no match</div>;
+
+  // const Red = 0;
+  // const Blue = 0;
+  // const White = 0;
+  // const Green = 0;
 };

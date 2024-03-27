@@ -16,7 +16,7 @@ export const Venue = () => {
         const fixture = fixtures.find((fixture) => fixture.id === f.fixtureId);
         if (!fixture) return null;
         return (
-          <div className={styles.item}>
+          <div className={styles.item} key={fixture.id}>
             <Light fixture={fixture}></Light>
             <span>
               {fixture?.model} - ch?

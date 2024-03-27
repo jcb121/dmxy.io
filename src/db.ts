@@ -2,6 +2,7 @@ import { IDBPDatabase, openDB } from "idb";
 import { Fixture, FixtureProfile } from "./context/fixtures";
 import { Scene } from "./context/scenes";
 import { Venue } from "./context/venues";
+import { GenericProfile } from "./context/profiles";
 
 if (import.meta.hot) {
   import.meta.hot.accept(() => {
@@ -21,15 +22,19 @@ type MyDB = {
     value: FixtureProfile;
   };
 
+  genericProfiles: {
+    key: string;
+    value: GenericProfile;
+  };
   scenes: {
     key: string;
     value: Scene;
   };
 
   venues: {
-    key: string,
+    key: string;
     value: Venue;
-  }
+  };
 };
 
 let db: IDBPDatabase<MyDB> | undefined;
@@ -37,7 +42,7 @@ let db: IDBPDatabase<MyDB> | undefined;
 export const getDatabase = async (): Promise<IDBPDatabase<MyDB>> => {
   return db
     ? db
-    : await openDB<MyDB>("keyval-store2", 4, {
+    : await openDB<MyDB>("keyval-store2", 5, {
         upgrade(db) {
           console.log("CREATING DB?");
           try {
@@ -63,6 +68,13 @@ export const getDatabase = async (): Promise<IDBPDatabase<MyDB>> => {
           }
           try {
             db.createObjectStore("fixtureProfiles", {
+              keyPath: "id",
+            });
+          } catch (e) {
+            //
+          }
+          try {
+            db.createObjectStore("genericProfiles", {
               keyPath: "id",
             });
           } catch (e) {

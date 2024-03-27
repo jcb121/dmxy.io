@@ -1,4 +1,4 @@
-export const GenericFixtureProfile = () => {
+export const GenericFixtureProfiles = () => {
   return (
     <div>
 

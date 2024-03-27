@@ -77,6 +77,52 @@ export const FunctionSelect = ({
               })}
             </select>
 
+            {func.function === ChannelSimpleFunction.function && (
+              <span>
+                {" "}
+                <input
+                  placeholder="Function name"
+                  onChange={(e) => {
+                    onChange({
+                      ...value,
+                      [index]: {
+                        ...defaultValue,
+                        ...value[index],
+                        value: e.target.value,
+                      },
+                    });
+                  }}
+                />
+              </span>
+            )}
+
+            {func.function === ChannelSimpleFunction.colour && (
+              <span>
+                <span
+                  style={{
+                    background: `#${func.value}`,
+                  }}
+                >
+                  #
+                </span>
+                <input
+                  placeholder="HTML color Code"
+                  // type="number"
+                  prefix="#"
+                  onChange={(e) => {
+                    onChange({
+                      ...value,
+                      [index]: {
+                        ...defaultValue,
+                        ...value[index],
+                        value: e.target.value.replace("#", ""),
+                      },
+                    });
+                  }}
+                />
+              </span>
+            )}
+
             {multi && (
               <>
                 <label>

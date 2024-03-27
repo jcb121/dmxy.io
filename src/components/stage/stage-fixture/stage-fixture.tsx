@@ -1,9 +1,10 @@
 import { useContext } from "react";
 import { Scene, SceneContext } from "../../../context/scenes";
 import { Venue, VenueContext, VenueFixture } from "../../../context/venues";
-import { Light } from "../../light";
-import { Fixture, FixtureContext } from "../../../context/fixtures";
+import { Fixture } from "../../../context/fixtures";
 import styles from "./stage-fixture.module.scss";
+import { ProfileContext } from "../../../context/profiles";
+import { ConnectedLight } from "../../connectedLight";
 
 export const StageFixture = ({
   venueFixture,
@@ -17,20 +18,13 @@ export const StageFixture = ({
   scene: Scene;
 }) => {
   const { updateScene } = useContext(SceneContext);
-  const { fixtureProfiles } = useContext(FixtureContext);
   const { updateVenue } = useContext(VenueContext);
-
+  const { profiles } = useContext(ProfileContext);
   const groupId = scene.fixtureGroups.findIndex((fixtureIds) =>
     fixtureIds.includes(venueFixture.id)
   );
-
   const profileId = scene.profiles[groupId];
-
-  const profile = fixtureProfiles.find((p) => p.id === profileId);
-
-  const dmxValues = profileId
-    ? fixtureProfiles.find((p) => p.id === profileId)?.dmxValues
-    : undefined;
+  const profile = profiles.find((p) => p.id === profileId);
 
   const changeGroup = (targetGroup: number) => {
     scene.fixtureGroups[groupId] = scene.fixtureGroups[groupId].filter(
@@ -47,7 +41,7 @@ export const StageFixture = ({
   };
 
   const changeChannel = (targetChannel: number) => {
-    console.log(targetChannel);
+    // console.log(targetChannel);
     updateVenue({
       ...venue,
       venueFixtures: venue.venueFixtures.map((f) => {
@@ -76,7 +70,8 @@ export const StageFixture = ({
       }}
       onDrop={(e) => {
         const profileId = e.dataTransfer.getData("profileId");
-        const profile = fixtureProfiles.find((f) => f.id === profileId);
+        const profile = profiles.find((f) => f.id === profileId);
+
         if (!profile) return;
 
         updateScene({
@@ -90,72 +85,74 @@ export const StageFixture = ({
     >
       <div className={styles.info}>
         <table>
-          <tr>
-            <th colSpan={3}>
-              {fixture.model} ch{fixture.channels}
-            </th>
-          </tr>
-          <tr>
-            <th colSpan={3}>{profile?.name}</th>
-          </tr>
-          <tr>
-            <td>
-              <button
-                onClick={() => {
-                  changeChannel(venueFixture.channel - 1);
-                }}
-              >
-                -
-              </button>
-            </td>
-            <td>
-              Channel {venueFixture.channel} -{" "}
-              {venueFixture.channel + fixture.channels}
-            </td>
-            <td align="right">
-              <button
-                onClick={() => {
-                  changeChannel(venueFixture.channel + 1);
-                }}
-              >
-                +
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <button
-                onClick={() => {
-                  changeGroup(groupId - 1);
-                }}
-              >
-                -
-              </button>
-            </td>
-            <td>Group {groupId}</td>
-            <td align="right">
-              <button
-                onClick={() => {
-                  changeGroup(groupId + 1);
-                }}
-              >
-                +
-              </button>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <button>clone</button>
-            </td>
-            <td></td>
-            <td>
-              <button>delete</button>
-            </td>
-          </tr>
+          <tbody>
+            <tr>
+              <th colSpan={3}>
+                {fixture.model} ch{fixture.channels}
+              </th>
+            </tr>
+            <tr>
+              <th colSpan={3}>{profile?.name}</th>
+            </tr>
+            <tr>
+              <td>
+                <button
+                  onClick={() => {
+                    changeChannel(venueFixture.channel - 1);
+                  }}
+                >
+                  -
+                </button>
+              </td>
+              <td>
+                Channel {venueFixture.channel} -{" "}
+                {venueFixture.channel + fixture.channels}
+              </td>
+              <td align="right">
+                <button
+                  onClick={() => {
+                    changeChannel(venueFixture.channel + 1);
+                  }}
+                >
+                  +
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <button
+                  onClick={() => {
+                    changeGroup(groupId - 1);
+                  }}
+                >
+                  -
+                </button>
+              </td>
+              <td>Group {groupId}</td>
+              <td align="right">
+                <button
+                  onClick={() => {
+                    changeGroup(groupId + 1);
+                  }}
+                >
+                  +
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <button>clone</button>
+              </td>
+              <td></td>
+              <td>
+                <button>delete</button>
+              </td>
+            </tr>
+          </tbody>
         </table>
       </div>
 
-      <Light fixture={fixture} dmxValues={dmxValues} />
+      <ConnectedLight profile={profile} fixture={fixture} />
     </div>
   );
 };

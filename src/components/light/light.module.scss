@@ -1,7 +1,8 @@
+.Bar,
+.Square,
 .Circle {
   height: 50px;
   width: 50px;
-  border-radius: 100%;
   border: 4px solid black;
   opacity: 1;
   overflow: hidden;
@@ -14,6 +15,14 @@
   //   width: 25px;
   //   border-width: 2px;
   // }
+}
+
+.Circle {
+  border-radius: 100%;
+}
+
+.Bar {
+  width: 100px;
 }
 
 .root {
@@ -30,14 +39,14 @@
   animation-iteration-count: infinite;
   border-width: 15px;
   border-style: solid;
-  border-radius: 30px;
+  // border-radius: 30px;
 }
 
 @keyframes strobe {
   from {
-    opacity: 1;
+    opacity: 0;
   }
   to {
-    opacity: 0;
+    opacity: 1;
   }
 }
