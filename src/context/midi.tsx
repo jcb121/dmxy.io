@@ -1,95 +1,86 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { useGlobals, useMidiListener } from "./globals";
 
-export const MidiContext = React.createContext<{}>({});
+// function listInputsAndOutputs(midiAccess: MIDIAccess) {
+//   for (const entry of midiAccess.inputs) {
+//     const input = entry[1];
+//     console.log(
+//       `Input port [type:'${input.type}']` +
+//         ` id:'${input.id}'` +
+//         ` manufacturer:'${input.manufacturer}'` +
+//         ` name:'${input.name}'` +
+//         ` version:'${input.version}'`
+//     );
+//     input.onmidimessage = (message) => {
+//       console.log(message, message.data);
+//     };
+//   }
 
-function listInputsAndOutputs(midiAccess: MIDIAccess) {
-  for (const entry of midiAccess.inputs) {
-    const input = entry[1];
-    console.log(
-      `Input port [type:'${input.type}']` +
-        ` id:'${input.id}'` +
-        ` manufacturer:'${input.manufacturer}'` +
-        ` name:'${input.name}'` +
-        ` version:'${input.version}'`
-    );
-    input.onmidimessage = (message) => {
-      console.log(message, message.data);
-    };
-  }
+//   for (const entry of midiAccess.outputs) {
+//     const output = entry[1];
+//     console.log(
+//       `Output port [type:'${output.type}'] id:'${output.id}' manufacturer:'${output.manufacturer}' name:'${output.name}' version:'${output.version}'`
+//     );
+//   }
+// }
 
-  for (const entry of midiAccess.outputs) {
-    const output = entry[1];
-    console.log(
-      `Output port [type:'${output.type}'] id:'${output.id}' manufacturer:'${output.manufacturer}' name:'${output.name}' version:'${output.version}'`
-    );
-  }
-}
-
-function onMIDISuccess(midiAccess: MIDIAccess) {
-  console.log("MIDI ready!", midiAccess);
-  listInputsAndOutputs(midiAccess);
-  // midi = midiAccess; // store in the global (in real usage, would probably keep in an object instance)
-}
-
-function onMIDIFailure(msg: string) {
-  console.error(`Failed to get MIDI access - ${msg}`);
-}
+// function onMIDIFailure(msg: string) {
+//   console.error(`Failed to get MIDI access - ${msg}`);
+// }
 
 export const MidiProvider = ({ children }: { children: React.ReactNode }) => {
   // const [MIDIInput, setMIDIInput] = useState<MIDIInput>();
 
+  const midiTriggers = useGlobals((state) => state.midiTriggers);
+  const setGlobalValue = useGlobals((state) => state.setGlobalValue);
+  const eventHandlerRef = useRef<(e: Event) => void>();
+
+  const [mIDIInputs, setMIDIInputs] = useState<MIDIInputMap>();
+
   useEffect(() => {
-    navigator.permissions
-      .query({ name: "midi", sysex: true })
-      .then((result) => {
-        console.log(result);
-        if (result.state === "granted") {
-          // Access granted.
-        } else if (result.state === "prompt") {
-          // Using API will prompt for permission
-        }
-        // Permission was denied by user prompt or permission policy
-
-        navigator.requestMIDIAccess().then((midiAccess: MIDIAccess) => {
-          for (const entry of midiAccess.inputs) {
-            const input = entry[1];
-            console.log(
-              `Input port [type:'${input.type}']` +
-                ` id:'${input.id}'` +
-                ` manufacturer:'${input.manufacturer}'` +
-                ` name:'${input.name}'` +
-                ` version:'${input.version}'`
-            );
-
-            input.addEventListener("midimessage", (e: Event) => {
-              midiEvent(e);
-              return;
-            });
-            // input.addEventListener('statechange', (f) => {
-            //   console.log('s', f)
-            //   // return;
-            // })
-          }
-        }, onMIDIFailure);
+    (async () => {
+      const result = await navigator.permissions.query({
+        name: "midi",
+        sysex: true,
       });
+      const midiAccess = await navigator.requestMIDIAccess();
+      setMIDIInputs(midiAccess.inputs);
+    })();
   }, []);
 
-  const midiEvent = (e: Event) => {
-    console.log("msg", e);
-    const deviceID = e.currentTarget.id as string;
-    const [type, controlID, value] = e.data;
+  useEffect(() => {
+    if (!mIDIInputs) return;
 
-    const myEvent = new Event("CustomMidiEvent");
-    myEvent.data = {
-      type,
-      controlID,
-      value,
-      deviceID,
+    const eventHandler = (e: Event) => {
+      const deviceId = e.currentTarget.id as string;
+      const [_, controlId, value] = e.data;
+
+      // const name = e.target.name;
+      const foundKey = Object.keys(midiTriggers).find((key) => {
+        return (
+          midiTriggers &&
+          midiTriggers[key].controlId == controlId &&
+          midiTriggers[key].deviceId === deviceId
+        );
+      });
+
+      if (foundKey) {
+        setGlobalValue(foundKey, value * 2);
+      }
     };
-    document.dispatchEvent(myEvent);
-  };
 
-  return <MidiContext.Provider value={{}}>{children}</MidiContext.Provider>;
+    mIDIInputs.forEach((input) => {
+      if (eventHandlerRef.current) {
+        input.removeEventListener("midimessage", eventHandlerRef.current);
+      }
+
+      input.addEventListener("midimessage", eventHandler);
+    });
+
+    eventHandlerRef.current = eventHandler;
+  }, [mIDIInputs, setGlobalValue, midiTriggers]);
+
+  return <>{children}</>;
 };
 
 export enum MidiEventTypes {
@@ -97,3 +88,15 @@ export enum MidiEventTypes {
   onRelease = 128,
   onTurn = 176,
 }
+
+export type MidiTrigger = {
+  // type: MidiEventTypes;
+  name: string;
+  controlId: string;
+  value: number;
+  deviceId: string;
+};
+
+export type CustomMidiEvent = Event & {
+  data: MidiTrigger;
+};

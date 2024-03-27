@@ -1,8 +1,9 @@
 import { ChannelFunction, ChannelSimpleFunction } from "../../context/fixtures";
+import { useGlobals } from "../../context/globals";
 
-import styles from "./channelSetting.module.scss";
+import styles from "./fixture-channel-setting.module.scss";
 
-export const ChannelSetting = ({
+export const FixtureChannelSetting = ({
   channel,
   channelValue,
   onChange,
@@ -15,6 +16,8 @@ export const ChannelSetting = ({
   labelValue?: string;
   onLabelChange?: (l: string) => void;
 }) => {
+  const globals = useGlobals((state) => state.globals);
+
   return (
     <>
       {Object.keys(channel).map((functionIndex) => {
@@ -23,25 +26,28 @@ export const ChannelSetting = ({
         return (
           <tr key={func.function}>
             <td>
-              <input
-                className={styles.input}
-                size={9}
-                style={{
-                  borderStyle: "solid",
-                  borderColor:
-                    func.function === ChannelSimpleFunction.colour
-                      ? `#${func.value}`
-                      : undefined,
-                }}
-                value={labelValue}
-                onChange={(e) => {
-                  onLabelChange && onLabelChange(e.target.value);
-                }}
-                // readOnly={true}
-                type="text"
-                placeholder={func.value ? `#${func.value}` : func.function}
-              />
-              :
+              {func.function === ChannelSimpleFunction.colour ? (
+                <input
+                  className={styles.input}
+                  size={9}
+                  style={{
+                    borderStyle: "solid",
+                    borderColor:
+                      func.function === ChannelSimpleFunction.colour
+                        ? `#${func.value}`
+                        : undefined,
+                  }}
+                  value={labelValue}
+                  onChange={(e) => {
+                    onLabelChange && onLabelChange(e.target.value);
+                  }}
+                  // readOnly={true}
+                  type="text"
+                  placeholder={func.value ? `#${func.value}` : func.function}
+                />
+              ) : (
+                func.function
+              )}
             </td>
             <td>
               <input
@@ -74,6 +80,15 @@ export const ChannelSetting = ({
                   onChange(parseInt(e.target.value));
                 }}
               />
+            </td>
+            <td>
+              Global:
+              <select>
+                <option></option>
+                {Object.keys(globals).map((v) => (
+                  <option>{v}</option>
+                ))}
+              </select>
             </td>
           </tr>
         );

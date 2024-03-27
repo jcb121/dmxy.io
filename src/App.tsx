@@ -7,10 +7,11 @@ import { Stage } from "./components/stage";
 import { Venue } from "./components/venue";
 import { Scene, SceneContext } from "./context/scenes";
 import { Venue as VenueType, VenueContext } from "./context/venues";
-import { CreateGenericProfile } from "./components/createGenericProfile";
 import { ProfileContext } from "./context/profiles";
 // import { Light } from "./components/light";
 import { GenericLight } from "./components/generic-light";
+import { CreateGenericProfile } from "./components/createGenericProfile";
+import { Globals } from "./components/globals";
 
 function App() {
   const { fixtures, saveFixture } = useContext(FixtureContext);
@@ -113,9 +114,12 @@ function App() {
             Save Scene
           </button>
           <Stage scene={scene} />
-          <div className={styles.bottom}>
-            <CreateGenericProfile />
-          </div>
+
+          <Globals />
+
+          {/* <div className={styles.bottom}> */}
+          <CreateGenericProfile />
+          {/* </div> */}
         </div>
         <div className={styles.right}>
           <Venue />

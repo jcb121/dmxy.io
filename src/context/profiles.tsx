@@ -7,15 +7,21 @@ export type ProfileState = {
   id: string;
   state: Record<ChannelSimpleFunction, number>;
   value: Record<ChannelSimpleFunction, string>;
+  // hold?: number;
+  // fadeIn?: number;
+  // fadeOut?: number;
 };
 
+// this is just one simple state...
 export type GenericProfile = {
   name: string;
   id: string;
-  states: ProfileState[];
-  hold?: number;
-  fadeIn?: number;
-  fadeOut?: number;
+  state: Record<ChannelSimpleFunction, number>;
+  value: Record<ChannelSimpleFunction, string>;
+  globals: Record<ChannelSimpleFunction, string>;
+
+  // state: ProfileState;
+  // states: ProfileState[];
 };
 
 export const ProfileContext = React.createContext<{

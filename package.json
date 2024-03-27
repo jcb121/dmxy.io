@@ -13,7 +13,8 @@
     "idb": "^8.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "sass": "^1.72.0"
+    "sass": "^1.72.0",
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@types/dom-serial": "^1.0.6",

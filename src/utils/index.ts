@@ -101,7 +101,7 @@ export const getCSSStrobeDuration = (
           func.range[0],
           func.range[1],
           dmxValues[channelId],
-          10000, // 10s
+          1000, // 1s
           100 // 100ms
         )
       : 0;
@@ -179,23 +179,27 @@ export const mapRGBASToDMX = (
         const channelFunction = channel[functionId];
 
         if (channelFunction.function === ChannelSimpleFunction.strobe) {
-          return mapNumbers(
-            0,
-            255,
-            strobe,
-            channelFunction.range[0],
-            channelFunction.range[1]
-          );
+          return strobe === 0
+            ? 0
+            : mapNumbers(
+                0,
+                255,
+                strobe,
+                channelFunction.range[0],
+                channelFunction.range[1]
+              );
         }
 
         if (channelFunction.function === ChannelSimpleFunction.brightness) {
-          return mapNumbers(
-            0,
-            255,
-            brightness,
-            channelFunction.range[0],
-            channelFunction.range[1]
-          );
+          return brightness === 0
+            ? 0
+            : mapNumbers(
+                0,
+                255,
+                brightness,
+                channelFunction.range[0],
+                channelFunction.range[1]
+              );
         }
 
         if (

@@ -138,6 +138,7 @@ export const RGBA = ({
     fixture.channelFunctions,
     dmxValues
   );
+
   const cssBrightness = getCSSBrightness(fixture.channelFunctions, dmxValues);
   // console.log("cssStobeTime", cssStobeTime);
 
@@ -147,13 +148,9 @@ export const RGBA = ({
         className={styles.inner}
         style={{
           // borderColor: `rgba(${Red},${Green},${Blue}, ${cssBrightness})`,
-          animationDuration: `${cssStobeTime}ms` || undefined,
-          borderColor: cssBrightness
-            ? `rgba(${Red},${Green},${Blue}, ${cssBrightness})`
-            : `rgb(${Red},${Green},${Blue})`,
-          background: cssBrightness
-            ? `rgba(${Red},${Green},${Blue}, ${cssBrightness})`
-            : `rgb(${Red},${Green},${Blue})`,
+          animationDuration: `${cssStobeTime}ms`,
+          borderColor: `rgba(${Red},${Green},${Blue}, ${cssBrightness})`,
+          background: `rgba(${Red},${Green},${Blue}, ${cssBrightness})`,
           // White is a tricky one...
           // background: `rgba(${White},${White},${White}, ${cssBrightnessWhite})`,
         }}
