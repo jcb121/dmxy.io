@@ -15,11 +15,6 @@ export const Stage = ({ scene }: { scene: Scene }) => {
   const { venueFixtures } = venue;
   const ref = useRef<HTMLDivElement>(null);
 
-  // group to scene
-  // const [scene, setScene] = useState<Record<string, string>>({});
-  // liveFixtureId to group
-  // const [groups, setGroups] = useState<string[][]>([]);
-
   return (
     <div
       ref={ref}
@@ -43,7 +38,7 @@ export const Stage = ({ scene }: { scene: Scene }) => {
           venueFixtures: [
             ...venue.venueFixtures,
             {
-              channel: 0,
+              channel: 1,
               id,
               fixtureId,
               x: e.clientX - left,

@@ -8,7 +8,7 @@ import {
 
 import styles from "./createFixture.module.scss";
 import { FunctionSelect } from "./function-select";
-import { connect, sendState } from "../../dmx";
+import { connect } from "../../dmx";
 
 export const CreateFixture = ({
   onSubmit,
@@ -31,11 +31,11 @@ export const CreateFixture = ({
   const [port, setPort] = useState<SerialPort>();
 
   // useEffect(() => {
-  //   port && sendState(port, dmxValues);
+  //   port && sendUniverse(port, dmxValues);
   // }, [port, dmxValues]);
 
   const _onSave = () => {
-    console.log(channelFunctions);
+    console.log('Saving Fixture', channelFunctions);
 
     // if (model && channels)
     onSubmit({
@@ -63,7 +63,7 @@ export const CreateFixture = ({
       <button
         onClick={() => {
           console.log(port);
-          port && sendState(port, dmxValues);
+          // port && sendUniverse(port, dmxValues);
         }}
       >
         send

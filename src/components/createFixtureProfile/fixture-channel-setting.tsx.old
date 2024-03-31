@@ -16,7 +16,7 @@ export const FixtureChannelSetting = ({
   labelValue?: string;
   onLabelChange?: (l: string) => void;
 }) => {
-  const globals = useGlobals((state) => state.globals);
+  const globals = useGlobals((state) => state.values);
 
   return (
     <>

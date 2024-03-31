@@ -9,7 +9,7 @@ import {
   getCSSBrightness,
   getCSSStrobeDuration,
   // getRGB,
-  getRGBColours,
+  mapDMXtoChannels,
   // mapNumbers,
 } from "../../utils";
 
@@ -49,13 +49,9 @@ export const RGBA = ({
   //   }, {} as Record<ChannelSimpleFunction, number | undefined>);
   // }, [dmxValues, fixture]);
 
-  const {
-    ff0000: Red,
-    "0000ff": Blue,
-    "00ff00": Green,
-  } = dmxValues
-    ? getRGBColours(fixture.channelFunctions, dmxValues)
-    : ({} as Record<string, number>);
+  // console.log(dmxValues)
+
+  // console.log(fixture.channelFunctions, dmxValues)
 
   // console.log(red);
 
@@ -133,6 +129,14 @@ export const RGBA = ({
   // console.log(Brightness, cssBrightness);
 
   // const cssBrightnessWhite = (!White ? 0 : Brightness) / 255;
+  const {
+    Red,
+    Blue,
+    Green,
+    // Brightness, Storbe
+  } = dmxValues
+    ? mapDMXtoChannels(fixture.channelFunctions, dmxValues)
+    : ({} as Record<string, number>);
 
   const cssStobeTime = getCSSStrobeDuration(
     fixture.channelFunctions,
@@ -140,7 +144,6 @@ export const RGBA = ({
   );
 
   const cssBrightness = getCSSBrightness(fixture.channelFunctions, dmxValues);
-  // console.log("cssStobeTime", cssStobeTime);
 
   return (
     <div className={`${styles[fixture.fixtureShape]}`}>

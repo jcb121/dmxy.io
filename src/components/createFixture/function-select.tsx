@@ -96,7 +96,7 @@ export const FunctionSelect = ({
               </span>
             )}
 
-            {func.function === ChannelSimpleFunction.colour && (
+            {/* {func.function === ChannelSimpleFunction.colour && (
               <span>
                 <span
                   style={{
@@ -121,7 +121,7 @@ export const FunctionSelect = ({
                   }}
                 />
               </span>
-            )}
+            )} */}
 
             {multi && (
               <>

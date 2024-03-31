@@ -32,21 +32,21 @@ export const VenueContext = React.createContext<{
   saveVenue: (v: Venue) => void;
   // setVenue: React.Dispatch<React.SetStateAction<Venue>>;
 }>({
-  venues: [sampleVenue],
+  venues: [],
   saveVenue: () => {},
   updateVenue: () => {},
 });
 
 export const VenueProvider = ({ children }: { children: React.ReactNode }) => {
-  const [venues, setVenues] = useState<Venue[]>([sampleVenue]);
+  const [venues, setVenues] = useState<Venue[]>([]);
 
   useEffect(() => {
     (async () => {
       const database = await getDatabase();
       const data = await database.getAll("venues");
-      console.log("GOT VEUES", data)
+      console.log("GOT VEUES", data);
 
-      if (data.length > 0) setVenues(data);
+      setVenues(data.length > 0 ? data : [sampleVenue]);
     })();
   }, []);
 

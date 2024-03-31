@@ -12,7 +12,10 @@ export type FixtureProfile = {
 
 export enum ChannelSimpleFunction {
   unknow = "",
-  colour = "Colour",
+  // colour = "Colour",
+  red = "Red",
+  green = "Green",
+  blue = "Blue",
   brightness = "Brightness",
   strobe = "Strobe",
   function = "Function",

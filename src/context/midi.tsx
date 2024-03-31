@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useGlobals, useMidiListener } from "./globals";
+import { useGlobals } from "./globals";
 
 // function listInputsAndOutputs(midiAccess: MIDIAccess) {
 //   for (const entry of midiAccess.inputs) {
@@ -28,57 +28,76 @@ import { useGlobals, useMidiListener } from "./globals";
 //   console.error(`Failed to get MIDI access - ${msg}`);
 // }
 
+export type MIDIMessageEventWithData = MIDIMessageEvent & {
+  currentTarget: EventTarget & {
+    id: string;
+    name: string;
+  };
+  data: [number, number, number];
+};
+
 export const MidiProvider = ({ children }: { children: React.ReactNode }) => {
   // const [MIDIInput, setMIDIInput] = useState<MIDIInput>();
 
+  const midiFunctions = useGlobals((state) => state.functions);
+
   const midiTriggers = useGlobals((state) => state.midiTriggers);
-  const setGlobalValue = useGlobals((state) => state.setGlobalValue);
-  const eventHandlerRef = useRef<(e: Event) => void>();
+  // const setGlobalValue = useGlobals((state) => state.setGlobalValue);
+  const eventHandlerRef = useRef<(e: MIDIMessageEventWithData) => void>();
 
   const [mIDIInputs, setMIDIInputs] = useState<MIDIInputMap>();
 
   useEffect(() => {
     (async () => {
       const result = await navigator.permissions.query({
+        // @ts-expect-error Missing type
         name: "midi",
         sysex: true,
       });
+      console.log("MIDI RESULT", result.state);
       const midiAccess = await navigator.requestMIDIAccess();
       setMIDIInputs(midiAccess.inputs);
     })();
   }, []);
 
   useEffect(() => {
+    console.log("mIDIInputs", mIDIInputs);
     if (!mIDIInputs) return;
 
-    const eventHandler = (e: Event) => {
-      const deviceId = e.currentTarget.id as string;
-      const [_, controlId, value] = e.data;
+    const eventHandler = (e: MIDIMessageEventWithData) => {
+      const deviceId = e.currentTarget?.id as string;
+      const [type, controlId] = e.data;
 
       // const name = e.target.name;
       const foundKey = Object.keys(midiTriggers).find((key) => {
         return (
           midiTriggers &&
           midiTriggers[key].controlId == controlId &&
-          midiTriggers[key].deviceId === deviceId
+          midiTriggers[key].deviceId === deviceId &&
+          midiTriggers[key].type === type
         );
       });
-
       if (foundKey) {
-        setGlobalValue(foundKey, value * 2);
+        midiFunctions[midiTriggers[foundKey].callBack](
+          e,
+          midiTriggers[foundKey]
+        );
       }
     };
 
     mIDIInputs.forEach((input) => {
       if (eventHandlerRef.current) {
-        input.removeEventListener("midimessage", eventHandlerRef.current);
+        input.removeEventListener(
+          "midimessage",
+          eventHandlerRef.current as (e: Event) => void
+        );
       }
 
-      input.addEventListener("midimessage", eventHandler);
+      input.addEventListener("midimessage", eventHandler as (e: Event) => void);
     });
 
     eventHandlerRef.current = eventHandler;
-  }, [mIDIInputs, setGlobalValue, midiTriggers]);
+  }, [mIDIInputs, midiTriggers, midiFunctions]);
 
   return <>{children}</>;
 };
@@ -89,12 +108,24 @@ export enum MidiEventTypes {
   onTurn = 176,
 }
 
+export enum MidiCallback {
+  setBeatLength = "setBeatLength",
+  setColour = "setColour",
+  turnOn = "turnOn",
+  turnOff = "turnOff",
+  setState = "setState",
+}
+
+// export type MidiCallback = (e: { value: number; timestamp: number }) => void;
+
 export type MidiTrigger = {
-  // type: MidiEventTypes;
+  type: MidiEventTypes;
   name: string;
-  controlId: string;
+  controlId: number;
   value: number;
   deviceId: string;
+  callBack: MidiCallback;
+  key: string;
 };
 
 export type CustomMidiEvent = Event & {

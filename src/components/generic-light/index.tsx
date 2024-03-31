@@ -10,22 +10,19 @@ import { ConnectedLight } from "../connectedLight";
 const channelFunctions: ChannelFunctions = {
   0: {
     0: {
-      function: ChannelSimpleFunction.colour,
-      value: "ff0000",
+      function: ChannelSimpleFunction.red,
       range: [0, 255],
     },
   },
   1: {
     0: {
-      function: ChannelSimpleFunction.colour,
-      value: "00ff00",
+      function: ChannelSimpleFunction.green,
       range: [0, 255],
     },
   },
   2: {
     0: {
-      function: ChannelSimpleFunction.colour,
-      value: "0000ff",
+      function: ChannelSimpleFunction.blue,
       range: [0, 255],
     },
   },
@@ -58,7 +55,7 @@ export const GenericLight = ({
         channelFunctions,
         fixtureShape: FixtureShape.circle,
       }}
-      profile={profile}
+      profiles={[profile]}
     />
   );
 };

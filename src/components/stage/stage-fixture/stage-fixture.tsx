@@ -19,12 +19,14 @@ export const StageFixture = ({
 }) => {
   const { updateScene } = useContext(SceneContext);
   const { updateVenue } = useContext(VenueContext);
-  const { profiles } = useContext(ProfileContext);
+  const { profiles: allProfiles } = useContext(ProfileContext);
   const groupId = scene.fixtureGroups.findIndex((fixtureIds) =>
     fixtureIds.includes(venueFixture.id)
   );
-  const profileId = scene.profiles[groupId];
-  const profile = profiles.find((p) => p.id === profileId);
+  const profileIds = scene.profiles[groupId] as string[] | undefined;
+  const profiles = profileIds
+    ? allProfiles.filter((p) => profileIds.includes(p.id))
+    : [];
 
   const changeGroup = (targetGroup: number) => {
     scene.fixtureGroups[groupId] = scene.fixtureGroups[groupId].filter(
@@ -41,7 +43,6 @@ export const StageFixture = ({
   };
 
   const changeChannel = (targetChannel: number) => {
-    // console.log(targetChannel);
     updateVenue({
       ...venue,
       venueFixtures: venue.venueFixtures.map((f) => {
@@ -70,15 +71,18 @@ export const StageFixture = ({
       }}
       onDrop={(e) => {
         const profileId = e.dataTransfer.getData("profileId");
-        const profile = profiles.find((f) => f.id === profileId);
+        const profile = allProfiles.find((f) => f.id === profileId);
 
         if (!profile) return;
+
+        const profileIds =
+          (scene.profiles[groupId] as string[] | undefined) || [];
 
         updateScene({
           ...scene,
           profiles: {
             ...scene.profiles,
-            [groupId]: profile.id,
+            [groupId]: [...profileIds, profile.id],
           },
         });
       }}
@@ -92,7 +96,7 @@ export const StageFixture = ({
               </th>
             </tr>
             <tr>
-              <th colSpan={3}>{profile?.name}</th>
+              <th colSpan={3}>{profiles.map((prof) => prof.name).join(",")}</th>
             </tr>
             <tr>
               <td>
@@ -152,7 +156,12 @@ export const StageFixture = ({
         </table>
       </div>
 
-      <ConnectedLight profile={profile} fixture={fixture} />
+      {/* TODO sort this out */}
+      <ConnectedLight
+        channel={venueFixture.channel}
+        profiles={profiles}
+        fixture={fixture}
+      />
     </div>
   );
 };

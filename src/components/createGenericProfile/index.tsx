@@ -7,7 +7,7 @@ import { useGlobals } from "../../context/globals";
 const defaultState = (globals: string[]): GenericProfile => ({
   name: "",
   id: crypto.randomUUID(),
-  value: {} as Record<ChannelSimpleFunction, string>,
+  // value: {} as Record<ChannelSimpleFunction, string>,
   state: Object.values(ChannelSimpleFunction).reduce((prof, name) => {
     if (name) prof[name] = 0;
     return prof;
@@ -22,15 +22,19 @@ const defaultState = (globals: string[]): GenericProfile => ({
 
 export const CreateGenericProfile = () => {
   const { saveProfile } = useContext(ProfileContext);
-  const globals = useGlobals((state) => state.globals);
+  const globalValues = useGlobals((state) => state.values);
   const [profile, setProfile] = useState<GenericProfile>(
-    defaultState(Object.keys(globals))
+    defaultState(Object.keys(globalValues))
   );
 
   const saveProfileClick = () => {
     saveProfile(profile);
-    setProfile(defaultState(Object.keys(globals)));
+    setProfile(defaultState(Object.keys(globalValues)));
   };
+
+  // const globalOptions = Object.keys(globalValues).filter(
+  //   (k) => globalValues[k].type === GlobalTypes.byte
+  // );
 
   return (
     <div className={styles.root}>
@@ -73,43 +77,43 @@ export const CreateGenericProfile = () => {
         /> */}
         <table>
           <tbody>
+            <tr>
+              <td>Target colour</td>
+              <td>
+                <input
+                  className={styles.input}
+                  size={9}
+                  style={{
+                    borderStyle: "solid",
+                    // borderColor: `#${value}`,
+                  }}
+                  // value={globalValue || value || ""}
+                  onChange={() => {
+                    // setProfile((state) => ({
+                    //   ...state,
+                    //   value: {
+                    //     ...state.value,
+                    //     [functionName]: e.target.value,
+                    //   },
+                    // }));
+                  }}
+                  type="text"
+                  // placeholder={functionName}
+                />
+              </td>
+            </tr>
+
             {Object.keys(profile.state).map((_funcName) => {
               const functionName = _funcName as ChannelSimpleFunction;
 
               const state = profile.state[functionName];
-              const value = profile.value[functionName];
+              // const value = profile.value[functionName];
               const global = profile.globals[functionName];
-              const globalValue = globals[global];
-
+              const globalValue = globalValues[global]?.value;
 
               return (
                 <tr key={functionName}>
-                  <td>
-                    {functionName === ChannelSimpleFunction.colour ? (
-                      <input
-                        className={styles.input}
-                        size={9}
-                        style={{
-                          borderStyle: "solid",
-                          borderColor: `#${value}`,
-                        }}
-                        value={value}
-                        onChange={(e) => {
-                          setProfile((state) => ({
-                            ...state,
-                            value: {
-                              ...state.value,
-                              [functionName]: e.target.value,
-                            },
-                          }));
-                        }}
-                        type="text"
-                        placeholder={functionName}
-                      />
-                    ) : (
-                      functionName
-                    )}
-                  </td>
+                  <td>{functionName}</td>
                   <td>
                     <input
                       disabled={!!global}
@@ -155,18 +159,28 @@ export const CreateGenericProfile = () => {
                     <select
                       value={global}
                       onChange={(e) => {
+                        // if (functionName === ChannelSimpleFunction.colour) {
                         setProfile((state) => ({
                           ...state,
                           globals: {
                             ...state.globals,
-                            [functionName]: parseInt(e.target.value),
+                            [functionName]: e.target.value,
                           },
                         }));
+                        // } else {
+                        // setProfile((state) => ({
+                        //   ...state,
+                        //   globals: {
+                        //     ...state.globals,
+                        //     [functionName]: parseInt(e.target.value),
+                        //   },
+                        // }));
+                        // }
                       }}
                     >
                       <option></option>
-                      {Object.keys(globals).map((v) => (
-                        <option>{v}</option>
+                      {Object.keys(globalValues).map((v) => (
+                        <option key={v}>{v}</option>
                       ))}
                     </select>
                   </td>

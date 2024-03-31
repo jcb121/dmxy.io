@@ -2,7 +2,7 @@ import { useContext } from "react";
 import { FixtureContext } from "../../context/fixtures";
 import styles from "./fixtureProfiles.module.scss";
 import { Light } from "../light";
-import { CreateFixtureProfile } from "../createFixtureProfile";
+// import { CreateFixtureProfile } from "../createFixtureProfile";
 
 export const FixtureProfiles = ({ fixtureId }: { fixtureId: string }) => {
   const { fixtureProfiles } = useContext(FixtureContext);
@@ -29,11 +29,7 @@ export const FixtureProfiles = ({ fixtureId }: { fixtureId: string }) => {
               }}
               className={styles.drag}
             >
-              <Light
-                fixture={fixture}
-                dmxValues={profile.dmxValues}
-                small={true}
-              />
+              <Light fixture={fixture} dmxValues={profile.dmxValues} />
             </div>
           </div>
         );
@@ -41,7 +37,7 @@ export const FixtureProfiles = ({ fixtureId }: { fixtureId: string }) => {
 
       <hr></hr>
 
-      <CreateFixtureProfile fixture={fixture} />
+      {/* <CreateFixtureProfile fixture={fixture} /> */}
     </div>
   );
 };

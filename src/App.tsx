@@ -5,24 +5,42 @@ import { FixtureContext } from "./context/fixtures";
 import { Fixtures } from "./components/fixtures";
 import { Stage } from "./components/stage";
 import { Venue } from "./components/venue";
-import { Scene, SceneContext } from "./context/scenes";
+import { SceneContext } from "./context/scenes";
 import { Venue as VenueType, VenueContext } from "./context/venues";
 import { ProfileContext } from "./context/profiles";
 // import { Light } from "./components/light";
 import { GenericLight } from "./components/generic-light";
 import { CreateGenericProfile } from "./components/createGenericProfile";
 import { Globals } from "./components/globals";
+import { Tempo } from "./components/tempo/tempo";
+import { SetScene } from "./components/set-scene";
+import { connect, startDMX } from "./dmx";
+import { SetColour } from "./components/set-color/set-color";
 
 function App() {
   const { fixtures, saveFixture } = useContext(FixtureContext);
   const { venues, saveVenue, updateVenue } = useContext(VenueContext);
-  const { scenes, updateScene, saveScene } = useContext(SceneContext);
+  const {
+    scenes,
+    updateScene,
+    saveScene,
+    activeScene,
+    createScene,
+    setActiveScene,
+  } = useContext(SceneContext);
   const { profiles } = useContext(ProfileContext);
-  const scene = scenes[0] as Scene | undefined;
-  const venue = venues[0] as VenueType | undefined;
-
   const [showFixture, setShowFixture] = useState(false);
-  const [showProfiles, setShowProfiles] = useState(false);
+  const [showProfiles, setShowProfiles] = useState(true);
+
+  // console.log('venues[0]', venues[0], scenes[0])
+
+  const scene = activeScene
+    ? scenes.find((s) => s.id === activeScene)
+    : undefined;
+  const venue = venues[0] as VenueType | undefined;
+  // const [port, setPort] = useState<SerialPort>();
+
+  if (!scene || !venue) return null;
 
   return (
     <>
@@ -63,7 +81,17 @@ function App() {
 
         {/* <button onClick={() => {}}>⏸︎</button> */}
 
-        <button onClick={() => {}}>DMX Connect</button>
+        <button
+          onClick={async () => {
+            const port = await connect();
+            if (port) {
+              // setPort(port);
+              startDMX(port);
+            }
+          }}
+        >
+          DMX Connect
+        </button>
       </div>
 
       <div className={styles.root}>
@@ -79,21 +107,49 @@ function App() {
             <div className={styles.genericProfiles}>
               {profiles.map((profile) => {
                 return (
-                  <div
-                    key={profile.id}
-                    draggable
-                    onDragStart={(e) => {
-                      e.dataTransfer.setData("profileId", profile.id);
-                      console.log("Settings", "profileId", profile.id);
-                    }}
-                  >
-                    <GenericLight profile={profile} />
+                  <div key={profile.name}>
+                    {profile.name}
+                    <div
+                      key={profile.id}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData("profileId", profile.id);
+                        console.log("Settings", "profileId", profile.id);
+                      }}
+                    >
+                      <GenericLight profile={profile} />
+                    </div>
                   </div>
                 );
               })}
             </div>
           </div>
         )}
+
+        <div className={styles.left}>
+          <div className={styles.scenes}>
+            <button
+              onClick={() => {
+                createScene();
+              }}
+            >
+              Create new scene
+            </button>
+            <hr></hr>
+
+            {scenes &&
+              scenes.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => {
+                    setActiveScene(s.id);
+                  }}
+                >
+                  {s.name}
+                </button>
+              ))}
+          </div>
+        </div>
 
         <div className={styles.main}>
           <input
@@ -114,6 +170,14 @@ function App() {
             Save Scene
           </button>
           <Stage scene={scene} />
+
+          <Tempo />
+
+          <SetColour />
+
+          <SetScene />
+
+          <SetScene />
 
           <Globals />
 

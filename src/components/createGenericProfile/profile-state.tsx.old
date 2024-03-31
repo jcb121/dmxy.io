@@ -5,8 +5,8 @@ import styles from "./profile-state.module.scss";
 
 export const ProfileState = ({
   // onSubmit,
-  onChange,
-  removeStep,
+  // onChange,
+  // removeStep,
   value: profile,
   title,
 }: {

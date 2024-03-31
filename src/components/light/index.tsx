@@ -4,12 +4,10 @@ import {
   DMXValues,
   Fixture,
 } from "../../context/fixtures";
-import styles from "./light.module.scss";
+// import styles from "./light.module.scss";
 import { RGBA } from "./rgba";
 import { Simple } from "./simple";
 import { Strobe } from "./strobe";
-
-
 
 export const Light = ({
   fixture,
@@ -47,9 +45,4 @@ export const Light = ({
   }
 
   return <div>no match</div>;
-
-  // const Red = 0;
-  // const Blue = 0;
-  // const White = 0;
-  // const Green = 0;
 };

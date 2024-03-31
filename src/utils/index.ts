@@ -36,7 +36,9 @@ export const animateColour = (
   const g = Math.round(aG + gDiff * distance);
   const b = Math.round(aB + bDiff * distance);
 
-  return `${r.toString(16)}${g.toString(16)}${b.toString(16)}`;
+  return `${r.toString(16).padStart(2, "0")}${g
+    .toString(16)
+    .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 };
 
 export const mapNumbers = (
@@ -109,7 +111,7 @@ export const getCSSStrobeDuration = (
     return res;
   }, 0);
 
-export const getRGBColours = (
+export const mapDMXtoChannels = (
   channelFunctions: ChannelFunctions,
   dmxValues: DMXValues
 ): Record<string, number> => {
@@ -118,28 +120,19 @@ export const getRGBColours = (
     const channel = channelFunctions[channelId];
     const dmxValue = dmxValues[channelId];
 
-    const colorFunc = Object.values(channel).find(
-      (subFunc) => subFunc.function === ChannelSimpleFunction.colour
+    const func = Object.values(channel).find(
+      (subFunc) => dmxValue <= subFunc.range[1] && dmxValue >= subFunc.range[0]
     );
-    if (colorFunc?.value) {
-      const val = mapNumbers(
-        colorFunc.range[0],
-        colorFunc.range[1],
-        dmxValue,
-        0,
-        255
-      );
-
+    if (func) {
+      const val = mapNumbers(func.range[0], func.range[1], dmxValue, 0, 255);
       return {
-        [colorFunc?.value]: val,
+        [func.function]: val,
         ...colours,
       };
     }
 
     return colours;
   }, {});
-
-  // console.log("RES", res);
 
   return res;
 };
@@ -161,14 +154,19 @@ export const getRGBColours = (
 //   );
 // }
 
+// export const combineRGBStrings = (red: string, green: string, blue: string) => {
+//   return `${red.substring(0, 2)}${green.substring(2, 2)}${blue.substring(
+//     4,
+//     2
+//   )}`;
+// };
+
 export const mapRGBASToDMX = (
   channelFunctions: ChannelFunctions,
   targetColour: string,
   brightness: number,
   strobe: number
 ): DMXValues => {
-  const targetRGB = getRGB(targetColour);
-
   const res = Object.keys(channelFunctions).reduce((dmxValues, _channelId) => {
     const channelId = parseInt(_channelId);
     const channel = channelFunctions[channelId];
@@ -202,26 +200,61 @@ export const mapRGBASToDMX = (
               );
         }
 
-        if (
-          channelFunction.function === ChannelSimpleFunction.colour &&
-          channelFunction.value &&
-          channelFunction.value !== "ffffff"
-        ) {
-          const channelRGB = getRGB(channelFunction.value);
-          const R = mapNumbers(0, 255, targetRGB[0], 0, channelRGB[0]);
-          const G = mapNumbers(0, 255, targetRGB[1], 0, channelRGB[1]);
-          const B = mapNumbers(0, 255, targetRGB[2], 0, channelRGB[2]);
-
-          return Math.round(
-            mapNumbers(
-              0,
-              255,
-              R + G + B,
-              channelFunction.range[0],
-              channelFunction.range[1]
-            )
+        if (channelFunction.function === ChannelSimpleFunction.red) {
+          const red = parseInt(targetColour.substring(0, 2), 16);
+          return mapNumbers(
+            0,
+            255,
+            red,
+            channelFunction.range[0],
+            channelFunction.range[1]
           );
         }
+
+        if (channelFunction.function === ChannelSimpleFunction.green) {
+          const blue = parseInt(targetColour.substring(2, 4), 16);
+
+          return mapNumbers(
+            0,
+            255,
+            blue,
+            channelFunction.range[0],
+            channelFunction.range[1]
+          );
+        }
+
+        if (channelFunction.function === ChannelSimpleFunction.blue) {
+          const green = parseInt(targetColour.substring(4, 6), 16);
+
+          return mapNumbers(
+            0,
+            255,
+            green,
+            channelFunction.range[0],
+            channelFunction.range[1]
+          );
+        }
+
+        // if (
+        //   channelFunction.function === ChannelSimpleFunction.colour &&
+        //   channelFunction.value &&
+        //   channelFunction.value !== "ffffff"
+        // ) {
+        //   const channelRGB = getRGB(channelFunction.value);
+        //   const R = mapNumbers(0, 255, targetRGB[0], 0, channelRGB[0]);
+        //   const G = mapNumbers(0, 255, targetRGB[1], 0, channelRGB[1]);
+        //   const B = mapNumbers(0, 255, targetRGB[2], 0, channelRGB[2]);
+
+        //   return Math.round(
+        //     mapNumbers(
+        //       0,
+        //       255,
+        //       R + G + B,
+        //       channelFunction.range[0],
+        //       channelFunction.range[1]
+        //     )
+        //   );
+        // }
 
         return channelValue;
       },

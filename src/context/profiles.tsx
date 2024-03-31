@@ -17,7 +17,7 @@ export type GenericProfile = {
   name: string;
   id: string;
   state: Record<ChannelSimpleFunction, number>;
-  value: Record<ChannelSimpleFunction, string>;
+  // value: Record<ChannelSimpleFunction, string>;
   globals: Record<ChannelSimpleFunction, string>;
 
   // state: ProfileState;
