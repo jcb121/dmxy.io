@@ -14,6 +14,7 @@ export enum ChannelSimpleFunction {
   unknow = "",
   // colour = "Colour",
   red = "Red",
+  white = "White",
   green = "Green",
   blue = "Blue",
   brightness = "Brightness",
@@ -24,7 +25,7 @@ export enum ChannelSimpleFunction {
 }
 
 export enum ColourMode {
-  rgba = "rgba",
+  rgbw = "rgbw",
   rgb = "rgb",
   fixed = "fixed",
   single = "single",

@@ -38,6 +38,21 @@ const channelFunctions: ChannelFunctions = {
       range: [0, 255],
     },
   },
+  5: {
+    0: {
+      function: ChannelSimpleFunction.white,
+      range: [0, 255],
+    },
+  },
+};
+
+const fixture = {
+  colourMode: ColourMode.rgbw,
+  id: "",
+  model: "RBGA",
+  channels: 5,
+  channelFunctions,
+  fixtureShape: FixtureShape.circle,
 };
 
 export const GenericLight = ({
@@ -45,17 +60,5 @@ export const GenericLight = ({
 }: {
   profile: Omit<GenericProfile, "id">;
 }) => {
-  return (
-    <ConnectedLight
-      fixture={{
-        colourMode: ColourMode.rgba,
-        id: "",
-        model: "RBGA",
-        channels: 5,
-        channelFunctions,
-        fixtureShape: FixtureShape.circle,
-      }}
-      profiles={[profile]}
-    />
-  );
+  return <ConnectedLight fixture={fixture} profiles={[profile]} />;
 };

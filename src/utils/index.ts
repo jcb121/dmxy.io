@@ -3,6 +3,26 @@ import {
   ChannelSimpleFunction,
   DMXValues,
 } from "../context/fixtures";
+import { ProfileState } from "../context/profiles";
+
+export const animateRGB = (
+  [aR, aG, aB]: [number, number, number],
+  [bR, bG, bB]: [number, number, number],
+  duration: number,
+  time: number
+): [number, number, number] => {
+  const rDiff = bR - aR;
+  const gDiff = bG - aG;
+  const bDiff = bB - aB;
+
+  const distance = time / duration;
+
+  const r = Math.round(aR + rDiff * distance);
+  const g = Math.round(aG + gDiff * distance);
+  const b = Math.round(aB + bDiff * distance);
+
+  return [r, g, b];
+};
 
 export const animateColour = (
   startColour: string,
@@ -20,21 +40,23 @@ export const animateColour = (
   const bG = parseInt(`${endColour[2]}${endColour[3]}`, 16);
   const bB = parseInt(`${endColour[4]}${endColour[5]}`, 16);
 
+  const [r, g, b] = animateRGB([aR, aG, aB], [bR, bG, bB], duration, time);
+
   // console.log(`B: ${bR},${bG},${bB}`);
 
-  const rDiff = bR - aR;
-  const gDiff = bG - aG;
-  const bDiff = bB - aB;
+  // const rDiff = bR - aR;
+  // const gDiff = bG - aG;
+  // const bDiff = bB - aB;
 
   // console.log(`diff: ${rDiff},${gDiff},${bDiff}`);
 
-  const distance = time / duration;
+  // const distance = time / duration;
 
   // console.log("distance", distance);
 
-  const r = Math.round(aR + rDiff * distance);
-  const g = Math.round(aG + gDiff * distance);
-  const b = Math.round(aB + bDiff * distance);
+  // const r = Math.round(aR + rDiff * distance);
+  // const g = Math.round(aG + gDiff * distance);
+  // const b = Math.round(aB + bDiff * distance);
 
   return `${r.toString(16).padStart(2, "0")}${g
     .toString(16)
@@ -55,6 +77,12 @@ export const getRGB = (colour: string): [number, number, number] => {
   const blue = parseInt(`${colour[4]}${colour[5]}`, 16);
 
   return [red, green, blue];
+};
+
+export const rgbToHex = ([r, g, b]: [number, number, number]) => {
+  return `${r.toString(16).padStart(2, "0")}${g
+    .toString(16)
+    .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 };
 
 export const isWhite = (a: string) => {
@@ -161,7 +189,43 @@ export const mapDMXtoChannels = (
 //   )}`;
 // };
 
-export const mapRGBASToDMX = (
+export const mapProfileStateToDMX = (
+  channelFunctions: ChannelFunctions,
+  profileSate: ProfileState
+) => {
+  const res = Object.keys(channelFunctions).reduce((dmxValues, _channelId) => {
+    const channelId = parseInt(_channelId);
+    const channel = channelFunctions[channelId];
+
+    const channelValue = Object.keys(channel).reduce(
+      (channelValue, _functionId) => {
+        const functionId = parseInt(_functionId);
+        const channelFunction = channel[functionId];
+
+        const targetState = profileSate[channelFunction.function];
+        if (!targetState) return channelValue;
+
+        return mapNumbers(
+          0,
+          255,
+          targetState,
+          channelFunction.range[0],
+          channelFunction.range[1]
+        );
+      },
+      0
+    );
+
+    return {
+      ...dmxValues,
+      [channelId]: channelValue,
+    };
+  }, {} as DMXValues);
+
+  return res;
+};
+
+export const mapHexToDMX = (
   channelFunctions: ChannelFunctions,
   targetColour: string,
   brightness: number,
@@ -268,4 +332,32 @@ export const mapRGBASToDMX = (
   }, {});
 
   return res;
+};
+
+export const setCSSVarsFromDmx = (
+  htmlElement: HTMLDivElement,
+  channelFunctions: ChannelFunctions,
+  dmxValues: DMXValues
+) => {
+  const {
+    Red,
+    Blue,
+    Green,
+    White,
+    // Brightness, Storbe
+  } = dmxValues
+    ? mapDMXtoChannels(channelFunctions, dmxValues)
+    : ({} as Record<string, number>);
+
+  const cssStobeTime = getCSSStrobeDuration(channelFunctions, dmxValues);
+
+  const Brightness = getCSSBrightness(channelFunctions, dmxValues);
+
+  htmlElement.style.setProperty("--Red", `${Red || 0} `);
+  htmlElement.style.setProperty("--Blue", `${Blue || 0}`);
+  htmlElement.style.setProperty("--Green", `${Green || 0}`);
+  htmlElement.style.setProperty("--White", `${White || 0}`);
+
+  htmlElement.style.setProperty("--Brightness", `${Brightness || 0}`);
+  htmlElement.style.setProperty("--StrobeTime", `${cssStobeTime}ms`);
 };

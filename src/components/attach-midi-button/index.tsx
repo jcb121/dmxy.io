@@ -7,7 +7,7 @@ export const AttachMidiButton = ({
   label,
 }: {
   value?: MidiTrigger;
-  onMidiDetected: (a: Omit<MidiTrigger, "callBack" | "key">) => void;
+  onMidiDetected: (a: Omit<MidiTrigger, "payload">) => void;
   label?: string;
 }) => {
   const [listening, setListening] = useState<boolean>(false);
@@ -18,13 +18,12 @@ export const AttachMidiButton = ({
 
     const event = (e: MIDIMessageEventWithData) => {
       const deviceId = e.currentTarget.id as string;
-      const [type, controlId, value] = e.data;
+      const [type, controlId] = e.data;
       const name = e.currentTarget?.name;
 
       onMidiDetected({
         deviceId,
         controlId,
-        value,
         name,
         type,
       });

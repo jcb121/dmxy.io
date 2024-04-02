@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  ChannelSimpleFunction,
-  DMXValues,
-  Fixture,
-} from "../../context/fixtures";
+import { useCallback, useEffect, useRef } from "react";
+import { ChannelSimpleFunction, Fixture } from "../../context/fixtures";
 import { useGlobals } from "../../context/globals";
-import { GenericProfile } from "../../context/profiles";
-import { mapRGBASToDMX } from "../../utils";
+import { GenericProfile, ProfileState } from "../../context/profiles";
+import {
+  animateRGB,
+  mapProfileStateToDMX,
+  setCSSVarsFromDmx,
+} from "../../utils";
 import { Light } from "../light";
 import { DMXState } from "../../dmx";
 
@@ -20,30 +20,32 @@ export const ConnectedLight = ({
   profiles?: Omit<GenericProfile, "id">[];
 }) => {
   const globals = useGlobals((state) => state.values);
-
   const hold = parseInt(`${globals["Beatlength"]?.value || 0}`);
+  const fade = parseInt(`${globals["Fade"]?.value || 0}`);
+  const fadeGap = parseInt(`${globals["FadeGap"]?.value || 0}`);
+  const ref = useRef<HTMLDivElement>(null);
 
-  const state =
-    profiles &&
-    profiles[0] &&
-    Object.keys(profiles[0].globals).reduce((state, key) => {
-      return profiles[0].globals[key as ChannelSimpleFunction]
-        ? { ...state, [key]: globals[key].value }
-        : state;
-    }, profiles[0].state);
+  // const state =
+  //   profiles &&
+  //   profiles[0] &&
+  //   Object.keys(profiles[0].globals).reduce((state, key) => {
+  //     return profiles[0].globals[key as ChannelSimpleFunction]
+  //       ? { ...state, [key]: globals[key].value }
+  //       : state;
+  //   }, profiles[0].state);
 
-  const [dmxVals, setDmxVals] = useState<DMXValues>(
-    profiles && profiles[0] && state
-      ? mapRGBASToDMX(
-          fixture.channelFunctions,
-          `${state.Red.toString(16).padStart(2, "0")}${state.Green.toString(
-            16
-          ).padStart(2, "0")}${state.Blue.toString(16).padStart(2, "0")}`,
-          state.Brightness,
-          state.Strobe
-        )
-      : {}
-  );
+  // const [dmxVals, setDmxVals] = useState<DMXValues>(
+  //   profiles && profiles[0] && state
+  //     ? mapRGBASToDMX(
+  //         fixture.channelFunctions,
+  //         `${state.Red.toString(16).padStart(2, "0")}${state.Green.toString(
+  //           16
+  //         ).padStart(2, "0")}${state.Blue.toString(16).padStart(2, "0")}`,
+  //         state.Brightness,
+  //         state.Strobe
+  //       )
+  //     : {}
+  // );
 
   const animationRef = useRef<number>();
 
@@ -51,78 +53,101 @@ export const ConnectedLight = ({
     (timeStamp: number) => {
       if (!profiles || profiles.length === 0) return;
 
-      const stepDuration = hold;
-      // (profile.hold || 0) + (profile?.fadeIn || 0) + (profile.fadeOut || 0);
+      const stepDuration = hold; // 1000
+
+      const gapTime = (stepDuration / 255) * fadeGap;
+
+      const onTime = stepDuration - gapTime;
+
+      const fadeTime = (onTime / 510) * fade; // 250
+
+      const normalTime = stepDuration - gapTime - fadeTime - fadeTime;
 
       if (stepDuration) {
         const step = (timeStamp / stepDuration) % profiles.length;
         const frameIndex = Math.floor(step);
 
-        // console.log(step, frameIndex)
+        const stepTime = (step - frameIndex) * stepDuration;
 
-        // console.log('fr',frameIndex);
+        let currentColour: [number, number, number] | undefined = undefined;
 
-        // const stepTime = (step - frameIndex) * stepDuration;
-        // const profile = profiles[frameIndex];
-        // const nextProfile = profiles[frameIndex + 1] || profiles[0];
+        if (stepTime < fadeTime) {
+          const lastProfile =
+            profiles[frameIndex - 1] || profiles[profiles.length - 1];
 
-        // if (profile.fadeIn && stepTime < (profile.fadeIn || 0)) {
-        //   const colour = animateColour(
-        //     nextFrame.value.Colour,
-        //     frame.value.Colour,
-        //     profile.fadeIn,
-        //     stepTime
-        //   );
+          currentColour = animateRGB(
+            fadeGap
+              ? [0, 0, 0]
+              : [
+                  lastProfile.state.Red,
+                  lastProfile.state.Green,
+                  lastProfile.state.Blue,
+                ],
+            [
+              profiles[frameIndex].state.Red,
+              profiles[frameIndex].state.Green,
+              profiles[frameIndex].state.Blue,
+            ],
+            fadeGap ? fadeTime : fadeTime * 2,
+            fadeGap ? stepTime : stepTime + fadeTime
+          );
+        } else if (stepTime > stepDuration - gapTime) {
+          // in the gap, the colour is black
+          currentColour = [0, 0, 0];
+        } else if (stepTime > normalTime + fadeTime) {
+          const nextProfile = profiles[frameIndex + 1] || profiles[0];
 
-        //   setDmxVals(
-        //     mapRGBASToDMX(
-        //       fixture.channelFunctions,
-        //       colour,
-        //       profile.states[frameIndex].state.Brightness,
-        //       profile.states[frameIndex].state.Strobe
-        //     )
-        //   );
-        // } else if (
-        //   profile.fadeOut &&
-        //   stepTime > stepDuration - (profile.fadeOut || 0)
-        // ) {
-        // const colour = animateColour(
-        //   frame.value.Colour,
-        //   nextFrame.value.Colour,
-        //   profile.fadeOut,
-        //   stepTime
-        // );
-
-        // mapRGBASToDMX(
-        //   fixture.channelFunctions,
-        //   colour,
-        //   profile.states[frameIndex].state.Brightness,
-        //   profile.states[frameIndex].state.Strobe
-        // );
-        // } else {
+          currentColour = animateRGB(
+            [
+              profiles[frameIndex].state.Red,
+              profiles[frameIndex].state.Green,
+              profiles[frameIndex].state.Blue,
+            ],
+            fadeGap
+              ? [0, 0, 0]
+              : [
+                  nextProfile.state.Red,
+                  nextProfile.state.Green,
+                  nextProfile.state.Blue,
+                ],
+            fadeGap ? fadeTime : fadeTime * 2,
+            fadeGap
+              ? stepTime - fadeTime - normalTime
+              : stepTime - normalTime - fadeTime
+          );
+        } else {
+          // console.log("normal");
+        }
 
         const state = Object.keys(profiles[frameIndex].globals).reduce(
           (state, key) => {
             return profiles[frameIndex].globals[key as ChannelSimpleFunction]
-              ? { ...state, [key]: globals[key].value }
+              ? { ...state, [key]: globals[key]?.value }
               : state;
           },
-          profiles[frameIndex].state
+          {
+            ...profiles[frameIndex].state,
+            ...(currentColour
+              ? {
+                  Red: currentColour[0],
+                  Green: currentColour[1],
+                  Blue: currentColour[2],
+                }
+              : {}),
+          } as ProfileState
         );
 
-        // console.log(state);
+        if (state.Red === state.Blue && state.Red === state.Green) {
+          // state.White
+        }
 
-        const dmxVals = mapRGBASToDMX(
-          fixture.channelFunctions,
-          `${state.Red.toString(16).padStart(2, "0")}${state.Green.toString(
-            16
-          ).padStart(2, "0")}${state.Blue.toString(16).padStart(2, "0")}`,
-          state.Brightness,
-          state.Strobe
-        );
+        const dmxVals = mapProfileStateToDMX(fixture.channelFunctions, state);
+        // console.log(fixture.model, dmxVals);
 
-        // USE CSS VALUES HERE AS THEY CAN BE NESTED. THIS WILL SAVE IT FROM REACT SHIT..
-        setDmxVals(dmxVals);
+        // console.log(dmxVals)
+
+        if (ref.current)
+          setCSSVarsFromDmx(ref.current, fixture.channelFunctions, dmxVals);
 
         if (typeof channel === "undefined") return;
 
@@ -131,15 +156,28 @@ export const ConnectedLight = ({
         });
       }
     },
-    [hold, profiles, fixture.channelFunctions, globals, channel, setDmxVals]
+    [hold, profiles, fixture.channelFunctions, globals, channel, fade, fadeGap]
   );
 
   useEffect(() => {
     if (hold) {
       animationRef.current && clearInterval(animationRef.current);
-      animationRef.current = setInterval(() => animate(performance.now()), 46);
+      animationRef.current = setInterval(
+        () => animate(performance.now()),
+        // 46
+        23 // more like 60fps
+      );
+    } else {
+      animate(performance.now());
     }
+    return () => {
+      animationRef.current && clearInterval(animationRef.current);
+    };
   }, [animate, hold]);
 
-  return <Light fixture={fixture} dmxValues={dmxVals} />;
+  return (
+    <div ref={ref}>
+      <Light fixture={fixture} />
+    </div>
+  );
 };

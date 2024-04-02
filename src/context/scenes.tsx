@@ -1,6 +1,7 @@
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { getDatabase } from "../db";
 import { Venue, VenueContext } from "./venues";
+import { useGlobals } from "./globals";
 
 export type Scene = {
   // group can have multi profiles
@@ -9,7 +10,7 @@ export type Scene = {
 
   // array of the groups
   // [ [ left ]  [mid]  [right]]
-  fixtureGroups: string[][];
+  fixtureGroups: Array<string[] | undefined>;
   id: string;
   name: string;
 };
@@ -22,15 +23,15 @@ const SAMPLE_SCENE = () => ({
 });
 
 export const SceneContext = React.createContext<{
-  activeScene?: string;
-  setActiveScene: (a: string) => void;
+  // activeScene?: string;
+  // setActiveScene: (a: string) => void;
   scenes: Scene[];
   updateScene: (s: Scene) => void;
   saveScene: (s: Scene) => void;
   createScene: () => void;
 }>({
   scenes: [],
-  setActiveScene: () => {},
+  // setActiveScene: () => {},
   updateScene: () => {},
   saveScene: () => {},
   createScene: () => {},
@@ -39,7 +40,11 @@ export const SceneContext = React.createContext<{
 export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
   const { venues } = useContext(VenueContext);
   const venue = venues[0] as Venue | undefined;
-  const [activeScene, setActiveScene] = useState<string>();
+  const setGlobalValue = useGlobals((state) => state.setGlobalValue);
+  const activeScenes = useGlobals(
+    (state) => state.values["ActiveScene"]?.value
+  ) as string[];
+  const activeScene = activeScenes[activeScenes.length - 1];
 
   const [scenes, setScenes] = useState<Scene[]>([]);
 
@@ -49,7 +54,7 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
 
     const newScene = {
       ...sampleScene,
-      fixtureGroups: venue.venueFixtures.map((f) => [f.id]),
+      fixtureGroups: [],//venue.venueFixtures.map((f) => [f.id]),
       profiles: venue.venueFixtures.reduce((profiles, _, index) => {
         profiles[index] = [];
         return profiles;
@@ -57,16 +62,12 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     setScenes((state) => [...state, newScene]);
-    setActiveScene(sampleScene.id);
-  }, [venue]);
+    setGlobalValue("ActiveScene", [newScene.id]);
+    saveScene(newScene);
+  }, [venue, setGlobalValue]);
 
   useEffect(() => {
-    if (scenes.length === 0 && venue?.venueFixtures) {
-      createScene();
-    }
-  }, [createScene, scenes, venue]);
-
-  useEffect(() => {
+    if (scenes.length > 0) return;
     (async () => {
       const database = await getDatabase();
       const data = await database.getAll("scenes");
@@ -74,10 +75,47 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (data.length > 0) {
         setScenes(data);
-        setActiveScene(data[0].id);
+
+        if (!activeScene) {
+          console.log("Setting active scene to", data[0].id);
+          setGlobalValue("ActiveScene", [data[0].id]);
+        }
+      } else {
+        createScene();
       }
     })();
-  }, []);
+  }, [activeScene, scenes.length, setGlobalValue, createScene]);
+
+  // useEffect(() => {
+  //   // if a venue is changed, it'll add the new lights to it..
+  //   scenes.forEach((scene) => {
+  //     const fixtureGroups = scene.fixtureGroups.reduce(
+  //       (fixtureGroups, group) => {
+
+  //         return [
+  //           ...fixtureGroups,
+  //           group.filter((fId) =>
+  //             venue?.venueFixtures.find((fix) => fix.id !== fId)
+  //           ),
+  //         ];
+  //       },
+  //       [] as string[][]
+  //     ).filter(a => a.length !== 0)
+
+  //     console.log('fixtureGroups', fixtureGroups)
+
+  //     venue?.venueFixtures.forEach((f) => {
+  //       const found = fixtureGroups.find((fIds) => fIds.includes(f.id));
+  //       if (!found) {
+  //         fixtureGroups.push([f.id]);
+  //       }
+  //     });
+  //     updateScene({
+  //       ...scene,
+  //       fixtureGroups,
+  //     });
+  //   });
+  // }, [activeScenes, venue?.venueFixtures]);
 
   const updateScene = (scene: Scene) => {
     setScenes((state) => {
@@ -102,8 +140,6 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
     <SceneContext.Provider
       value={{
         createScene,
-        activeScene,
-        setActiveScene: (sceneId) => setActiveScene(sceneId),
         saveScene,
         scenes,
         updateScene,

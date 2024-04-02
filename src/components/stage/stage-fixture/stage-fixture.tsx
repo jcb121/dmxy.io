@@ -1,9 +1,9 @@
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
 import { Scene, SceneContext } from "../../../context/scenes";
 import { Venue, VenueContext, VenueFixture } from "../../../context/venues";
 import { Fixture } from "../../../context/fixtures";
 import styles from "./stage-fixture.module.scss";
-import { ProfileContext } from "../../../context/profiles";
+import { GenericProfile, ProfileContext } from "../../../context/profiles";
 import { ConnectedLight } from "../../connectedLight";
 
 export const StageFixture = ({
@@ -20,25 +20,39 @@ export const StageFixture = ({
   const { updateScene } = useContext(SceneContext);
   const { updateVenue } = useContext(VenueContext);
   const { profiles: allProfiles } = useContext(ProfileContext);
-  const groupId = scene.fixtureGroups.findIndex((fixtureIds) =>
-    fixtureIds.includes(venueFixture.id)
-  );
-  const profileIds = scene.profiles[groupId] as string[] | undefined;
+
+  const groupId = useMemo(() => {
+    const foundIndex = scene.fixtureGroups.findIndex((fixtureIds) =>
+      fixtureIds?.includes(venueFixture.id)
+    );
+
+    return foundIndex > -1 ? foundIndex : 0;
+  }, [scene.fixtureGroups, venueFixture.id]);
+
+  const profileIds = scene.profiles[groupId] || []; //as string[] | undefined;
   const profiles = profileIds
-    ? allProfiles.filter((p) => profileIds.includes(p.id))
-    : [];
+    .map((id) => allProfiles.find((p) => p.id == id))
+    .filter((a) => !!a) as GenericProfile[];
 
   const changeGroup = (targetGroup: number) => {
-    scene.fixtureGroups[groupId] = scene.fixtureGroups[groupId].filter(
-      (id) => id != venueFixture.id
-    );
-    if (scene.fixtureGroups[targetGroup]) {
-      scene.fixtureGroups[targetGroup].push(venueFixture.id);
+    if (targetGroup < 0) return;
+
+    const fixtureGroups = scene.fixtureGroups.reduce((fixtureGroups, group) => {
+      return [
+        ...fixtureGroups,
+        (group || []).filter((id) => id !== venueFixture.id),
+      ];
+    }, [] as string[][]);
+
+    if (fixtureGroups[targetGroup]) {
+      fixtureGroups[targetGroup].push(venueFixture.id);
     } else {
-      scene.fixtureGroups[targetGroup] = [venueFixture.id];
+      fixtureGroups[targetGroup] = [venueFixture.id];
     }
+
     updateScene({
       ...scene,
+      fixtureGroups,
     });
   };
 
@@ -96,7 +110,26 @@ export const StageFixture = ({
               </th>
             </tr>
             <tr>
-              <th colSpan={3}>{profiles.map((prof) => prof.name).join(",")}</th>
+              <th colSpan={3}>
+                {profiles?.map((prof) => (
+                  <button
+                    onClick={() => {
+                      const profileIds =
+                        (scene.profiles[groupId] as string[] | undefined) || [];
+
+                      updateScene({
+                        ...scene,
+                        profiles: {
+                          ...scene.profiles,
+                          [groupId]: profileIds.filter((p) => p != prof.id),
+                        },
+                      });
+                    }}
+                  >
+                    {prof.name} X
+                  </button>
+                ))}
+              </th>
             </tr>
             <tr>
               <td>
@@ -143,7 +176,7 @@ export const StageFixture = ({
                 </button>
               </td>
             </tr>
-            <tr>
+            {/* <tr>
               <td>
                 <button>clone</button>
               </td>
@@ -151,17 +184,23 @@ export const StageFixture = ({
               <td>
                 <button>delete</button>
               </td>
-            </tr>
+            </tr> */}
           </tbody>
         </table>
       </div>
 
-      {/* TODO sort this out */}
-      <ConnectedLight
-        channel={venueFixture.channel}
-        profiles={profiles}
-        fixture={fixture}
-      />
+      <div
+        draggable
+        onDragStart={(e) => {
+          e.dataTransfer.setData("id", venueFixture.id);
+        }}
+      >
+        <ConnectedLight
+          channel={venueFixture.channel}
+          profiles={profiles}
+          fixture={fixture}
+        />
+      </div>
     </div>
   );
 };

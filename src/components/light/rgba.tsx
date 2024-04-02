@@ -6,12 +6,9 @@ import {
 } from "../../context/fixtures";
 import styles from "./light.module.scss";
 import {
-  getCSSBrightness,
-  getCSSStrobeDuration,
-  // getRGB,
-  mapDMXtoChannels,
-  // mapNumbers,
+  setCSSVarsFromDmx,
 } from "../../utils";
+import { useEffect, useRef } from "react";
 
 export const RGBA = ({
   fixture,
@@ -129,35 +126,18 @@ export const RGBA = ({
   // console.log(Brightness, cssBrightness);
 
   // const cssBrightnessWhite = (!White ? 0 : Brightness) / 255;
-  const {
-    Red,
-    Blue,
-    Green,
-    // Brightness, Storbe
-  } = dmxValues
-    ? mapDMXtoChannels(fixture.channelFunctions, dmxValues)
-    : ({} as Record<string, number>);
 
-  const cssStobeTime = getCSSStrobeDuration(
-    fixture.channelFunctions,
-    dmxValues
-  );
+  const ref = useRef<HTMLDivElement>(null);
 
-  const cssBrightness = getCSSBrightness(fixture.channelFunctions, dmxValues);
+  useEffect(() => {
+    if (!ref.current || !dmxValues) return;
+
+    setCSSVarsFromDmx(ref.current, fixture.channelFunctions, dmxValues);
+  }, [dmxValues, fixture]);
 
   return (
-    <div className={`${styles[fixture.fixtureShape]}`}>
-      <div
-        className={styles.inner}
-        style={{
-          // borderColor: `rgba(${Red},${Green},${Blue}, ${cssBrightness})`,
-          animationDuration: `${cssStobeTime}ms`,
-          borderColor: `rgba(${Red},${Green},${Blue}, ${cssBrightness})`,
-          background: `rgba(${Red},${Green},${Blue}, ${cssBrightness})`,
-          // White is a tricky one...
-          // background: `rgba(${White},${White},${White}, ${cssBrightnessWhite})`,
-        }}
-      ></div>
+    <div className={`${styles[fixture.fixtureShape]}`} ref={ref}>
+      <div className={styles.inner}></div>
     </div>
   );
 };

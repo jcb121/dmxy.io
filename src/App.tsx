@@ -8,37 +8,33 @@ import { Venue } from "./components/venue";
 import { SceneContext } from "./context/scenes";
 import { Venue as VenueType, VenueContext } from "./context/venues";
 import { ProfileContext } from "./context/profiles";
-// import { Light } from "./components/light";
 import { GenericLight } from "./components/generic-light";
 import { CreateGenericProfile } from "./components/createGenericProfile";
 import { Globals } from "./components/globals";
-import { Tempo } from "./components/tempo/tempo";
-import { SetScene } from "./components/set-scene";
 import { connect, startDMX } from "./dmx";
-import { SetColour } from "./components/set-color/set-color";
+import { useGlobals } from "./context/globals";
+import { Controller } from "./components/controller/controller";
 
 function App() {
   const { fixtures, saveFixture } = useContext(FixtureContext);
   const { venues, saveVenue, updateVenue } = useContext(VenueContext);
-  const {
-    scenes,
-    updateScene,
-    saveScene,
-    activeScene,
-    createScene,
-    setActiveScene,
-  } = useContext(SceneContext);
+  const { scenes, updateScene, saveScene, createScene } =
+    useContext(SceneContext);
   const { profiles } = useContext(ProfileContext);
   const [showFixture, setShowFixture] = useState(false);
   const [showProfiles, setShowProfiles] = useState(true);
+  const activeScenes = useGlobals(
+    (state) => state.values["ActiveScene"]?.value as string[]
+  ) as string[];
 
-  // console.log('venues[0]', venues[0], scenes[0])
+  const activeSceneId = activeScenes[activeScenes.length - 1];
 
-  const scene = activeScene
-    ? scenes.find((s) => s.id === activeScene)
+  const setGlobalValue = useGlobals((state) => state.setGlobalValue);
+
+  const scene = activeSceneId
+    ? scenes.find((s) => s.id === activeSceneId)
     : undefined;
   const venue = venues[0] as VenueType | undefined;
-  // const [port, setPort] = useState<SerialPort>();
 
   if (!scene || !venue) return null;
 
@@ -140,9 +136,10 @@ function App() {
             {scenes &&
               scenes.map((s) => (
                 <button
+                  disabled={s.id === activeSceneId}
                   key={s.id}
                   onClick={() => {
-                    setActiveScene(s.id);
+                    setGlobalValue("ActiveScene", [s.id]);
                   }}
                 >
                   {s.name}
@@ -171,13 +168,15 @@ function App() {
           </button>
           <Stage scene={scene} />
 
-          <Tempo />
+          <Controller />
 
-          <SetColour />
+          {/* <Tempo /> */}
 
-          <SetScene />
+          {/* <SetColour /> */}
 
-          <SetScene />
+          {/* <SetScene /> */}
+
+          {/* <SetScene /> */}
 
           <Globals />
 

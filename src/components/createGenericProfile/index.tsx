@@ -1,5 +1,5 @@
 import { useContext, useState } from "react";
-import { GenericProfile, ProfileContext } from "../../context/profiles";
+import { GenericProfile, ProfileContext, ProfileState } from "../../context/profiles";
 import { ChannelSimpleFunction } from "../../context/fixtures";
 import styles from "./createGenericProfile.module.scss";
 import { useGlobals } from "../../context/globals";
@@ -11,7 +11,7 @@ const defaultState = (globals: string[]): GenericProfile => ({
   state: Object.values(ChannelSimpleFunction).reduce((prof, name) => {
     if (name) prof[name] = 0;
     return prof;
-  }, {} as Record<string, number>),
+  }, {} as ProfileState),
   globals: Object.values(ChannelSimpleFunction).reduce((prof, name) => {
     if (globals.includes(name)) {
       prof[name] = name;

@@ -29,17 +29,44 @@
 }
 
 .inner {
+  &::after {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    content: "";
+    border-radius: 20px;
+
+    background-color: rgba(
+      var(--White),
+      var(--White),
+      var(--White),
+      var(--Brightness)
+    );
+  }
+
+  position: relative;
+
   box-sizing: border-box;
-  flex: 1;
-  // border: 5px solid;
+  // flex: 1;
   height: 100%;
   width: 100%;
   animation-name: strobe;
   animation-direction: alternate;
   animation-iteration-count: infinite;
-  border-width: 15px;
-  border-style: solid;
+  // border-width: 15px;
+  // border-style: solid;
   // border-radius: 30px;
+
+  animation-duration: var(--StrobeTime);
+
+  background-color: rgba(
+    var(--Red),
+    var(--Green),
+    var(--Blue),
+    var(--Brightness)
+  );
 }
 
 @keyframes strobe {

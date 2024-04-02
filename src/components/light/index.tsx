@@ -1,3 +1,4 @@
+import { memo } from "react";
 import {
   ChannelSimpleFunction,
   ColourMode,
@@ -9,11 +10,17 @@ import { RGBA } from "./rgba";
 import { Simple } from "./simple";
 import { Strobe } from "./strobe";
 
-export const Light = ({
+export const _Light = ({
   fixture,
   dmxValues,
 }: {
+  /**
+   * This shouldn't change during a performance
+   */
   fixture: Fixture;
+  /**
+   * This is more for testing, you should pass the colours via CSS vars
+   */
   dmxValues?: DMXValues;
 }) => {
   const funcs = Object.values(fixture.channelFunctions).reduce(
@@ -38,7 +45,7 @@ export const Light = ({
   }
 
   if (
-    fixture.colourMode === ColourMode.rgba ||
+    fixture.colourMode === ColourMode.rgbw ||
     fixture.colourMode === ColourMode.rgb
   ) {
     return <RGBA fixture={fixture} dmxValues={dmxValues} />;
@@ -46,3 +53,5 @@ export const Light = ({
 
   return <div>no match</div>;
 };
+
+export const Light = memo(_Light);

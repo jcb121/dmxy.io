@@ -3,20 +3,22 @@ import { ChannelSimpleFunction } from "./fixtures";
 import { getDatabase } from "../db";
 import React from "react";
 
-export type ProfileState = {
-  id: string;
-  state: Record<ChannelSimpleFunction, number>;
-  value: Record<ChannelSimpleFunction, string>;
-  // hold?: number;
-  // fadeIn?: number;
-  // fadeOut?: number;
-};
+export type ProfileState = Record<ChannelSimpleFunction, number>;
+
+// export type ProfileState = {
+//   id: string;
+//   state: Record<ChannelSimpleFunction, number>;
+//   value: Record<ChannelSimpleFunction, string>;
+//   // hold?: number;
+//   // fadeIn?: number;
+//   // fadeOut?: number;
+// };
 
 // this is just one simple state...
 export type GenericProfile = {
   name: string;
   id: string;
-  state: Record<ChannelSimpleFunction, number>;
+  state: ProfileState;
   // value: Record<ChannelSimpleFunction, string>;
   globals: Record<ChannelSimpleFunction, string>;
 

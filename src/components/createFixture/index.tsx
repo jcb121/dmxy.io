@@ -117,7 +117,7 @@ export const CreateFixture = ({
               <label>
                 <input
                   type="radio"
-                  name="rgba"
+                  name="ColourMode"
                   checked={ColourMode.fixed == colourMode}
                   onChange={(e) => {
                     e.target.checked && setColourMode(ColourMode.fixed);
@@ -128,7 +128,7 @@ export const CreateFixture = ({
               <label>
                 <input
                   type="radio"
-                  name="rgba"
+                  name="ColourMode"
                   checked={ColourMode.rgb == colourMode}
                   onChange={(e) => {
                     e.target.checked && setColourMode(ColourMode.rgb);
@@ -139,18 +139,18 @@ export const CreateFixture = ({
               <label>
                 <input
                   type="radio"
-                  name="rgba"
-                  checked={ColourMode.rgba == colourMode}
+                  name="ColourMode"
+                  checked={ColourMode.rgbw == colourMode}
                   onChange={(e) => {
-                    e.target.checked && setColourMode(ColourMode.rgba);
+                    e.target.checked && setColourMode(ColourMode.rgbw);
                   }}
                 />
-                RGBA
+                RGBW
               </label>
               <label>
                 <input
                   type="radio"
-                  name="rgba"
+                  name="ColourMode"
                   checked={ColourMode.single == colourMode}
                   onChange={(e) => {
                     e.target.checked && setColourMode(ColourMode.single);
