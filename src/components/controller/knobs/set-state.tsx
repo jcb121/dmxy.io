@@ -1,24 +1,17 @@
-import { useEvents } from "../../../context/events";
-import {
-  GlobalTypes,
-  NewGlobalsValue,
-  useGlobals,
-} from "../../../context/globals";
+import { setState as setStateEvent, useEvents } from "../../../context/events";
+import { GlobalTypes, useGlobals } from "../../../context/globals";
 import { MidiCallback, useMidiTriggers } from "../../../context/midi";
 import { AttachMidiButton } from "../../attach-midi-button";
 import styles from "../controller.module.scss";
 
 export const SetState = ({
-  setValue,
-  globalVar,
   buttonId,
+  payload,
+  onEventChange: _onEventChange,
 }: {
   buttonId: string;
-  globalVar?: string;
-  setValue: (
-    globalVar?: string,
-    payload?: NewGlobalsValue[keyof NewGlobalsValue]
-  ) => void;
+  payload?: setStateEvent;
+  onEventChange: (s: setStateEvent) => void;
 }) => {
   const editMode = useEvents((state) => state.editMode);
   const globalState = useGlobals((state) => state.values);
@@ -35,17 +28,29 @@ export const SetState = ({
     });
 
   // const [key, setKey] = useState<string>();
-  const foundVar = !!globalVar && globalState[globalVar];
+  const foundVar =
+    (payload?.globalVar && globalState[payload.globalVar]) || undefined;
+
+  const midiTrigger = buttonId ? midiTriggers[`${buttonId}_press`] : undefined;
+  const onEventChange = (a: setStateEvent) => {
+    if (midiTrigger) {
+      setMidiTrigger(`${buttonId}_press`, {
+        ...midiTrigger,
+        payload: a,
+      });
+    }
+    _onEventChange(a);
+  };
 
   return (
     <div>
       <div className={styles.mainKnob}>
-        <div>{globalVar}</div>
+        <div>{payload?.globalVar}</div>
 
         <input
           type="range"
           value={
-            globalState[buttonId]?.value || (foundVar && foundVar.type) || 0
+            globalState[buttonId]?.value || (foundVar && foundVar.value) || 0
           }
           onChange={(e) => {
             if (!foundVar) return;
@@ -53,10 +58,9 @@ export const SetState = ({
               foundVar.type === GlobalTypes.byte ||
               foundVar.type === GlobalTypes.time
             ) {
-              globalVar &&
+              payload &&
                 setGlobalState({
-                  globalVar,
-                  function: MidiCallback.setState,
+                  ...payload,
                   payload: {
                     value: parseInt(e.target.value),
                     type: foundVar.type,
@@ -74,10 +78,14 @@ export const SetState = ({
             onChange={(e) => {
               const key = e.target.value;
               if (key && globalState[key]) {
-                setValue(key, globalState[key]);
+                onEventChange({
+                  function: MidiCallback.setState,
+                  globalVar: key,
+                  payload: globalState[key],
+                });
               }
             }}
-            value={globalVar}
+            value={payload?.globalVar || ""}
           >
             <option value="">None</option>
             {options.map((_key) => (
@@ -88,23 +96,11 @@ export const SetState = ({
           <AttachMidiButton
             value={midiTriggers[buttonId]}
             onMidiDetected={(midiTrigger) => {
-              if (!foundVar) return;
-              if (
-                foundVar.type === GlobalTypes.byte ||
-                foundVar.type === GlobalTypes.time
-              ) {
-                setMidiTrigger(buttonId, {
-                  ...midiTrigger,
-                  payload: {
-                    function: MidiCallback.setState,
-                    globalVar,
-                    payload: {
-                      value: 0,
-                      type: foundVar.type,
-                    },
-                  },
-                });
-              }
+              if (!payload) return;
+              setMidiTrigger(buttonId, {
+                ...midiTrigger,
+                payload,
+              });
             }}
             label={"Attach Knob"}
           />

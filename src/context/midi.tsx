@@ -173,6 +173,7 @@ export enum MidiEventTypes {
 }
 
 export enum MidiCallback {
+  cycleScene = "cycleScene",
   setBeatLength = "setBeatLength",
   setColour = "setColour",
   setScene = "setScene",

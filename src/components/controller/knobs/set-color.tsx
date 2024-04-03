@@ -22,8 +22,8 @@ export const SetColour = ({
 
   const colour = rgbToHex([
     globalState["Red"]?.value as number,
-    globalState["Blue"]?.value as number,
     globalState["Green"]?.value as number,
+    globalState["Blue"]?.value as number,
   ]);
 
   const value = globalState[buttonId]?.value || 0;
@@ -40,7 +40,6 @@ export const SetColour = ({
 
   const setMidiTrigger = useMidiTriggers((state) => state.setMidiTrigger);
   const midiTriggers = useMidiTriggers((state) => state.midiTriggers);
-
 
   return (
     <div>
@@ -63,8 +62,8 @@ export const SetColour = ({
           value={value}
           max={255}
           onChange={(e) => {
-            console.log('Setting', buttonId, parseInt(e.target.value))
-            // setGlobalValue(buttonId, parseInt(e.target.value));
+            // console.log('Setting', buttonId, parseInt(e.target.value))
+
             const third = 255 / 2;
             const state = parseInt(e.target.value) / third;
             const frame = Math.floor(state);

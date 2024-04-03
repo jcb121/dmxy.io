@@ -1,3 +1,4 @@
+import { SetBeatLength as SetBeatLengthEvent } from "../../../context/events";
 import { GlobalTypes, useGlobals } from "../../../context/globals";
 // import { AttachMidiButton } from "../../../attach-midi-button";
 import { MidiCallback, useMidiTriggers } from "../../../context/midi";
@@ -10,13 +11,15 @@ const oneMinute = 60 * 1000;
 export const Tempo = ({
   buttonId,
   editMode,
-  setGlobalVar,
+  // setGlobalVar,
+  payload,
+  onEventChange: _onEventChange,
 }: {
   buttonId: string;
-
-  globalVar?: string;
-  setGlobalVar: (a: string) => void;
   editMode: boolean;
+
+  payload?: SetBeatLengthEvent;
+  onEventChange: (s: SetBeatLengthEvent) => void;
 }) => {
   const setBeatLength = useGlobals((state) => state.handlers.setBeatLength);
   const beatlength = useGlobals((state) => state.values.Beatlength?.value);
@@ -45,6 +48,17 @@ export const Tempo = ({
     });
   };
 
+  const midiTrigger = buttonId ? midiTriggers[`${buttonId}_press`] : undefined;
+  const onEventChange = (a: SetBeatLengthEvent) => {
+    if (midiTrigger) {
+      setMidiTrigger(`${buttonId}_press`, {
+        ...midiTrigger,
+        payload: a,
+      });
+    }
+    _onEventChange(a);
+  };
+
   return (
     <div>
       <button onClick={handleClick} className={styles.mainButton}>
@@ -53,7 +67,16 @@ export const Tempo = ({
       </button>
       {editMode && (
         <div>
-          <select onChange={(e) => setGlobalVar(e.target.value)}>
+          Global:
+          <select
+            onChange={(e) => {
+              if (payload)
+                onEventChange({
+                  ...payload,
+                  globalVar: e.target.value,
+                });
+            }}
+          >
             {options.map((_key) => (
               <option key={_key}>{_key}</option>
             ))}
@@ -61,14 +84,11 @@ export const Tempo = ({
           <AttachMidiButton
             value={midiTriggers[`${buttonId}_tempo`]}
             onMidiDetected={(midiTrigger) => {
-              setMidiTrigger(`${buttonId}_tempo`, {
-                ...midiTrigger,
-                payload: {
-                  function: MidiCallback.setBeatLength,
-                  timeStamp: undefined,
-                  globalVar: undefined,
-                },
-              });
+              if (payload)
+                setMidiTrigger(`${buttonId}_tempo`, {
+                  ...midiTrigger,
+                  payload,
+                });
             }}
             label={"Attach Button"}
           />

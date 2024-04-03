@@ -7,11 +7,11 @@ import { SetScene } from "./buttons/set-scene";
 import { SetColour as SetColourButton } from "./buttons/set-colour";
 import { RemoveScene } from "./buttons/remove-scene";
 import { SetState as SetStateButton } from "./buttons/set-state";
+import { CycleScene } from "./buttons/cycle-scene";
 import { SetColour as SetColourKnob } from "./knobs/set-color";
 import { SetState as SetStateKnob } from "./knobs/set-state";
 import { UserEvent, useEvents } from "../../context/events";
 import { Empty } from "./knobs/empy";
-import { useEffect } from "react";
 // import { useEvents } from "../../context/events";
 // import { SetColour } from "./knobs/set-color/set-color";
 
@@ -25,18 +25,10 @@ const KNOBS = [
 ];
 
 export const Controller = () => {
-  // const globalFuncs = useGlobals((state) => state.functions);
-
   const setButtonFuncs = useEvents((state) => state.setButtonFuncs);
   const buttonFuncs = useEvents((state) => state.buttonFuncs);
   const editMode = useEvents((state) => state.editMode);
   const setEditMode = useEvents((state) => state.setEditMode);
-
-  useEffect(() => {
-    console.log("buttonFuncs", buttonFuncs);
-  }, [buttonFuncs]);
-
-  // const midiTriggers = useGlobals((state) => state.midiTriggers);
 
   return (
     <div>
@@ -72,15 +64,10 @@ export const Controller = () => {
                       {buttonFunc?.function === MidiCallback.setBeatLength && (
                         <Tempo
                           buttonId={`_button_${id}`}
-                          setGlobalVar={(globalVar) => {
-                            setButtonFuncs(id, {
-                              timeStamp: undefined,
-                              globalVar,
-                              function: MidiCallback.setBeatLength,
-                            });
+                          payload={buttonFunc}
+                          onEventChange={(payload) => {
+                            if (payload) setButtonFuncs(id, payload);
                           }}
-                          globalVar={buttonFunc.globalVar}
-                          // midiTriggerName={`button_${id}`}
                           editMode={editMode}
                         />
                       )}
@@ -89,26 +76,22 @@ export const Controller = () => {
                         <SetScene
                           buttonId={`_button_${id}`}
                           editMode={editMode}
-                          setSceneId={(sceneId) => {
-                            setButtonFuncs(id, {
-                              sceneId: sceneId,
-                              function: MidiCallback.setScene,
-                            });
+                          payload={buttonFunc}
+                          onEventChange={(payload) => {
+                            if (payload) setButtonFuncs(id, payload);
                           }}
-                          sceneId={buttonFunc.sceneId}
                         />
                       )}
 
                       {buttonFunc?.function === MidiCallback.removeScene && (
                         <RemoveScene
+                          buttonId={`_button_${id}`}
                           editMode={editMode}
-                          setSceneId={(sceneId) => {
-                            setButtonFuncs(id, {
-                              sceneId: sceneId,
-                              function: MidiCallback.removeScene,
-                            });
+                          payload={buttonFunc}
+                          onEventChange={(payload) => {
+                            // this is the best way to do it...
+                            if (payload) setButtonFuncs(id, payload);
                           }}
-                          sceneId={buttonFunc.sceneId}
                         />
                       )}
 
@@ -116,12 +99,10 @@ export const Controller = () => {
                         <SetColourButton
                           buttonId={`_button_${id}`}
                           editMode={editMode}
-                          colour={buttonFunc.colour}
-                          setColour={(colour) => {
-                            setButtonFuncs(id, {
-                              colour,
-                              function: MidiCallback.setColour,
-                            });
+                          payload={buttonFunc}
+                          onEventChange={(payload) => {
+                            // this is the best way to do it...
+                            if (payload) setButtonFuncs(id, payload);
                           }}
                         />
                       )}
@@ -130,15 +111,22 @@ export const Controller = () => {
                         <SetStateButton
                           buttonId={`_button_${id}`}
                           editMode={editMode}
-                          payload={buttonFunc.payload}
-                          globalVar={buttonFunc.globalVar}
-                          setValue={(globalVar, payload) => {
-                            if (payload)
-                              setButtonFuncs(id, {
-                                payload,
-                                globalVar: globalVar || undefined,
-                                function: MidiCallback.setState,
-                              });
+                          payload={buttonFunc}
+                          onEventChange={(payload) => {
+                            // this is the best way to do it...
+                            if (payload) setButtonFuncs(id, payload);
+                          }}
+                        />
+                      )}
+
+                      {buttonFunc?.function === MidiCallback.cycleScene && (
+                        <CycleScene
+                          buttonId={`_button_${id}`}
+                          editMode={editMode}
+                          payload={buttonFunc}
+                          onEventChange={(payload) => {
+                            // this is the best way to do it...
+                            if (payload) setButtonFuncs(id, payload);
                           }}
                         />
                       )}
@@ -146,15 +134,6 @@ export const Controller = () => {
                       {!buttonFuncs[id]?.function && (
                         <button className={styles.mainButton}>Empty</button>
                       )}
-
-                      {/* <div className={styles.square}>
-  <button className={styles.button}>Press</button>
-  </div> */}
-
-                      {/* <AttachMidiButton onMidiDetected={e => {
-  console.log(e)
-  }}
-  /> */}
                     </div>
                   );
                 })}
@@ -162,9 +141,6 @@ export const Controller = () => {
             );
           })}
         </div>
-        {/* <AttachMidiButton label="Detect Knob" onMidiDetected={e => {
-          console.log(e)
-        }} /> */}
 
         <div className={styles.right}>
           {KNOBS.map((knowRow, rowIndex) => (
@@ -207,14 +183,10 @@ export const Controller = () => {
                     {buttonFunc?.function === MidiCallback.setState && (
                       <SetStateKnob
                         buttonId={`_button_${id}`}
-                        // value={buttonFunc.value}
-                        globalVar={buttonFunc.globalVar}
-                        setValue={(globalVar, payload) => {
-                          setButtonFuncs(id, {
-                            payload,
-                            globalVar: globalVar || undefined,
-                            function: MidiCallback.setState,
-                          });
+                        payload={buttonFunc}
+                        onEventChange={(payload) => {
+                          // this is the best way to do it...
+                          if (payload) setButtonFuncs(id, payload);
                         }}
                       />
                     )}

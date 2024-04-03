@@ -4,45 +4,60 @@ import { useGlobals } from "../../../context/globals";
 // import { MidiCallback, MidiEventTypes } from "../../../context/midi";
 import { SceneContext } from "../../../context/scenes";
 import styles from "../controller.module.scss";
-import { MidiCallback } from "../../../context/midi";
+import { MidiCallback, useMidiTriggers } from "../../../context/midi";
+import { removeScene as removeSceneEvent } from "../../../context/events";
 
 export const RemoveScene = ({
+  buttonId,
   editMode,
-  sceneId,
-  setSceneId,
+  payload,
+  onEventChange: _onEventChange,
 }: {
-  sceneId?: string;
+  buttonId: string;
+
   editMode: boolean;
-  setSceneId: (s: string) => void;
+  payload?: removeSceneEvent;
+  onEventChange: (s: removeSceneEvent) => void;
 }) => {
-  // const setMidiTrigger = useGlobals((state) => state.setMidiTrigger);
-  // const midiTriggers = useGlobals((state) => state.midiTriggers);
+  const midiTriggers = useMidiTriggers((state) => state.midiTriggers);
+  const setMidiTrigger = useMidiTriggers((state) => state.setMidiTrigger);
   const removeScene = useGlobals((state) => state.handlers.removeScene);
 
   const { scenes } = useContext(SceneContext);
 
-  const sceneName = scenes.find((s) => s.id === sceneId);
+  const sceneName = scenes.find((s) => s.id === payload?.sceneId);
+
+  const midiTrigger = buttonId ? midiTriggers[`${buttonId}_press`] : undefined;
+
+  const onEventChange = (a: removeSceneEvent) => {
+    if (midiTrigger) {
+      setMidiTrigger(`${buttonId}_press`, {
+        ...midiTrigger,
+        payload: a,
+      });
+    }
+    _onEventChange(a);
+  };
 
   return (
     <div className={styles.root}>
       <button
         className={styles.mainButton}
         onClick={() => {
-          sceneId &&
-            removeScene({
-              function: MidiCallback.removeScene,
-              sceneId: sceneId,
-            });
+          payload?.sceneId && removeScene(payload);
         }}
       >
         {`Scene: ${sceneName?.name || "Empty"}`}
       </button>
       {editMode && (
         <select
-          value={sceneId}
+          value={payload?.sceneId}
           onChange={(e) => {
             console.log(e.target.value);
-            setSceneId(e.target.value);
+            onEventChange({
+              function: MidiCallback.removeScene,
+              sceneId: e.target.value,
+            });
           }}
         >
           <option value="">Select Scene</option>

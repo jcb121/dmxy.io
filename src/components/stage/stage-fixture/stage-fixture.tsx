@@ -122,6 +122,7 @@ export const StageFixture = ({
               <th colSpan={3}>
                 {profiles?.map((prof) => (
                   <button
+                    key={prof.id}
                     className={styles.button}
                     onClick={() => {
                       const profileIds =

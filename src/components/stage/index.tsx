@@ -21,8 +21,6 @@ export const Stage = ({ scene }: { scene: Scene }) => {
         const id = e.dataTransfer.getData("id");
         const { top, left } = ref.current!.getBoundingClientRect();
 
-        console.log("DROP", id)
-
         if (!id) {
           const fixtureId = e.dataTransfer.getData("fixtureId");
           const fixture = fixtures.find((f) => f.id === fixtureId);

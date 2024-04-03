@@ -14,8 +14,12 @@ import { Globals } from "./components/globals";
 import { connect, startDMX } from "./dmx";
 import { GlobalTypes, useGlobals } from "./context/globals";
 import { Controller } from "./components/controller/controller";
+import { useUI } from "./context/ui";
 
 function App() {
+  const editMode = useUI((state) => state.venueEditMode);
+  const setVenueEditMode = useUI((state) => state.setVenueEditMode);
+
   const { fixtures, saveFixture } = useContext(FixtureContext);
   const { venues, saveVenue, updateVenue } = useContext(VenueContext);
   const { scenes, updateScene, saveScene, createScene } =
@@ -39,7 +43,7 @@ function App() {
   if (!scene || !venue) return null;
 
   return (
-    <>
+    <div className={styles.root}>
       <div className={styles.header}>
         <input
           value={venue?.name}
@@ -73,6 +77,14 @@ function App() {
           Save Venue
         </button>
 
+        <button
+          onClick={() => {
+            setVenueEditMode(!editMode);
+          }}
+        >
+          Venue Edit Mode
+        </button>
+
         <span className={styles.spacer}></span>
 
         {/* <button onClick={() => {}}>⏸︎</button> */}
@@ -90,7 +102,7 @@ function App() {
         </button>
       </div>
 
-      <div className={styles.root}>
+      <div className={styles.body}>
         {showFixture && (
           <div className={styles.left}>
             <Fixtures fixtures={fixtures} />
@@ -101,10 +113,14 @@ function App() {
         {showProfiles && (
           <div className={styles.left}>
             <div className={styles.genericProfiles}>
+              <div className={styles.leftTitle}>Profiles</div>
+
               {profiles.map((profile) => {
                 return (
-                  <div key={profile.name}>
-                    {profile.name}
+                  <div key={profile.name} className={styles.genericProfile}>
+                    <div className={styles.genericProfileName}>
+                      {profile.name}
+                    </div>
                     <div
                       key={profile.id}
                       draggable
@@ -131,7 +147,8 @@ function App() {
             >
               Create new scene
             </button>
-            <hr></hr>
+
+            <div className={styles.leftTitle}>Select Scene:</div>
 
             {scenes &&
               scenes.map((s) => (
@@ -187,11 +204,12 @@ function App() {
           <CreateGenericProfile />
           {/* </div> */}
         </div>
+
         <div className={styles.right}>
           <Venue />
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

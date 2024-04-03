@@ -31,12 +31,19 @@ export type setState = {
   payload?: NewGlobalsValue[keyof NewGlobalsValue];
 };
 
+export type CycleScene = {
+  function: MidiCallback.cycleScene;
+  scenes: string[];
+  cycleName: string;
+};
+
 export type UserEventMap = {
   [MidiCallback.setBeatLength]: SetBeatLength;
   [MidiCallback.setColour]: SetColour;
   [MidiCallback.setScene]: SetScene;
   [MidiCallback.removeScene]: removeScene;
   [MidiCallback.setState]: setState;
+  [MidiCallback.cycleScene]: CycleScene;
 };
 
 type ValueOf<T> = T[keyof T];

@@ -110,9 +110,44 @@ export const useGlobals = create(
             handlers.setState(e);
           } else if (e.function === MidiCallback.removeScene) {
             handlers.removeScene(e);
+          } else if (e.function === MidiCallback.cycleScene) {
+            handlers.cycleScene(e);
           }
         },
         handlers: {
+          cycleScene: (e) =>
+            set((state) => {
+              const sceneAnimationIndex = `_${e.cycleName}_sceneAnimationIndexKey`;
+              const sceneAnimation = `_${e.cycleName}_sceneAnimationKey`;
+              const sAIVar = state.values[sceneAnimationIndex];
+              const sceneIndex =
+                sAIVar !== undefined && sAIVar.type === GlobalTypes.byte
+                  ? sAIVar.value
+                  : -1;
+              const scenes = e.scenes;
+              const nextSceneIndex = scenes[sceneIndex + 1]
+                ? sceneIndex + 1
+                : 0;
+
+              return {
+                ...state,
+                values: {
+                  ...state.values,
+                  [sceneAnimationIndex]: {
+                    value: nextSceneIndex,
+                    type: GlobalTypes.byte,
+                  },
+                  [sceneAnimation]: {
+                    type: GlobalTypes.scene,
+                    value: scenes,
+                  },
+                  ActiveScene: {
+                    type: GlobalTypes.scene,
+                    value: [scenes[nextSceneIndex]],
+                  },
+                },
+              };
+            }),
           setBeatLength: (e) => {
             console.log(e);
             lastClickTimeout && clearTimeout(lastClickTimeout);

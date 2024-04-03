@@ -1,5 +1,9 @@
 import { useContext, useState } from "react";
-import { GenericProfile, ProfileContext, ProfileState } from "../../context/profiles";
+import {
+  GenericProfile,
+  ProfileContext,
+  ProfileState,
+} from "../../context/profiles";
 import { ChannelSimpleFunction } from "../../context/fixtures";
 import styles from "./createGenericProfile.module.scss";
 import { useGlobals } from "../../context/globals";
@@ -38,20 +42,43 @@ export const CreateGenericProfile = () => {
 
   return (
     <div className={styles.root}>
-      <div className={styles.topBar}>
-        <input
-          className={styles.input}
-          placeholder="Profile name"
-          value={profile.name}
-          onChange={(e) => {
-            setProfile((state) => ({ ...state, name: e.target.value }));
-          }}
-        />
-        <div className={styles.spacer}></div>
+      <div className={styles.header}>
+        <div className={styles.title}>Profile</div>
+        <div className={styles.create}>
+          <div className={styles.label}>Create Profile:</div>
 
-        <button className={styles.save} onClick={saveProfileClick}>
-          Save
-        </button>
+          <input
+            className={styles.input}
+            value={profile.name}
+            onChange={(e) => {
+              setProfile((state) => ({ ...state, name: e.target.value }));
+            }}
+          />
+          {/* <input
+            className={styles.input}
+            size={9}
+            style={{
+              borderStyle: "solid",
+              // borderColor: `#${value}`,
+            }}
+            // value={globalValue || value || ""}
+            onChange={() => {
+              // setProfile((state) => ({
+              //   ...state,
+              //   value: {
+              //     ...state.value,
+              //     [functionName]: e.target.value,
+              //   },
+              // }));
+            }}
+            type="text"
+            // placeholder={functionName}
+          /> */}
+
+          <button className={styles.button} onClick={saveProfileClick}>
+            Save
+          </button>
+        </div>
       </div>
       <div>
         {/* <ProfileState
@@ -77,32 +104,6 @@ export const CreateGenericProfile = () => {
         /> */}
         <table>
           <tbody>
-            <tr>
-              <td>Target colour</td>
-              <td>
-                <input
-                  className={styles.input}
-                  size={9}
-                  style={{
-                    borderStyle: "solid",
-                    // borderColor: `#${value}`,
-                  }}
-                  // value={globalValue || value || ""}
-                  onChange={() => {
-                    // setProfile((state) => ({
-                    //   ...state,
-                    //   value: {
-                    //     ...state.value,
-                    //     [functionName]: e.target.value,
-                    //   },
-                    // }));
-                  }}
-                  type="text"
-                  // placeholder={functionName}
-                />
-              </td>
-            </tr>
-
             {Object.keys(profile.state).map((_funcName) => {
               const functionName = _funcName as ChannelSimpleFunction;
 

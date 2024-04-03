@@ -1,28 +1,20 @@
 import { useState } from "react";
-import {
-  GlobalTypes,
-  NewGlobalsValue,
-  useGlobals,
-} from "../../../context/globals";
-import { MidiCallback, useMidiTriggers } from "../../../context/midi";
+import { GlobalTypes, useGlobals } from "../../../context/globals";
+import { useMidiTriggers } from "../../../context/midi";
 import { AttachMidiButton } from "../../attach-midi-button";
 import styles from "../controller.module.scss";
+import { setState as setStateEvent } from "../../../context/events";
 
 export const SetState = ({
   buttonId,
   editMode,
   payload,
-  setValue,
-  globalVar,
+  onEventChange: _onEventChange,
 }: {
   buttonId: string;
-  globalVar?: string;
   editMode: boolean;
-  payload?: NewGlobalsValue[keyof NewGlobalsValue];
-  setValue: (
-    globalVar?: string,
-    payload?: NewGlobalsValue[keyof NewGlobalsValue]
-  ) => void;
+  payload?: setStateEvent;
+  onEventChange: (s: setStateEvent) => void;
 }) => {
   const globalState = useGlobals((state) => state.values);
   const setGlobalState = useGlobals((state) => state.handlers.setState);
@@ -32,20 +24,26 @@ export const SetState = ({
   const [key, setKey] = useState("");
   const foundVar = key && globalState[key] ? globalState[key] : false;
 
+  const midiTrigger = buttonId ? midiTriggers[`${buttonId}_press`] : undefined;
+  const onEventChange = (a: setStateEvent) => {
+    if (midiTrigger) {
+      setMidiTrigger(`${buttonId}_press`, {
+        ...midiTrigger,
+        payload: a,
+      });
+    }
+    _onEventChange(a);
+  };
+
   return (
     <div>
       <button
         className={styles.mainButton}
         onClick={() => {
-          globalVar &&
-            setGlobalState({
-              globalVar,
-              payload,
-              function: MidiCallback.setState,
-            });
+          payload?.globalVar && setGlobalState(payload);
         }}
       >
-        {globalVar ?? "empty"}:{payload?.value ?? "empty"}
+        {payload?.globalVar ?? "empty"}:{payload?.payload?.value ?? "empty"}
       </button>
       {editMode && (
         <div>
@@ -64,26 +62,35 @@ export const SetState = ({
           <div>
             value:
             <input
-              value={payload?.value || ""}
+              value={payload?.payload?.value || ""}
               onChange={(e) => {
-                if (!foundVar) return;
+                if (!foundVar || !payload) return;
                 if (
                   foundVar.type === GlobalTypes.byte ||
                   foundVar.type === GlobalTypes.time
                 ) {
-                  setValue(globalVar, {
-                    value: parseInt(e.target.value),
-                    type: foundVar.type,
+                  onEventChange({
+                    ...payload,
+                    payload: {
+                      value: parseInt(e.target.value),
+                      type: foundVar.type,
+                    },
                   });
                 } else if (foundVar.type === GlobalTypes.colour) {
-                  setValue(globalVar, {
-                    value: e.target.value,
-                    type: foundVar.type,
+                  onEventChange({
+                    ...payload,
+                    payload: {
+                      value: e.target.value,
+                      type: foundVar.type,
+                    },
                   });
                 } else if (foundVar.type === GlobalTypes.scene) {
-                  setValue(globalVar, {
-                    value: [e.target.value],
-                    type: foundVar.type,
+                  onEventChange({
+                    ...payload,
+                    payload: {
+                      value: [e.target.value],
+                      type: foundVar.type,
+                    },
                   });
                 }
               }}
@@ -93,14 +100,10 @@ export const SetState = ({
           <AttachMidiButton
             value={midiTriggers[`${buttonId}_press`]}
             onMidiDetected={(midiTrigger) => {
-              if (globalVar && payload)
+              if (payload)
                 setMidiTrigger(`${buttonId}_press`, {
                   ...midiTrigger,
-                  payload: {
-                    function: MidiCallback.setState,
-                    globalVar,
-                    payload,
-                  },
+                  payload,
                 });
             }}
             label="Attach Down"

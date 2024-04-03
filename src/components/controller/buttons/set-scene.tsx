@@ -8,33 +8,42 @@ import {
   useMidiTriggers,
 } from "../../../context/midi";
 import { AttachMidiButton } from "../../attach-midi-button";
+import { SetScene as SetSceneEvent } from "../../../context/events";
 
 export const SetScene = ({
   buttonId,
   editMode,
-  sceneId,
-  setSceneId,
+  payload,
+  onEventChange: _onEventChange,
 }: {
   buttonId: string;
-  sceneId?: string;
   editMode: boolean;
-  setSceneId: (s: string) => void;
+  payload?: SetSceneEvent;
+  onEventChange: (s: SetSceneEvent) => void;
 }) => {
   const setScene = useGlobals((state) => state.handlers.setScene);
   const setMidiTrigger = useMidiTriggers((state) => state.setMidiTrigger);
   const midiTriggers = useMidiTriggers((state) => state.midiTriggers);
   const { scenes } = useContext(SceneContext);
-  const sceneName = scenes.find((s) => s.id === sceneId);
+  const sceneName = scenes.find((s) => s.id === payload?.sceneId);
+
+  const midiTrigger = buttonId ? midiTriggers[`${buttonId}_press`] : undefined;
+  const onEventChange = (a: SetSceneEvent) => {
+    if (midiTrigger) {
+      setMidiTrigger(`${buttonId}_press`, {
+        ...midiTrigger,
+        payload: a,
+      });
+    }
+    _onEventChange(a);
+  };
 
   return (
     <div>
       <button
         className={styles.mainButton}
         onClick={() => {
-          setScene({
-            function: MidiCallback.setScene,
-            sceneId: sceneId,
-          });
+          if (payload) setScene(payload);
           // sceneId && setGlobalValue("ActiveScene", [sceneId]);
         }}
       >
@@ -43,10 +52,13 @@ export const SetScene = ({
       {editMode && (
         <div>
           <select
-            value={sceneId}
+            value={payload?.sceneId}
             onChange={(e) => {
               console.log(e.target.value);
-              setSceneId(e.target.value);
+              onEventChange({
+                sceneId: e.target.value,
+                function: MidiCallback.setScene,
+              });
             }}
           >
             <option value="">Select Scene</option>
@@ -62,13 +74,10 @@ export const SetScene = ({
             value={midiTriggers[`${buttonId}_press`]}
             onMidiDetected={(midiTrigger) => {
               console.log(midiTrigger);
-              if (!sceneId) return;
+              if (!payload) return;
               setMidiTrigger(`${buttonId}_press`, {
                 ...midiTrigger,
-                payload: {
-                  function: MidiCallback.setScene,
-                  sceneId,
-                },
+                payload,
               });
             }}
             label="Attach Down"
@@ -76,13 +85,13 @@ export const SetScene = ({
           <AttachMidiButton
             value={midiTriggers[`${buttonId}_release`]}
             onMidiDetected={(midiTrigger) => {
-              if (!sceneId) return;
+              if (!payload) return;
               setMidiTrigger(`${buttonId}_release`, {
                 ...midiTrigger,
                 type: MidiEventTypes.onRelease,
                 payload: {
+                  ...payload,
                   function: MidiCallback.removeScene,
-                  sceneId,
                 },
               });
             }}
