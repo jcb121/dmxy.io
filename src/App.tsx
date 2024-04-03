@@ -12,7 +12,7 @@ import { GenericLight } from "./components/generic-light";
 import { CreateGenericProfile } from "./components/createGenericProfile";
 import { Globals } from "./components/globals";
 import { connect, startDMX } from "./dmx";
-import { useGlobals } from "./context/globals";
+import { GlobalTypes, useGlobals } from "./context/globals";
 import { Controller } from "./components/controller/controller";
 
 function App() {
@@ -139,7 +139,10 @@ function App() {
                   disabled={s.id === activeSceneId}
                   key={s.id}
                   onClick={() => {
-                    setGlobalValue("ActiveScene", [s.id]);
+                    setGlobalValue("ActiveScene", {
+                      type: GlobalTypes.scene,
+                      value: [s.id],
+                    });
                   }}
                 >
                   {s.name}

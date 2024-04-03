@@ -1,8 +1,6 @@
-import {
-  DMXValues,
-  Fixture,
-} from "../../context/fixtures";
-import { getCSSBrightness, getRGB } from "../../utils";
+import { useEffect, useRef } from "react";
+import { DMXValues, Fixture } from "../../context/fixtures";
+import { setCSSVarsFromDmx } from "../../utils";
 import styles from "./light.module.scss";
 
 export const Simple = ({
@@ -12,23 +10,25 @@ export const Simple = ({
   fixture: Fixture;
   dmxValues?: DMXValues;
 }) => {
-  const Brightness = getCSSBrightness(fixture.channelFunctions, dmxValues);
+  // const Brightness = getCSSBrightness(fixture.channelFunctions, dmxValues);
 
-  const [Red, Green, Blue] = fixture.colour
-    ? getRGB(fixture.colour)
-    : [255, 255, 255];
+  // const [Red, Green, Blue] = fixture.colour
+  //   ? getRGB(fixture.colour)
+  //   : [];
 
   // const cssBrightness = (!Red && !Green && !Blue ? 0 : Brightness) / 255;
 
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!ref.current || !dmxValues) return;
+
+    setCSSVarsFromDmx(ref.current, fixture, dmxValues);
+  }, [dmxValues, fixture]);
+
   return (
     <div className={`${styles[fixture.fixtureShape]}`}>
-      <div
-        className={styles.inner}
-        style={{
-          borderColor: `rgba(${Red},${Green},${Blue}, ${Brightness})`,
-          background: `rgba(${Red},${Green},${Blue}, ${Brightness})`,
-        }}
-      ></div>
+      <div className={styles.inner}></div>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { MidiCallback } from "./midi";
-import { GlobalTypes } from "./globals";
+import { NewGlobalsValue } from "./globals";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 export type UserEvent = ValueOf<UserEventMap>;
@@ -27,9 +27,8 @@ export type removeScene = {
 
 export type setState = {
   function: MidiCallback.setState;
-  value?: string | number;
   globalVar?: string;
-  dataType?: GlobalTypes;
+  payload?: NewGlobalsValue[keyof NewGlobalsValue];
 };
 
 export type UserEventMap = {

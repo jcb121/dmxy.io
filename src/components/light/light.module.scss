@@ -19,6 +19,24 @@
 
 .Circle {
   border-radius: 100%;
+  .inner {
+    &::after {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      content: "";
+      border-radius: 20px;
+
+      background-color: rgba(
+        var(--White),
+        var(--White),
+        var(--White),
+        var(--Brightness)
+      );
+    }
+  }
 }
 
 .Bar {
@@ -26,25 +44,11 @@
 }
 
 .root {
+
 }
 
 .inner {
-  &::after {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    right: 10px;
-    bottom: 10px;
-    content: "";
-    border-radius: 20px;
 
-    background-color: rgba(
-      var(--White),
-      var(--White),
-      var(--White),
-      var(--Brightness)
-    );
-  }
 
   position: relative;
 
@@ -67,6 +71,13 @@
     var(--Blue),
     var(--Brightness)
   );
+}
+
+.Strobe {
+  --Brightness: 255;
+  .inner {
+    opacity: 0;
+  }
 }
 
 @keyframes strobe {

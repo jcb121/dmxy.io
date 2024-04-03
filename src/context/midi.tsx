@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { UserEventMap } from "./events";
-import { useGlobals } from "./globals";
+import { GlobalTypes, useGlobals } from "./globals";
 import { animateColour } from "../utils";
 
 // function listInputsAndOutputs(midiAccess: MIDIAccess) {
@@ -107,8 +107,10 @@ export const MidiProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       if (foundKey) {
-
-        setGlobalValue(foundKey, value * 2);
+        setGlobalValue(foundKey, {
+          value: value * 2,
+          type: GlobalTypes.byte,
+        });
 
         const trigger = midiTriggers[foundKey];
 
@@ -132,7 +134,13 @@ export const MidiProvider = ({ children }: { children: React.ReactNode }) => {
           type == MidiEventTypes.onTurn &&
           trigger.payload.function === MidiCallback.setState
         ) {
-          applyAction({ ...trigger.payload, value: value * 2 });
+          applyAction({
+            ...trigger.payload,
+            payload: {
+              value: value * 2,
+              type: GlobalTypes.byte,
+            },
+          });
         } else if (trigger.payload.function === MidiCallback.setBeatLength) {
           applyAction({ ...trigger.payload, timeStamp: e.timeStamp });
         } else {

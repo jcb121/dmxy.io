@@ -121,8 +121,11 @@ export const ConnectedLight = ({
 
         const state = Object.keys(profiles[frameIndex].globals).reduce(
           (state, key) => {
+            const globalName =
+              profiles[frameIndex].globals[key as ChannelSimpleFunction];
+
             return profiles[frameIndex].globals[key as ChannelSimpleFunction]
-              ? { ...state, [key]: globals[key]?.value }
+              ? { ...state, [key]: globals[globalName]?.value }
               : state;
           },
           {
@@ -137,26 +140,18 @@ export const ConnectedLight = ({
           } as ProfileState
         );
 
-        if (state.Red === state.Blue && state.Red === state.Green) {
-          // state.White
-        }
-
         const dmxVals = mapProfileStateToDMX(fixture.channelFunctions, state);
-        // console.log(fixture.model, dmxVals);
 
-        // console.log(dmxVals)
+        if (ref.current) setCSSVarsFromDmx(ref.current, fixture, dmxVals);
 
-        if (ref.current)
-          setCSSVarsFromDmx(ref.current, fixture.channelFunctions, dmxVals);
-
-        if (typeof channel === "undefined") return;
-
-        Object.keys(dmxVals).forEach((key) => {
-          DMXState[parseInt(key) + channel] = dmxVals[parseInt(key)];
-        });
+        if (typeof channel !== "undefined") {
+          Object.keys(dmxVals).forEach((key) => {
+            DMXState[parseInt(key) + channel] = dmxVals[parseInt(key)];
+          });
+        }
       }
     },
-    [hold, profiles, fixture.channelFunctions, globals, channel, fade, fadeGap]
+    [hold, profiles, fixture, globals, channel, fade, fadeGap]
   );
 
   useEffect(() => {

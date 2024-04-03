@@ -1,8 +1,5 @@
 import { GlobalTypes, useGlobals } from "../../../context/globals";
-import {
-  MidiCallback,
-  useMidiTriggers,
-} from "../../../context/midi";
+import { MidiCallback, useMidiTriggers } from "../../../context/midi";
 import { AttachMidiButton } from "../../attach-midi-button";
 import styles from "../controller.module.scss";
 
@@ -25,9 +22,13 @@ export const Empty = ({
         <input
           type="range"
           value={globals[buttonId]?.value || 0}
-          onChange={(e) => setGlobalValue(buttonId, e.target.value)}
+          onChange={(e) =>
+            setGlobalValue(buttonId, {
+              type: GlobalTypes.byte,
+              value: parseInt(e.target.value),
+            })
+          }
           max={255}
-          // onChange={(e) => {}}
         />
       </div>
       {editMode && (
@@ -39,7 +40,10 @@ export const Empty = ({
               payload: {
                 function: MidiCallback.setState,
                 globalVar: buttonId,
-                dataType: GlobalTypes.byte,
+                payload: {
+                  value: 0,
+                  type: GlobalTypes.byte,
+                },
               },
             });
           }}

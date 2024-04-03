@@ -132,7 +132,7 @@ export const RGBA = ({
   useEffect(() => {
     if (!ref.current || !dmxValues) return;
 
-    setCSSVarsFromDmx(ref.current, fixture.channelFunctions, dmxValues);
+    setCSSVarsFromDmx(ref.current, fixture, dmxValues);
   }, [dmxValues, fixture]);
 
   return (

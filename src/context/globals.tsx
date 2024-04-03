@@ -11,27 +11,35 @@ export enum GlobalTypes {
   scene = "scene",
 }
 
-// export enum Global
+export type NewGlobalsValue = {
+  [GlobalTypes.byte]: {
+    type: GlobalTypes.byte;
+    value: number;
+  };
+  [GlobalTypes.colour]: {
+    type: GlobalTypes.colour;
+    value: string;
+  };
+  [GlobalTypes.scene]: {
+    type: GlobalTypes.scene;
+    value: string[];
+  };
+  [GlobalTypes.time]: {
+    type: GlobalTypes.time;
+    value: number;
+  };
+};
+type SetGlobalValue<T = NewGlobalsValue> = (
+  name: string,
+  // a: keyof T,
+  payload: T[keyof T]
+) => void;
 
-export type GlobalsValue =
-  | {
-      type: GlobalTypes.byte;
-      value: number;
-    }
-  | {
-      type: GlobalTypes.colour;
-      value: string;
-    }
-  | {
-      type: GlobalTypes.scene;
-      value: string[];
-    }
-  | {
-      type: GlobalTypes.time;
-      value: number;
-    };
+type NewGlobalValues<T = NewGlobalsValue> = {
+  [global: string]: T[keyof T];
+};
 
-export const GLOBAL_VARS: Record<string, GlobalsValue> = {
+export const GLOBAL_VARS: NewGlobalValues = {
   Blue: {
     type: GlobalTypes.byte,
     value: 255,
@@ -85,8 +93,8 @@ export const useGlobals = create(
   persist<{
     apply: (a: UserEvent) => void;
     handlers: MapToFunction<UserEventMap>;
-    values: Record<string, GlobalsValue | undefined>;
-    setGlobalValue: (key: string, value: number | string | string[]) => void;
+    values: NewGlobalValues;
+    setGlobalValue: SetGlobalValue;
   }>(
     (set, get) => {
       return {
@@ -184,22 +192,16 @@ export const useGlobals = create(
             });
           },
           setState: (e) => {
-            console.log('setting?', e)
+            const { globalVar, payload } = e;
+            if (!globalVar || !payload) return;
 
-            set((state) =>
-              e.globalVar && e.dataType
-                ? {
-                    ...state,
-                    values: {
-                      ...state.values,
-                      [e.globalVar]: {
-                        type: e.dataType,
-                        value: e.value,
-                      } as GlobalsValue,
-                    },
-                  }
-                : state
-            );
+            set((state) => ({
+              ...state,
+              values: {
+                ...state.values,
+                [globalVar]: payload,
+              },
+            }));
           },
         },
         // functions: {
@@ -240,17 +242,14 @@ export const useGlobals = create(
         //   },
         // },
         values: GLOBAL_VARS,
-        setGlobalValue: (key, value) => {
+        setGlobalValue: (key, payload) => {
           // if(GLOBAL_VARS[key])
           // GLOBAL_VARS[key].value = value;
           set((state) => ({
             ...state,
             values: {
               ...state.values,
-              [key]: {
-                value: value,
-                type: state.values?.[key]?.type,
-              } as GlobalsValue,
+              [key]: payload,
             },
           }));
         },

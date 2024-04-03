@@ -130,15 +130,15 @@ export const Controller = () => {
                         <SetStateButton
                           buttonId={`_button_${id}`}
                           editMode={editMode}
-                          value={buttonFunc.value}
+                          payload={buttonFunc.payload}
                           globalVar={buttonFunc.globalVar}
-                          setValue={(value, globalVar, dataType) => {
-                            setButtonFuncs(id, {
-                              dataType: dataType || undefined,
-                              value: value || undefined,
-                              globalVar: globalVar || undefined,
-                              function: MidiCallback.setState,
-                            });
+                          setValue={(globalVar, payload) => {
+                            if (payload)
+                              setButtonFuncs(id, {
+                                payload,
+                                globalVar: globalVar || undefined,
+                                function: MidiCallback.setState,
+                              });
                           }}
                         />
                       )}
@@ -209,10 +209,9 @@ export const Controller = () => {
                         buttonId={`_button_${id}`}
                         // value={buttonFunc.value}
                         globalVar={buttonFunc.globalVar}
-                        setValue={(value, globalVar, dataType) => {
+                        setValue={(globalVar, payload) => {
                           setButtonFuncs(id, {
-                            dataType: dataType || undefined,
-                            value: value || undefined,
+                            payload,
                             globalVar: globalVar || undefined,
                             function: MidiCallback.setState,
                           });

@@ -6,4 +6,15 @@
   background-color: rgb(133, 133, 133);
   border-radius: 5px;
   padding: 2px;
+
+  * {
+    text-wrap: nowrap;
+  }
+}
+
+.button {
+  margin: 1px;
+  padding: 2px;
+  border-radius: 1px;
+  border: none;
 }

@@ -1,0 +1,60 @@
+.items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  // padding: 2px;
+}
+
+.create {
+  align-items: stretch;
+  // justify-content: center;
+  display: flex;
+  gap: 5px;
+}
+
+.header {
+  display: flex;
+  // align-items: center;
+  // justify-content: center;
+  align-items: center;
+  background-color: var(--color-1);
+
+  .label {
+    font-size: 16px;
+    padding: 4px;
+    font-weight: bold;
+  }
+
+  .select {
+    font-size: 16px;
+    padding: 4px;
+  }
+
+  .input {
+    font-size: 16px;
+    padding: 4px;
+  }
+  .button {
+    font-size: 16px;
+    padding: 4px 8px;
+    border-width: 1;
+  }
+}
+
+.root {
+  padding-bottom: 8px;
+}
+
+.title {
+  font-weight: bolder;
+  text-transform: uppercase;
+  font-size: larger;
+  padding: 8px;
+  margin-right: 8px;
+  background-color: var(--color-5);
+}

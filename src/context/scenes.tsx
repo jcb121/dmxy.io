@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { getDatabase } from "../db";
 import { Venue, VenueContext } from "./venues";
-import { useGlobals } from "./globals";
+import { GlobalTypes, useGlobals } from "./globals";
 
 export type Scene = {
   // group can have multi profiles
@@ -54,7 +54,7 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
 
     const newScene = {
       ...sampleScene,
-      fixtureGroups: [],//venue.venueFixtures.map((f) => [f.id]),
+      fixtureGroups: [], //venue.venueFixtures.map((f) => [f.id]),
       profiles: venue.venueFixtures.reduce((profiles, _, index) => {
         profiles[index] = [];
         return profiles;
@@ -62,7 +62,10 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     setScenes((state) => [...state, newScene]);
-    setGlobalValue("ActiveScene", [newScene.id]);
+    setGlobalValue("ActiveScene", {
+      type: GlobalTypes.scene,
+      value: [newScene.id],
+    });
     saveScene(newScene);
   }, [venue, setGlobalValue]);
 
@@ -78,7 +81,10 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (!activeScene) {
           console.log("Setting active scene to", data[0].id);
-          setGlobalValue("ActiveScene", [data[0].id]);
+          setGlobalValue("ActiveScene", {
+            type: GlobalTypes.scene,
+            value: [data[0].id],
+          });
         }
       } else {
         createScene();

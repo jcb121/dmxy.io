@@ -1,7 +1,9 @@
 import {
   ChannelFunctions,
   ChannelSimpleFunction,
+  ColourMode,
   DMXValues,
+  Fixture,
 } from "../context/fixtures";
 import { ProfileState } from "../context/profiles";
 
@@ -336,7 +338,7 @@ export const mapHexToDMX = (
 
 export const setCSSVarsFromDmx = (
   htmlElement: HTMLDivElement,
-  channelFunctions: ChannelFunctions,
+  { channelFunctions, colourMode, colour }: Fixture,
   dmxValues: DMXValues
 ) => {
   const {
@@ -353,11 +355,21 @@ export const setCSSVarsFromDmx = (
 
   const Brightness = getCSSBrightness(channelFunctions, dmxValues);
 
-  htmlElement.style.setProperty("--Red", `${Red || 0} `);
-  htmlElement.style.setProperty("--Blue", `${Blue || 0}`);
-  htmlElement.style.setProperty("--Green", `${Green || 0}`);
-  htmlElement.style.setProperty("--White", `${White || 0}`);
+  if (colourMode === ColourMode.rgbw || colourMode === ColourMode.rgb) {
+    htmlElement.style.setProperty("--Red", `${Red || 0} `);
+    htmlElement.style.setProperty("--Blue", `${Blue || 0}`);
+    htmlElement.style.setProperty("--Green", `${Green || 0}`);
+    htmlElement.style.setProperty("--White", `${White || 0}`);
+  }
 
-  htmlElement.style.setProperty("--Brightness", `${Brightness || 0}`);
+  if (colourMode === ColourMode.single) {
+    const [Red, Green, Blue] = colour ? getRGB(colour) : [];
+    htmlElement.style.setProperty("--Red", `${Red || 0} `);
+    htmlElement.style.setProperty("--Blue", `${Blue || 0}`);
+    htmlElement.style.setProperty("--Green", `${Green || 0}`);
+  }
+
+  // a strobe does not have brightness...
+  htmlElement.style.setProperty("--Brightness", `${Brightness}`);
   htmlElement.style.setProperty("--StrobeTime", `${cssStobeTime}ms`);
 };

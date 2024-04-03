@@ -1,8 +1,6 @@
-import {
-  DMXValues,
-  Fixture,
-} from "../../context/fixtures";
-import { getCSSStrobeDuration, getRGB } from "../../utils";
+import { useEffect, useRef } from "react";
+import { DMXValues, Fixture } from "../../context/fixtures";
+import { setCSSVarsFromDmx } from "../../utils";
 import styles from "./light.module.scss";
 
 export const Strobe = ({
@@ -12,25 +10,17 @@ export const Strobe = ({
   fixture: Fixture;
   dmxValues?: DMXValues;
 }) => {
-  // console.log(dmxValues);
-  const Strobe = getCSSStrobeDuration(fixture.channelFunctions, dmxValues);
+  const ref = useRef<HTMLDivElement>(null);
 
-  const [Red, Green, Blue] = fixture.colour
-    ? getRGB(fixture.colour)
-    : [255, 255, 255];
+  useEffect(() => {
+    if (!ref.current || !dmxValues) return;
 
-  // console.log(Strobe);
+    setCSSVarsFromDmx(ref.current, fixture, dmxValues);
+  }, [dmxValues, fixture]);
 
   return (
-    <div className={`${styles[fixture.fixtureShape]}`}>
-      <div
-        className={styles.inner}
-        style={{
-          animationDuration: `${Strobe}ms` || undefined,
-          borderColor: `rgba(${Red},${Green},${Blue}, ${Strobe === 0 ? 0 : 1})`,
-          background: `rgba(${Red},${Green},${Blue}, ${Strobe === 0 ? 0 : 1})`,
-        }}
-      ></div>
+    <div ref={ref} className={`${styles.Strobe} ${styles[fixture.fixtureShape]}`}>
+      <div className={styles.inner}></div>
     </div>
   );
 };
