@@ -99,13 +99,17 @@ export const StageFixture = ({
             (scene.profiles[groupId] as string[] | undefined)) ||
           [];
 
-        if (groupId === undefined) return;
+        const fixtureGroups = scene.fixtureGroups;
+        if (groupId === undefined) {
+          fixtureGroups[0] = [...(fixtureGroups[0] || []), venueFixture.id];
+        }
 
         updateScene({
           ...scene,
+          fixtureGroups: [...fixtureGroups],
           profiles: {
             ...scene.profiles,
-            [groupId]: [...profileIds, profile.id],
+            [groupId || 0]: [...profileIds, profile.id],
           },
         });
       }}

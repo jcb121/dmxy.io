@@ -22,9 +22,9 @@ function App() {
 
   const { fixtures, saveFixture } = useContext(FixtureContext);
   const { venues, saveVenue, updateVenue } = useContext(VenueContext);
-  const { scenes, updateScene, saveScene, createScene } =
+  const { scenes, updateScene, saveScene, createScene, reloadScenes } =
     useContext(SceneContext);
-  const { profiles } = useContext(ProfileContext);
+  const { profiles, reloadProfiles } = useContext(ProfileContext);
   const [showFixture, setShowFixture] = useState(false);
   const [showProfiles, setShowProfiles] = useState(true);
   const activeScenes = useGlobals(
@@ -113,7 +113,9 @@ function App() {
         {showProfiles && (
           <div className={styles.left}>
             <div className={styles.genericProfiles}>
-              <div className={styles.leftTitle}>Profiles</div>
+              <button onClick={reloadProfiles}>
+                <div className={styles.leftTitle}>Profiles ⟳</div>
+              </button>
 
               {profiles.map((profile) => {
                 return (
@@ -148,7 +150,9 @@ function App() {
               Create new scene
             </button>
 
-            <div className={styles.leftTitle}>Select Scene:</div>
+            <button onClick={reloadScenes}>
+              <div className={styles.leftTitle}>Secenes ⟳</div>
+            </button>
 
             {scenes &&
               scenes.map((s) => (

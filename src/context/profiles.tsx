@@ -30,23 +30,19 @@ export const ProfileContext = React.createContext<{
   profiles: GenericProfile[];
   updateProfile: (s: GenericProfile) => void;
   saveProfile: (s: GenericProfile) => void;
+  reloadProfiles: () => void;
 }>({
   profiles: [],
   updateProfile: () => {},
   saveProfile: () => {},
+  reloadProfiles: () => {},
 });
 
 export const ProfileProvier = ({ children }: { children: React.ReactNode }) => {
   const [profiles, setProfiles] = useState<GenericProfile[]>([]);
 
   useEffect(() => {
-    (async () => {
-      const database = await getDatabase();
-      const data = await database.getAll("genericProfiles");
-      console.log("GOT Profiles", data);
-
-      if (data.length > 0) setProfiles(data);
-    })();
+    reloadProfiles();
   }, []);
 
   const updateProfile = (profile: GenericProfile) => {
@@ -70,9 +66,18 @@ export const ProfileProvier = ({ children }: { children: React.ReactNode }) => {
     setProfiles((state) => [...state, profile]);
   };
 
+  const reloadProfiles = async () => {
+    const database = await getDatabase();
+    const data = await database.getAll("genericProfiles");
+    console.log("GOT Profiles", data);
+
+    if (data.length > 0) setProfiles(data);
+  }
+
   return (
     <ProfileContext.Provider
       value={{
+        reloadProfiles,
         saveProfile,
         profiles,
         updateProfile,

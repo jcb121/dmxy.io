@@ -40,19 +40,19 @@ type NewGlobalValues<T = NewGlobalsValue> = {
 };
 
 export const GLOBAL_VARS: NewGlobalValues = {
-  Blue: {
+  globalBlue: {
     type: GlobalTypes.byte,
     value: 255,
   },
-  Red: {
+  globalRed: {
     type: GlobalTypes.byte,
     value: 255,
   },
-  Green: {
+  globalGreen: {
     type: GlobalTypes.byte,
     value: 255,
   },
-  White: {
+  globalWhite: {
     type: GlobalTypes.byte,
     value: 255,
   },
@@ -176,15 +176,15 @@ export const useGlobals = create(
               ...state,
               values: {
                 ...state.values,
-                Red: {
+                globalRed: {
                   type: GlobalTypes.byte,
                   value: Red,
                 },
-                Green: {
+                globalGreen: {
                   type: GlobalTypes.byte,
                   value: Green,
                 },
-                Blue: {
+                globalBlue: {
                   value: Blue,
                   type: GlobalTypes.byte,
                 },

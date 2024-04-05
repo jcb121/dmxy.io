@@ -25,11 +25,13 @@ const SAMPLE_SCENE = () => ({
 export const SceneContext = React.createContext<{
   // activeScene?: string;
   // setActiveScene: (a: string) => void;
+  reloadScenes: () => void,
   scenes: Scene[];
   updateScene: (s: Scene) => void;
   saveScene: (s: Scene) => void;
   createScene: () => void;
 }>({
+  reloadScenes: () => {},
   scenes: [],
   // setActiveScene: () => {},
   updateScene: () => {},
@@ -142,9 +144,20 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
     database.put("scenes", scene);
   };
 
+  const reloadScenes = async() => {
+    const database = await getDatabase();
+    const data = await database.getAll("scenes");
+    console.log("GOT SCENES", data);
+
+    if (data.length > 0) {
+      setScenes(data);
+    }
+  }
+
   return (
     <SceneContext.Provider
       value={{
+        reloadScenes,
         createScene,
         saveScene,
         scenes,
