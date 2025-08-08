@@ -1,61 +1,58 @@
-import { useContext } from "react";
-import { SceneContext } from "../../../context/scenes";
-import styles from "../controller.module.scss";
+import { useScenes } from "../../../context/scenes";
 import { useGlobals } from "../../../context/globals";
-import {
-  MidiCallback,
-  MidiEventTypes,
-  useMidiTriggers,
-} from "../../../context/midi";
-import { AttachMidiButton } from "../../attach-midi-button";
+import { MidiCallback, MidiEventTypes } from "../../../context/midi";
 import { SetScene as SetSceneEvent } from "../../../context/events";
+import { BaseButton } from "./base-button";
+import styles from "../controller.module.scss";
 
 export const SetScene = ({
-  buttonId,
+  active,
   editMode,
   payload,
-  onEventChange: _onEventChange,
+  onEventChange,
 }: {
-  buttonId: string;
+  active?: boolean;
   editMode: boolean;
   payload?: SetSceneEvent;
   onEventChange: (s: SetSceneEvent) => void;
 }) => {
   const setScene = useGlobals((state) => state.handlers.setScene);
-  const setMidiTrigger = useMidiTriggers((state) => state.setMidiTrigger);
-  const midiTriggers = useMidiTriggers((state) => state.midiTriggers);
-  const { scenes } = useContext(SceneContext);
+  const scenes = useScenes((s) => s.scenes);
   const sceneName = scenes.find((s) => s.id === payload?.sceneId);
 
-  const midiTrigger = buttonId ? midiTriggers[`${buttonId}_press`] : undefined;
-  const onEventChange = (a: SetSceneEvent) => {
-    if (midiTrigger) {
-      setMidiTrigger(`${buttonId}_press`, {
-        ...midiTrigger,
-        payload: a,
-      });
-    }
-    _onEventChange(a);
-  };
-
   return (
-    <div>
-      <button
-        className={styles.mainButton}
-        onClick={() => {
-          if (payload) setScene(payload);
-          // sceneId && setGlobalValue("ActiveScene", [sceneId]);
+    <>
+      <BaseButton
+        active={active}
+        onMouseDown={() => {
+          if (payload) setScene(payload, MidiEventTypes.onPress);
         }}
       >
-        {`Scene: ${sceneName?.name || "Empty"}`}
-      </button>
+        <div className={styles.noWrap}>
+          {`Scene: ${sceneName?.name || "Empty"}`}
+        </div>
+      </BaseButton>
       {editMode && (
         <div>
+          <label>
+            Remove{" "}
+            <input
+              type="checkbox"
+              onChange={(e) => {
+                onEventChange({
+                  remove: e.target.checked,
+                  sceneId: payload?.sceneId,
+                  function: MidiCallback.setScene,
+                });
+              }}
+              checked={payload?.remove}
+            />
+          </label>
           <select
             value={payload?.sceneId}
             onChange={(e) => {
-              console.log(e.target.value);
               onEventChange({
+                remove: payload?.remove || false,
                 sceneId: e.target.value,
                 function: MidiCallback.setScene,
               });
@@ -69,36 +66,8 @@ export const SetScene = ({
                 </option>
               ))}
           </select>
-          <div></div>
-          <AttachMidiButton
-            value={midiTriggers[`${buttonId}_press`]}
-            onMidiDetected={(midiTrigger) => {
-              console.log(midiTrigger);
-              if (!payload) return;
-              setMidiTrigger(`${buttonId}_press`, {
-                ...midiTrigger,
-                payload,
-              });
-            }}
-            label="Attach Down"
-          />
-          <AttachMidiButton
-            value={midiTriggers[`${buttonId}_release`]}
-            onMidiDetected={(midiTrigger) => {
-              if (!payload) return;
-              setMidiTrigger(`${buttonId}_release`, {
-                ...midiTrigger,
-                type: MidiEventTypes.onRelease,
-                payload: {
-                  ...payload,
-                  function: MidiCallback.removeScene,
-                },
-              });
-            }}
-            label="Attach Release"
-          />
         </div>
       )}
-    </div>
+    </>
   );
 };

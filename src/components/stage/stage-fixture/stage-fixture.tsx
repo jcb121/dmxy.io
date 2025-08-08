@@ -1,80 +1,19 @@
-import { useContext, useMemo } from "react";
-import { Scene, SceneContext } from "../../../context/scenes";
-import { Venue, VenueContext, VenueFixture } from "../../../context/venues";
+import { Scene } from "../../../context/scenes";
+import { Venue, VenueFixture } from "../../../context/venues";
 import { Fixture } from "../../../context/fixtures";
 import styles from "./stage-fixture.module.scss";
-import { GenericProfile, ProfileContext } from "../../../context/profiles";
 import { ConnectedLight } from "../../connectedLight";
-import { useUI } from "../../../context/ui";
 
 export const StageFixture = ({
   venueFixture,
   fixture,
-  scene,
-  venue,
 }: {
   venue: Venue;
   fixture: Fixture;
   venueFixture: VenueFixture;
-  scene: Scene;
+  scene?: Scene;
 }) => {
-  const { updateScene } = useContext(SceneContext);
-  const { updateVenue } = useContext(VenueContext);
-  const { profiles: allProfiles } = useContext(ProfileContext);
-  const venueEditMode = useUI((state) => state.venueEditMode);
-
-  const groupId = useMemo<number | undefined>(() => {
-    const foundIndex = scene.fixtureGroups.findIndex((fixtureIds) =>
-      fixtureIds?.includes(venueFixture.id)
-    );
-
-    return foundIndex > -1 ? foundIndex : undefined;
-  }, [scene.fixtureGroups, venueFixture.id]);
-
-  const profileIds = (groupId !== undefined && scene.profiles[groupId]) || []; //as string[] | undefined;
-  const profiles = profileIds
-    .map((id) => allProfiles.find((p) => p.id == id))
-    .filter((a) => !!a) as GenericProfile[];
-
-  const changeGroup = (targetGroup: number) => {
-    const fixtureGroups = scene.fixtureGroups.reduce((fixtureGroups, group) => {
-      return [
-        ...fixtureGroups,
-        (group || []).filter((id) => id !== venueFixture.id),
-      ];
-    }, [] as string[][]);
-
-    if (targetGroup > -1) {
-      if (fixtureGroups[targetGroup]) {
-        fixtureGroups[targetGroup] = [
-          ...fixtureGroups[targetGroup],
-          venueFixture.id,
-        ];
-      } else {
-        fixtureGroups[targetGroup] = [venueFixture.id];
-      }
-    }
-
-    updateScene({
-      ...scene,
-      fixtureGroups,
-    });
-  };
-
-  const changeChannel = (targetChannel: number) => {
-    updateVenue({
-      ...venue,
-      venueFixtures: venue.venueFixtures.map((f) => {
-        if (f.id === venueFixture.id) {
-          return {
-            ...f,
-            channel: targetChannel,
-          };
-        }
-        return f;
-      }),
-    });
-  };
+  // const venueEditMode = useUI((state) => state.venueEditMode);
 
   return (
     <div
@@ -88,98 +27,13 @@ export const StageFixture = ({
       onDragOver={(e) => {
         e.preventDefault();
       }}
-      onDrop={(e) => {
-        const profileId = e.dataTransfer.getData("profileId");
-        const profile = allProfiles.find((f) => f.id === profileId);
-
-        if (!profile) return;
-
-        const profileIds =
-          (groupId !== undefined &&
-            (scene.profiles[groupId] as string[] | undefined)) ||
-          [];
-
-        const fixtureGroups = scene.fixtureGroups;
-        if (groupId === undefined) {
-          fixtureGroups[0] = [...(fixtureGroups[0] || []), venueFixture.id];
-        }
-
-        updateScene({
-          ...scene,
-          fixtureGroups: [...fixtureGroups],
-          profiles: {
-            ...scene.profiles,
-            [groupId || 0]: [...profileIds, profile.id],
-          },
-        });
-      }}
+      onDrop={(e) => {}}
     >
       <div className={styles.info}>
         <table>
           <tbody>
             <tr>
-              <th colSpan={3}>
-                {fixture.model} ch{fixture.channels}
-              </th>
-            </tr>
-            <tr>
-              <th colSpan={3}>
-                {profiles?.map((prof) => (
-                  <button
-                    key={prof.id}
-                    className={styles.button}
-                    onClick={() => {
-                      const profileIds =
-                        (groupId !== undefined &&
-                          (scene.profiles[groupId] as string[] | undefined)) ||
-                        [];
-
-                      if (groupId == undefined) return;
-
-                      updateScene({
-                        ...scene,
-                        profiles: {
-                          ...scene.profiles,
-                          [groupId]: profileIds.filter((p) => p != prof.id),
-                        },
-                      });
-                    }}
-                  >
-                    {prof.name}
-                  </button>
-                ))}
-              </th>
-            </tr>
-            {venueEditMode && (
-              <tr>
-                <td>
-                  <button
-                    className={styles.button}
-                    onClick={() => {
-                      changeChannel(venueFixture.channel - 1);
-                    }}
-                  >
-                    -
-                  </button>
-                </td>
-                <td>
-                  Channel {venueFixture.channel} -{" "}
-                  {venueFixture.channel + fixture.channels}
-                </td>
-                <td align="right">
-                  <button
-                    className={styles.button}
-                    onClick={() => {
-                      changeChannel(venueFixture.channel + 1);
-                    }}
-                  >
-                    +
-                  </button>
-                </td>
-              </tr>
-            )}
-            <tr>
-              <td>
+              {/* <td>
                 <button
                   className={styles.button}
                   onClick={() => {
@@ -188,11 +42,11 @@ export const StageFixture = ({
                 >
                   -
                 </button>
-              </td>
-              <td>
+              </td> */}
+              {/* <td>
                 {groupId !== undefined ? `Group ${groupId}` : "No Group"}{" "}
-              </td>
-              <td align="right">
+              </td> */}
+              {/* <td align="right">
                 <button
                   className={styles.button}
                   onClick={() => {
@@ -201,17 +55,8 @@ export const StageFixture = ({
                 >
                   +
                 </button>
-              </td>
+              </td> */}
             </tr>
-            {/* <tr>
-              <td>
-                <button>clone</button>
-              </td>
-              <td></td>
-              <td>
-                <button>delete</button>
-              </td>
-            </tr> */}
           </tbody>
         </table>
       </div>
@@ -224,8 +69,9 @@ export const StageFixture = ({
       >
         <ConnectedLight
           channel={venueFixture.channel}
-          profiles={profiles}
+          // profiles={profiles}
           fixture={fixture}
+          venueFixture={venueFixture}
         />
       </div>
     </div>

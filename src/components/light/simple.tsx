@@ -23,7 +23,7 @@ export const Simple = ({
   useEffect(() => {
     if (!ref.current || !dmxValues) return;
 
-    setCSSVarsFromDmx(ref.current, fixture, dmxValues);
+    // setCSSVarsFromDmx(ref.current, fixture, dmxValues);
   }, [dmxValues, fixture]);
 
   return (

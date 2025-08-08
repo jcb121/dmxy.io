@@ -1,0 +1,12 @@
+.function {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.add,
+.delete {
+  padding: 2px;
+  margin: 0;
+  font-size: 10px;
+}

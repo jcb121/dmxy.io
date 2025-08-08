@@ -1,26 +1,23 @@
-import { useContext } from "react";
 import { GlobalTypes, useGlobals } from "../../../context/globals";
-import { MidiCallback, useMidiTriggers } from "../../../context/midi";
-import styles from "../controller.module.scss";
-import { SceneContext } from "../../../context/scenes";
+import { MidiCallback, MidiEventTypes } from "../../../context/midi";
 import { CycleScene as CycleSceneEvent } from "../../../context/events";
-import { AttachMidiButton } from "../../attach-midi-button";
+import { BaseButton } from "./base-button";
+import styles from '../controller.module.scss'
+import { useScenes } from "../../../context/scenes";
 
 export const CycleScene = ({
-  buttonId,
+  active,
   editMode,
   payload,
-  onEventChange: _onEventChange,
+  onEventChange,
 }: {
-  buttonId: string;
+  active?: boolean;
   editMode: boolean;
   payload?: CycleSceneEvent;
   onEventChange: (s: CycleSceneEvent) => void;
 }) => {
   const cycleScene = useGlobals((state) => state.handlers.cycleScene);
-  const { scenes } = useContext(SceneContext);
-  const midiTriggers = useMidiTriggers((state) => state.midiTriggers);
-  const setMidiTrigger = useMidiTriggers((state) => state.setMidiTrigger);
+  const scenes = useScenes(s => s.scenes);
 
   const sAIVar = useGlobals((state) =>
     payload?.cycleName
@@ -31,8 +28,8 @@ export const CycleScene = ({
   const sceneIndex =
     sAIVar !== undefined && sAIVar.type === GlobalTypes.byte ? sAIVar.value : 0;
 
-  const currentSceneId =
-    (payload && payload.scenes && payload.scenes[sceneIndex]) || undefined;
+  // const currentSceneId =
+  //   (payload && payload.scenes && payload.scenes[sceneIndex]) || undefined;
 
   const nextSceneId =
     payload?.scenes &&
@@ -40,32 +37,21 @@ export const CycleScene = ({
       ? payload.scenes[sceneIndex + 1]
       : payload.scenes[0]);
 
-  const midiTrigger = buttonId ? midiTriggers[`${buttonId}_press`] : undefined;
-  const onEventChange = (a: CycleSceneEvent) => {
-    if (midiTrigger) {
-      setMidiTrigger(`${buttonId}_press`, {
-        ...midiTrigger,
-        payload: a,
-      });
-    }
-    _onEventChange(a);
-  };
-
   return (
-    <div>
-      <button
-        className={styles.mainButton}
-        onClick={() => {
-          if (payload?.cycleName) cycleScene(payload);
+    <>
+      <BaseButton
+        active={active}
+        onMouseDown={() => {
+          if (payload?.cycleName) cycleScene(payload, MidiEventTypes.onPress);
         }}
       >
-        <div>
+        {/* <div>
           {`Current scene:`} {scenes.find((s) => s.id == currentSceneId)?.name}
+        </div> */}
+        <div className={styles.noWrap}>
+          {`Next:`} {scenes.find((s) => s.id == nextSceneId)?.name}
         </div>
-        <div>
-          {`Nextscene:`} {scenes.find((s) => s.id == nextSceneId)?.name}
-        </div>
-      </button>
+      </BaseButton>
       {editMode && (
         <div>
           <div>
@@ -120,23 +106,8 @@ export const CycleScene = ({
               </button>
             ))}
           </div>
-          <AttachMidiButton
-            value={midiTriggers[`${buttonId}_press`]}
-            onMidiDetected={(midiTrigger) => {
-              if (payload)
-                setMidiTrigger(`${buttonId}_press`, {
-                  ...midiTrigger,
-                  payload: {
-                    function: MidiCallback.cycleScene,
-                    scenes: payload.scenes,
-                    cycleName: payload.cycleName,
-                  },
-                });
-            }}
-            label="Attach Down"
-          />
         </div>
       )}
-    </div>
+    </>
   );
 };

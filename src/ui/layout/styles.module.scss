@@ -1,0 +1,19 @@
+.root {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.header {
+  flex-basis: 100%;
+  flex-shrink: 0;
+}
+
+.left {
+  flex-basis: 20%;
+  flex-grow: 0;
+}
+
+.content {
+  flex: 1;
+}

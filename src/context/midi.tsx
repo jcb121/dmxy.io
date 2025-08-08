@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { UserEventMap } from "./events";
+import { useEvents } from "./events";
 import { GlobalTypes, useGlobals } from "./globals";
 import { animateColour } from "../utils";
 
@@ -43,7 +43,7 @@ export type MIDIMessageEventWithData = MIDIMessageEvent & {
 export const useMidiTriggers = create(
   persist<{
     midiTriggers: Record<string, MidiTrigger>;
-    setMidiTrigger: (key: string, midiTrigger: MidiTrigger) => void;
+    setMidiTrigger: (id: string, midiTrigger: MidiTrigger) => void;
   }>(
     (set) => {
       return {
@@ -65,15 +65,34 @@ export const useMidiTriggers = create(
   )
 );
 
+const press: Record<string, number> = {};
+
+export const getMidiEventType = (
+  e: MIDIMessageEventWithData
+): MidiEventTypes => {
+  const [event, controlId] = e.data;
+  const eventByte = event.toString(16).padStart(2, "0");
+
+  if (eventByte[0] === "9") {
+    press[`${e.currentTarget.id}-${controlId}`] = e.timeStamp;
+    return MidiEventTypes.onPress;
+  }
+  if (eventByte[0] === "8") {
+    if (e.timeStamp - press[`${e.currentTarget.id}-${controlId}`] > 1000) {
+      press[`${e.currentTarget.id}-${controlId}`] = 0;
+      return MidiEventTypes.onHoldRelease;
+    }
+
+    return MidiEventTypes.onRelease;
+  }
+  if (eventByte[0] === "a") return MidiEventTypes.onAfterTouch;
+  if (eventByte[0] === "b") return MidiEventTypes.onTurn;
+
+  return MidiEventTypes.unknown;
+};
+
 export const MidiProvider = ({ children }: { children: React.ReactNode }) => {
-  // const [MIDIInput, setMIDIInput] = useState<MIDIInput>();
-
-  const applyAction = useGlobals((state) => state.apply);
-
-  const midiTriggers = useMidiTriggers((state) => state.midiTriggers);
-  const setGlobalValue = useGlobals((state) => state.setGlobalValue);
   const eventHandlerRef = useRef<(e: MIDIMessageEventWithData) => void>();
-
   const [mIDIInputs, setMIDIInputs] = useState<MIDIInputMap>();
 
   useEffect(() => {
@@ -94,29 +113,41 @@ export const MidiProvider = ({ children }: { children: React.ReactNode }) => {
 
     const eventHandler = (e: MIDIMessageEventWithData) => {
       const deviceId = e.currentTarget?.id as string;
-      const [type, controlId, value] = e.data;
+      const { midiTriggers } = useMidiTriggers.getState();
+      const { buttonFuncs } = useEvents.getState();
+      const applyAction = useGlobals.getState().apply;
+      const setGlobalValue = useGlobals.getState().setGlobalValue;
 
-      // const name = e.target.name;
-      const foundKey = Object.keys(midiTriggers).find((key) => {
+      const [, controlId, value] = e.data;
+      const type = getMidiEventType(e);
+
+      const id = Object.keys(midiTriggers).find((key) => {
         return (
           midiTriggers &&
           midiTriggers[key].controlId == controlId &&
-          midiTriggers[key].deviceId === deviceId &&
-          midiTriggers[key].type === type
+          midiTriggers[key].deviceId === deviceId
         );
       });
 
-      if (foundKey) {
-        setGlobalValue(foundKey, {
-          value: value * 2,
-          type: GlobalTypes.byte,
-        });
+      if (id) {
+        if (
+          type === MidiEventTypes.onTurn ||
+          type === MidiEventTypes.onPress ||
+          type === MidiEventTypes.onHoldRelease ||
+          type === MidiEventTypes.onRelease
+        ) {
+          setGlobalValue(id, {
+            value: value * 2,
+            type: GlobalTypes.byte,
+          });
+        }
 
-        const trigger = midiTriggers[foundKey];
+        const payload = buttonFuncs[id];
+        if (!payload) return;
 
         if (
           type == MidiEventTypes.onTurn &&
-          trigger.payload.function === MidiCallback.setColour
+          payload.function === MidiCallback.setColour
         ) {
           // setValue(parseInt(e.target.value));
           const third = 127 / 2;
@@ -129,22 +160,30 @@ export const MidiProvider = ({ children }: { children: React.ReactNode }) => {
           } else if (frame === 1) {
             colour = animateColour("00ff00", "0000ff", 1, state - frame);
           }
-          applyAction({ ...trigger.payload, colour });
+          applyAction({ ...payload, colour }, type);
         } else if (
           type == MidiEventTypes.onTurn &&
-          trigger.payload.function === MidiCallback.setState
+          payload.function === MidiCallback.setState
         ) {
-          applyAction({
-            ...trigger.payload,
-            payload: {
-              value: value * 2,
-              type: GlobalTypes.byte,
+          applyAction(
+            {
+              ...payload,
+              payload: {
+                value: value * 2,
+                type: GlobalTypes.byte,
+              },
             },
-          });
-        } else if (trigger.payload.function === MidiCallback.setBeatLength) {
-          applyAction({ ...trigger.payload, timeStamp: e.timeStamp });
-        } else {
-          applyAction(trigger.payload);
+            type
+          );
+        } else if (payload.function === MidiCallback.setBeatLength) {
+          applyAction({ ...payload, timeStamp: e.timeStamp }, type);
+        } else if (
+          type === MidiEventTypes.onTurn ||
+          type === MidiEventTypes.onPress ||
+          type === MidiEventTypes.onHoldRelease ||
+          type === MidiEventTypes.onRelease
+        ) {
+          applyAction(payload, type);
         }
       }
     };
@@ -157,37 +196,43 @@ export const MidiProvider = ({ children }: { children: React.ReactNode }) => {
         );
       }
 
+      console.log("ATTACHING");
       input.addEventListener("midimessage", eventHandler as (e: Event) => void);
     });
 
     eventHandlerRef.current = eventHandler;
-  }, [applyAction, mIDIInputs, midiTriggers, setGlobalValue]);
+  }, [mIDIInputs]);
 
   return <>{children}</>;
 };
 
 export enum MidiEventTypes {
-  onPress = 144,
-  onRelease = 128,
-  onTurn = 176,
+  onTurn = "onTurn",
+  onPress = "onPress",
+  onRelease = "onRelease",
+  unknown = "unknown",
+  onAfterTouch = "onAfterTouch",
+  onHoldRelease = "onHoldRelease",
 }
 
 export enum MidiCallback {
   cycleScene = "cycleScene",
   setBeatLength = "setBeatLength",
   setColour = "setColour",
+  playColour = "playColour",
   setScene = "setScene",
   setState = "setState",
   removeScene = "removeScene",
+  toggleColour = "toggleColour",
+  changeZone = "changeZone",
+  setRenderMode = "setRenderMode",
 }
 
 export type MidiTrigger = {
-  type: MidiEventTypes;
   name: string;
   controlId: number;
   // value: number; // this happends om the event...
   deviceId: string;
-  payload: UserEventMap[keyof UserEventMap];
 };
 
 export type CustomMidiEvent = Event & {

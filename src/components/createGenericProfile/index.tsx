@@ -1,14 +1,15 @@
-import { useContext, useState } from "react";
+import { useMemo } from "react";
 import {
   GenericProfile,
-  ProfileContext,
   ProfileState,
+  useProfiles,
 } from "../../context/profiles";
-import { ChannelSimpleFunction } from "../../context/fixtures";
+import { ChannelSimpleFunction, useFixtures } from "../../context/fixtures";
 import styles from "./createGenericProfile.module.scss";
 import { useGlobals } from "../../context/globals";
+import { getRGB } from "../../utils";
 
-const defaultState = (globals: string[]): GenericProfile => ({
+export const defaultState = (globals: string[]): GenericProfile => ({
   name: "",
   id: crypto.randomUUID(),
   // value: {} as Record<ChannelSimpleFunction, string>,
@@ -24,12 +25,34 @@ const defaultState = (globals: string[]): GenericProfile => ({
   }, {} as Record<string, string>),
 });
 
-export const CreateGenericProfile = () => {
-  const { saveProfile } = useContext(ProfileContext);
+export const CreateGenericProfile = ({
+  profile,
+  setProfile,
+}: {
+  profile: GenericProfile;
+  setProfile: React.Dispatch<React.SetStateAction<GenericProfile>>;
+}) => {
+  const fixture = useFixtures((state) => state.fixtures);
+
+  const colourOptions = useMemo(() => {
+    return fixture.reduce((colours, fixture) => {
+      return fixture.channelFunctions.reduce((_colours, channelFunctions) => {
+        return channelFunctions.reduce((__colours, func) => {
+          if (
+            func.function === ChannelSimpleFunction.fixedColour &&
+            func.value
+          ) {
+            return [...__colours, func.value];
+          }
+
+          return __colours;
+        }, _colours);
+      }, colours);
+    }, [] as string[]);
+  }, [fixture]);
+
+  const saveProfile = useProfiles((state) => state.add);
   const globalValues = useGlobals((state) => state.values);
-  const [profile, setProfile] = useState<GenericProfile>(
-    defaultState(Object.keys(globalValues))
-  );
 
   const saveProfileClick = () => {
     saveProfile(profile);
@@ -81,6 +104,30 @@ export const CreateGenericProfile = () => {
         </div>
       </div>
       <div>
+        {colourOptions.map((colour) => (
+          <button
+            style={{
+              background: `#${colour}`,
+            }}
+            key={colour}
+            onClick={() => {
+              const [Red, Green, Blue] = getRGB(colour);
+              setProfile((profile) => ({
+                ...profile,
+                state: {
+                  ...profile.state,
+                  Red,
+                  Green,
+                  Blue,
+                },
+              }));
+            }}
+          >
+            #{colour}
+          </button>
+        ))}
+      </div>
+      <div>
         {/* <ProfileState
           // title={`Step ${index + 1}`}
           // removeStep={(profileState) => {
@@ -110,7 +157,7 @@ export const CreateGenericProfile = () => {
               const state = profile.state[functionName];
               // const value = profile.value[functionName];
               const global = profile.globals[functionName];
-              const globalValue = globalValues[global]?.value;
+              const globalValue = global && globalValues[global]?.value;
 
               return (
                 <tr key={functionName}>

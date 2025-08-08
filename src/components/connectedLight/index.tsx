@@ -1,29 +1,61 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { ChannelSimpleFunction, Fixture } from "../../context/fixtures";
 import { useGlobals } from "../../context/globals";
-import { GenericProfile, ProfileState } from "../../context/profiles";
+import {
+  GenericProfile,
+  ProfileState,
+  useProfiles,
+} from "../../context/profiles";
 import {
   animateRGB,
   mapProfileStateToDMX,
   setCSSVarsFromDmx,
 } from "../../utils";
-import { Light } from "../light";
+// import { Light } from "../light";
 import { DMXState } from "../../dmx";
+import { VenueFixture } from "../../context/venues";
+import { Scene } from "../../context/scenes";
 
 export const ConnectedLight = ({
   fixture,
-  profiles,
+  // profiles,
   channel,
+  children,
+  venueFixture,
+  scene,
 }: {
+  children?: React.ReactNode;
   channel?: number;
   fixture: Fixture;
-  profiles?: Omit<GenericProfile, "id">[];
+  venueFixture: VenueFixture;
+  // profiles?: Omit<GenericProfile, "id">[];
+  scene?: Scene;
 }) => {
   const globals = useGlobals((state) => state.values);
   const hold = parseInt(`${globals["Beatlength"]?.value || 0}`);
   const fade = parseInt(`${globals["Fade"]?.value || 0}`);
   const fadeGap = parseInt(`${globals["FadeGap"]?.value || 0}`);
   const ref = useRef<HTMLDivElement>(null);
+
+  const allProfiles = useProfiles((state) => state.profiles);
+
+  const profiles = useMemo(() => {
+    if (!scene) return [];
+
+    const profileIds =
+      scene.profiles[venueFixture.id] ||
+      ["all", ...venueFixture.tags].reduce((profileIds, tag) => {
+
+        if (scene.profiles[tag]) {
+          return [...profileIds, ...(scene.profiles[tag] || [])];
+        }
+        return profileIds;
+      }, [] as string[]);
+
+    return profileIds
+      .map((id) => allProfiles.find((p) => p.id == id))
+      .filter((a) => !!a) as GenericProfile[];
+  }, [allProfiles, venueFixture, scene]);
 
   // const state =
   //   profiles &&
@@ -79,14 +111,14 @@ export const ConnectedLight = ({
             fadeGap
               ? [0, 0, 0]
               : [
-                  lastProfile.state.Red,
-                  lastProfile.state.Green,
-                  lastProfile.state.Blue,
+                  lastProfile.state.Red || 0,
+                  lastProfile.state.Green || 0,
+                  lastProfile.state.Blue || 0,
                 ],
             [
-              profiles[frameIndex].state.Red,
-              profiles[frameIndex].state.Green,
-              profiles[frameIndex].state.Blue,
+              profiles[frameIndex].state.Red || 0,
+              profiles[frameIndex].state.Green || 0,
+              profiles[frameIndex].state.Blue || 0,
             ],
             fadeGap ? fadeTime : fadeTime * 2,
             fadeGap ? stepTime : stepTime + fadeTime
@@ -99,16 +131,16 @@ export const ConnectedLight = ({
 
           currentColour = animateRGB(
             [
-              profiles[frameIndex].state.Red,
-              profiles[frameIndex].state.Green,
-              profiles[frameIndex].state.Blue,
+              profiles[frameIndex].state.Red || 0,
+              profiles[frameIndex].state.Green || 0,
+              profiles[frameIndex].state.Blue || 0,
             ],
             fadeGap
               ? [0, 0, 0]
               : [
-                  nextProfile.state.Red,
-                  nextProfile.state.Green,
-                  nextProfile.state.Blue,
+                  nextProfile.state.Red || 0,
+                  nextProfile.state.Green || 0,
+                  nextProfile.state.Blue || 0,
                 ],
             fadeGap ? fadeTime : fadeTime * 2,
             fadeGap
@@ -118,12 +150,14 @@ export const ConnectedLight = ({
         } else {
           // console.log("normal");
         }
+        if (!profiles[frameIndex]) return;
 
         const state = Object.keys(profiles[frameIndex].globals).reduce(
           (state, key) => {
             const globalName =
               profiles[frameIndex].globals[key as ChannelSimpleFunction];
 
+            if (!globalName) return state;
             return profiles[frameIndex].globals[key as ChannelSimpleFunction]
               ? { ...state, [key]: globals[globalName]?.value }
               : state;
@@ -142,6 +176,12 @@ export const ConnectedLight = ({
 
         const dmxVals = mapProfileStateToDMX(fixture.channelFunctions, state);
 
+        venueFixture.overwrites &&
+          Object.keys(venueFixture?.overwrites).forEach((channel) => {
+            const globalName = venueFixture.overwrites[channel as number];
+            dmxVals[channel] = globals[globalName].value;
+          });
+
         if (ref.current) setCSSVarsFromDmx(ref.current, fixture, dmxVals);
 
         if (typeof channel !== "undefined") {
@@ -151,7 +191,7 @@ export const ConnectedLight = ({
         }
       }
     },
-    [hold, profiles, fixture, globals, channel, fade, fadeGap]
+    [hold, profiles, fixture, globals, channel, fade, fadeGap, venueFixture]
   );
 
   useEffect(() => {
@@ -172,7 +212,8 @@ export const ConnectedLight = ({
 
   return (
     <div ref={ref}>
-      <Light fixture={fixture} />
+      {children}
+      {/* <Light fixture={fixture} /> */}
     </div>
   );
 };

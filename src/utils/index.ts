@@ -1,7 +1,7 @@
 import {
   ChannelFunctions,
   ChannelSimpleFunction,
-  ColourMode,
+  SubChannelFunction,
   DMXValues,
   Fixture,
 } from "../context/fixtures";
@@ -97,24 +97,30 @@ export const isWhite = (a: string) => {
 export const getCSSBrightness = (
   channelFunctions: ChannelFunctions,
   dmxValues?: DMXValues
-) =>
-  Object.keys(channelFunctions).reduce((brightness, _channelId) => {
-    const channelId = parseInt(_channelId);
-    const channel = channelFunctions[channelId];
-    const func = Object.values(channel).find(
-      (subFunc) => subFunc.function === ChannelSimpleFunction.brightness
+) => {
+  const hasItensity = channelFunctions.find((c) =>
+    c.find((f) => f.function === ChannelSimpleFunction.intensity)
+  );
+
+  if (!hasItensity) {
+    return 1;
+  }
+
+  return channelFunctions.reduce((brightness, channel, index) => {
+    const func = channel.find(
+      (subFunc) => subFunc.function === ChannelSimpleFunction.intensity
     );
     if (!func || !dmxValues) return brightness;
     const res = mapNumbers(
       func.range[0],
       func.range[1],
-      dmxValues[channelId],
+      dmxValues[index],
       0,
       1
     );
-    // console.log('BRIGHTNESS', res)
     return res;
   }, 0);
+};
 
 export const getCSSStrobeDuration = (
   channelFunctions: ChannelFunctions,
@@ -145,12 +151,9 @@ export const mapDMXtoChannels = (
   channelFunctions: ChannelFunctions,
   dmxValues: DMXValues
 ): Record<string, number> => {
-  const res = Object.keys(channelFunctions).reduce((colours, _channelId) => {
-    const channelId = parseInt(_channelId);
-    const channel = channelFunctions[channelId];
-    const dmxValue = dmxValues[channelId];
-
-    const func = Object.values(channel).find(
+  const res = channelFunctions.reduce((colours, channel, index) => {
+    const dmxValue = dmxValues[index];
+    const func = channel.find(
       (subFunc) => dmxValue <= subFunc.range[1] && dmxValue >= subFunc.range[0]
     );
     if (func) {
@@ -163,7 +166,6 @@ export const mapDMXtoChannels = (
 
     return colours;
   }, {});
-
   return res;
 };
 
@@ -195,28 +197,28 @@ export const mapProfileStateToDMX = (
   channelFunctions: ChannelFunctions,
   profileSate: ProfileState
 ) => {
-  const res = Object.keys(channelFunctions).reduce((dmxValues, _channelId) => {
-    const channelId = parseInt(_channelId);
-    const channel = channelFunctions[channelId];
-
-    const channelValue = Object.keys(channel).reduce(
-      (channelValue, _functionId) => {
-        const functionId = parseInt(_functionId);
-        const channelFunction = channel[functionId];
-
-        const targetState = profileSate[channelFunction.function];
-        if (!targetState) return channelValue;
-
-        return mapNumbers(
-          0,
-          255,
-          targetState,
-          channelFunction.range[0],
-          channelFunction.range[1]
-        );
-      },
-      0
-    );
+  const res = channelFunctions.reduce((dmxValues, channel, channelId) => {
+    const channelValue = channel.reduce((channelValue, channelFunction) => {
+      // sort for fixed colour first.
+      if (channelFunction.function === ChannelSimpleFunction.fixedColour) {
+        if (
+          channelFunction.value ===
+          rgbToHex([profileSate.Red, profileSate.Green, profileSate.Blue])
+        ) {
+          return channelFunction.range[0] + 1;
+        }
+      }
+      // everything else acts the same...
+      const targetState = profileSate[channelFunction.function];
+      if (!targetState) return channelValue;
+      return mapNumbers(
+        0,
+        255,
+        targetState,
+        channelFunction.range[0],
+        channelFunction.range[1]
+      );
+    }, 0);
 
     return {
       ...dmxValues,
@@ -254,7 +256,7 @@ export const mapHexToDMX = (
               );
         }
 
-        if (channelFunction.function === ChannelSimpleFunction.brightness) {
+        if (channelFunction.function === ChannelSimpleFunction.intensity) {
           return brightness === 0
             ? 0
             : mapNumbers(
@@ -338,38 +340,93 @@ export const mapHexToDMX = (
 
 export const setCSSVarsFromDmx = (
   htmlElement: HTMLDivElement,
-  { channelFunctions, colourMode, colour }: Fixture,
+  { channelFunctions }: Fixture,
   dmxValues: DMXValues
 ) => {
+  // STOBE CODE =========================================================================
+  const strobe = channelFunctions.reduce((channelFunction, c) => {
+    if (channelFunction) return channelFunction;
+
+    const found = c.find((f) => f.function === ChannelSimpleFunction.strobe);
+    if (found) {
+      return found;
+    }
+  }, undefined as SubChannelFunction<ChannelSimpleFunction, number, number> | undefined);
+
+  const cssStobeTime = getCSSStrobeDuration(channelFunctions, dmxValues);
+
+  // Special rule for a stobe with a set colour;
+  if (strobe?.value) {
+    const [Red, Green, Blue] =
+      cssStobeTime > 0 ? getRGB(strobe.value) : [0, 0, 0];
+    htmlElement.style.setProperty("--Red", `${Red || 0} `);
+    htmlElement.style.setProperty("--Green", `${Green || 0}`);
+    htmlElement.style.setProperty("--Blue", `${Blue || 0}`);
+    // htmlElement.style.setProperty("--White", `${White || 0}`);
+    htmlElement.style.setProperty("--StrobeTime", `${cssStobeTime}ms`);
+    return;
+  }
+  // FIXED COLOUR CODE ==================================================================
+  const Brightness = getCSSBrightness(channelFunctions, dmxValues);
+
+  const fixedColour = channelFunctions.reduce((channelFunction, c, index) => {
+    if (channelFunction) return channelFunction;
+
+    const found = c.find(
+      (f) =>
+        f.function === ChannelSimpleFunction.fixedColour &&
+        dmxValues[index] > f.range[0] &&
+        dmxValues[index] < f.range[1]
+    );
+    if (found) {
+      return found;
+    }
+  }, undefined as SubChannelFunction<ChannelSimpleFunction, number, number> | undefined);
+
+  // console.log("FIXED COLOUR", fixedColour);
+  if (fixedColour?.value) {
+    const [Red, Green, Blue] = getRGB(fixedColour.value);
+    htmlElement.style.setProperty("--Red", `${Red || 0} `);
+    htmlElement.style.setProperty("--Green", `${Green || 0}`);
+    htmlElement.style.setProperty("--Blue", `${Blue || 0}`);
+
+    htmlElement.style.setProperty("--Brightness", `${Brightness}`);
+    htmlElement.style.setProperty("--StrobeTime", `${cssStobeTime}ms`);
+    return;
+  }
+
+  // RGBA COLOUR CODE =====================================================================
   const {
     Red,
     Blue,
     Green,
     White,
+    Tilt,
+    // Pan,
+    // ...result
     // Brightness, Storbe
   } = dmxValues
     ? mapDMXtoChannels(channelFunctions, dmxValues)
     : ({} as Record<string, number>);
 
-  const cssStobeTime = getCSSStrobeDuration(channelFunctions, dmxValues);
+  // console.log("RES", result);
 
-  const Brightness = getCSSBrightness(channelFunctions, dmxValues);
+  // tilt is from 0 to 255.
 
-  if (colourMode === ColourMode.rgbw || colourMode === ColourMode.rgb) {
-    htmlElement.style.setProperty("--Red", `${Red || 0} `);
-    htmlElement.style.setProperty("--Blue", `${Blue || 0}`);
-    htmlElement.style.setProperty("--Green", `${Green || 0}`);
-    htmlElement.style.setProperty("--White", `${White || 0}`);
-  }
+  htmlElement.style.setProperty("--Tilt", `${(Tilt / 255) * 100 - 50 || 0}px`);
 
-  if (colourMode === ColourMode.single) {
-    const [Red, Green, Blue] = colour ? getRGB(colour) : [];
-    htmlElement.style.setProperty("--Red", `${Red || 0} `);
-    htmlElement.style.setProperty("--Blue", `${Blue || 0}`);
-    htmlElement.style.setProperty("--Green", `${Green || 0}`);
-  }
+  htmlElement.style.setProperty("--Red", `${Red || 0} `);
+  htmlElement.style.setProperty("--Green", `${Green || 0}`);
+  htmlElement.style.setProperty("--Blue", `${Blue || 0}`);
+  htmlElement.style.setProperty("--White", `${White || 0}`);
 
-  // a strobe does not have brightness...
+  // if (colourMode === ColourMode.single) {
+  //   const [Red, Green, Blue] = colour ? getRGB(colour) : [];
+  //   htmlElement.style.setProperty("--Red", `${Red || 0} `);
+  //   htmlElement.style.setProperty("--Blue", `${Blue || 0}`);
+  //   htmlElement.style.setProperty("--Green", `${Green || 0}`);
+  // }
+
   htmlElement.style.setProperty("--Brightness", `${Brightness}`);
   htmlElement.style.setProperty("--StrobeTime", `${cssStobeTime}ms`);
 };

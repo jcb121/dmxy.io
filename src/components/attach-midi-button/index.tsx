@@ -18,14 +18,13 @@ export const AttachMidiButton = ({
 
     const event = (e: MIDIMessageEventWithData) => {
       const deviceId = e.currentTarget.id as string;
-      const [type, controlId] = e.data;
+      const [, controlId] = e.data;
       const name = e.currentTarget?.name;
 
       onMidiDetected({
         deviceId,
         controlId,
         name,
-        type,
       });
 
       setListening(false);

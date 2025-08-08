@@ -1,8 +1,11 @@
 import { create } from "zustand";
-import { MidiCallback } from "./midi";
+import { MidiCallback, MidiEventTypes } from "./midi";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { getRGB } from "../utils";
 import { MapToFunction, UserEvent, UserEventMap } from "./events";
+import { useZones } from "./zones";
+import { useActiveScene } from "./active-scene";
+import { Colours } from "../colours";
 
 export enum GlobalTypes {
   byte = "byte",
@@ -60,7 +63,7 @@ export const GLOBAL_VARS: NewGlobalValues = {
     type: GlobalTypes.time,
     value: 1000,
   },
-  Brightness: {
+  Intensity: {
     type: GlobalTypes.byte,
     value: 255,
   },
@@ -88,34 +91,109 @@ export const GLOBAL_VARS: NewGlobalValues = {
 
 let lastClickTime: number | undefined;
 let lastClickTimeout: number | undefined;
+// const active: Partial<Record<keyof typeof Colours, boolean>> = {};
 
 export const useGlobals = create(
   persist<{
-    apply: (a: UserEvent) => void;
-    handlers: MapToFunction<UserEventMap>;
+    apply: (a: UserEvent, T: MidiEventTypes) => void;
+    handlers: MapToFunction<UserEventMap, MidiEventTypes>;
     values: NewGlobalValues;
     setGlobalValue: SetGlobalValue;
+    activeVenueId?: string;
+    setActiveVenueId: (venueId: string) => void;
   }>(
     (set, get) => {
       return {
-        apply: (e: UserEvent) => {
+        apply: (e: UserEvent, t: MidiEventTypes) => {
           const handlers = get().handlers;
           if (e.function === MidiCallback.setBeatLength) {
-            handlers.setBeatLength(e);
+            handlers.setBeatLength(e, t);
+          } else if (e.function === MidiCallback.playColour) {
+            handlers.playColour(e, t);
           } else if (e.function === MidiCallback.setColour) {
-            handlers.setColour(e);
+            handlers.setColour(e, t);
           } else if (e.function === MidiCallback.setScene) {
-            handlers.setScene(e);
+            handlers.setScene(e, t);
           } else if (e.function === MidiCallback.setState) {
-            handlers.setState(e);
+            handlers.setState(e, t);
           } else if (e.function === MidiCallback.removeScene) {
-            handlers.removeScene(e);
+            handlers.removeScene(e, t);
           } else if (e.function === MidiCallback.cycleScene) {
-            handlers.cycleScene(e);
+            handlers.cycleScene(e, t);
+          } else if (e.function === MidiCallback.toggleColour) {
+            handlers.toggleColour(e, t);
+          } else if (e.function === MidiCallback.setRenderMode) {
+            handlers.setRenderMode(e, t);
+          } else if (e.function === MidiCallback.changeZone) {
+            handlers.changeZone(e, t);
           }
         },
         handlers: {
-          cycleScene: (e) =>
+          changeZone: (e, type) => {
+            if (type === MidiEventTypes.onPress) {
+              const { activeZone, zones, setActiveZone } = useZones.getState();
+              const index = (activeZone && zones.indexOf(activeZone)) || 0;
+              if (e.reverse) {
+                if (index <= 0) {
+                  setActiveZone(zones[zones.length - 1]);
+                } else {
+                  setActiveZone(zones[index - 1]);
+                }
+              } else {
+                if (index >= zones.length - 1) {
+                  setActiveZone(zones[0]);
+                } else {
+                  setActiveZone(zones[index + 1]);
+                }
+              }
+            }
+          },
+          setRenderMode: (e) => {
+            const { activeZone } = useZones.getState();
+
+            console.log("SET THE RENDER MODE", e, activeZone);
+          },
+          toggleColour: (e, type) => {
+            const { activeScene, updateScene } = useActiveScene.getState();
+            const { activeZone } = useZones.getState();
+            if (!activeZone || !activeScene) return;
+
+            if (type == MidiEventTypes.onHoldRelease) {
+              return updateScene({
+                ...activeScene,
+                profiles: {
+                  [activeZone]: [e.profileId],
+                },
+              });
+            }
+
+            if (type === MidiEventTypes.onRelease) {
+              if (activeScene.profiles[activeZone]?.includes(e.profileId)) {
+                updateScene({
+                  ...activeScene,
+                  profiles: {
+                    ...activeScene.profiles,
+                    [activeZone]: activeScene.profiles[activeZone]?.filter(
+                      (a) => a != e.profileId
+                    ),
+                  },
+                });
+              } else {
+                updateScene({
+                  ...activeScene,
+                  profiles: {
+                    ...activeScene.profiles,
+                    [activeZone]: [
+                      ...(activeScene.profiles[activeZone] || []),
+                      e.profileId,
+                    ],
+                  },
+                });
+              }
+            }
+          },
+          cycleScene: (e, type) =>
+            type !== MidiEventTypes.onPress &&
             set((state) => {
               const sceneAnimationIndex = `_${e.cycleName}_sceneAnimationIndexKey`;
               const sceneAnimation = `_${e.cycleName}_sceneAnimationKey`;
@@ -148,8 +226,8 @@ export const useGlobals = create(
                 },
               };
             }),
-          setBeatLength: (e) => {
-            console.log(e);
+          setBeatLength: (e, type) => {
+            if (type !== MidiEventTypes.onPress) return;
             lastClickTimeout && clearTimeout(lastClickTimeout);
             if (lastClickTime && e.timeStamp) {
               const seconds = e.timeStamp - lastClickTime;
@@ -169,8 +247,23 @@ export const useGlobals = create(
               lastClickTime = undefined;
             }, 5000);
           },
+          // sets the global colour
           setColour: (e) => {
             if (!e.colour) return;
+            const { handlers } = get();
+            const { activeScene } = useActiveScene.getState();
+
+            if (activeScene?.id !== e.sceneId) {
+              handlers.setScene(
+                {
+                  function: MidiCallback.setScene,
+                  remove: false,
+                  sceneId: e.sceneId,
+                },
+                MidiEventTypes.onPress
+              );
+            }
+
             const [Red, Green, Blue] = getRGB(e.colour);
             set((state) => ({
               ...state,
@@ -191,7 +284,46 @@ export const useGlobals = create(
               },
             }));
           },
-          setScene: (e) => {
+          playColour: (e, type) => {
+            if (!e.colour) return;
+            if (!e.sceneId) return;
+            const { handlers } = get();
+
+            if (type === MidiEventTypes.onPress) {
+              handlers.setColour(
+                {
+                  colour: Colours[e.colour],
+                  function: MidiCallback.setColour,
+                  sceneId: e.sceneId,
+                },
+                MidiEventTypes.onPress
+              );
+            } else if (
+              type === MidiEventTypes.onRelease ||
+              type === MidiEventTypes.onHoldRelease
+            ) {
+              // active[e.colour] = false;
+            }
+          },
+          setScene: (e, type) => {
+            if (e.remove && type === MidiEventTypes.onRelease) {
+              set((state) => {
+                return {
+                  ...state,
+                  values: {
+                    ...state.values,
+                    ["ActiveScene"]: {
+                      value: (
+                        state.values["ActiveScene"]?.value as string[]
+                      ).filter((s) => s !== e.sceneId),
+                      type: GlobalTypes.scene,
+                    },
+                  },
+                };
+              });
+            }
+
+            if (type !== MidiEventTypes.onPress) return;
             set((state) =>
               e.sceneId
                 ? {
@@ -210,7 +342,9 @@ export const useGlobals = create(
                 : state
             );
           },
-          removeScene: (e) => {
+          removeScene: (e, type) => {
+            if (type !== MidiEventTypes.onPress) return;
+
             set((state) => {
               return {
                 ...state,
@@ -239,43 +373,7 @@ export const useGlobals = create(
             }));
           },
         },
-        // functions: {
-        //   setColour: (e) => {
-        //     const [, , value] = e.data;
 
-        //     const third = 127 / 2;
-        //     const state = value / third;
-        //     const frame = Math.floor(state);
-
-        //     let res = "0000ff";
-        //     if (frame === 0) {
-        //       res = animateColour("ff0000", "00ff00", 1, state - frame);
-        //     } else if (frame === 1) {
-        //       res = animateColour("00ff00", "0000ff", 1, state - frame);
-        //     }
-
-        //     const [Red, Green, Blue] = getRGB(res);
-
-        //     set((state) => ({
-        //       ...state,
-        //       values: {
-        //         ...state.values,
-        //         Red: {
-        //           type: GlobalTypes.byte,
-        //           value: Red,
-        //         },
-        //         Green: {
-        //           type: GlobalTypes.byte,
-        //           value: Green,
-        //         },
-        //         Blue: {
-        //           value: Blue,
-        //           type: GlobalTypes.byte,
-        //         },
-        //       },
-        //     }));
-        //   },
-        // },
         values: GLOBAL_VARS,
         setGlobalValue: (key, payload) => {
           // if(GLOBAL_VARS[key])
@@ -288,6 +386,8 @@ export const useGlobals = create(
             },
           }));
         },
+        setActiveVenueId: (activeVenueId) =>
+          set((state) => ({ ...state, activeVenueId })),
       };
     },
     {
@@ -295,6 +395,7 @@ export const useGlobals = create(
       partialize: (state) => {
         return {
           values: state.values,
+          activeVenueId: state.activeVenueId,
           // midiTriggers: state.midiTriggers,
         };
       },

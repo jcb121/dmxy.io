@@ -2,29 +2,42 @@ import { useEffect, useState } from "react";
 import { ChannelSimpleFunction } from "./fixtures";
 import { getDatabase } from "../db";
 import React from "react";
+import { Colours } from "../colours";
+import { getRGB } from "../utils";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export type ProfileState = Record<ChannelSimpleFunction, number>;
-
-// export type ProfileState = {
-//   id: string;
-//   state: Record<ChannelSimpleFunction, number>;
-//   value: Record<ChannelSimpleFunction, string>;
-//   // hold?: number;
-//   // fadeIn?: number;
-//   // fadeOut?: number;
-// };
-
 // this is just one simple state...
+// better to have a target value...
 export type GenericProfile = {
   name: string;
   id: string;
-  state: ProfileState;
+  state: Partial<ProfileState>;
   // value: Record<ChannelSimpleFunction, string>;
-  globals: Record<ChannelSimpleFunction, string>;
-
-  // state: ProfileState;
-  // states: ProfileState[];
+  globals: Partial<Record<ChannelSimpleFunction, string>>;
 };
+
+const globalColurs: GenericProfile[] = Object.keys(Colours).map((name) => {
+  const [Red, Green, Blue] = getRGB(Colours[name as keyof typeof Colours]);
+
+  return {
+    name,
+    id: `global_${name}`,
+    globals: {
+      Intensity: "Intensity",
+      Strobe: "Strobe",
+    },
+    state: {
+      Red,
+      Green,
+      Blue,
+      // White: 0,
+    },
+  } satisfies GenericProfile;
+});
+
+// console.log(globalColurs);
 
 export const ProfileContext = React.createContext<{
   profiles: GenericProfile[];
@@ -38,8 +51,35 @@ export const ProfileContext = React.createContext<{
   reloadProfiles: () => {},
 });
 
+export const useProfiles = create<{
+  profiles: GenericProfile[];
+  add: (p: GenericProfile) => void;
+  remove: (p: GenericProfile) => void;
+}>()(
+  persist(
+    (set) => {
+      return {
+        add: (p: GenericProfile) => {
+          set((state) => ({
+            ...state,
+            profiles: [...state.profiles, p],
+          }));
+        },
+        remove: (profile) => {
+          set((state) => ({
+            ...state,
+            profiles: state.profiles.filter((f) => f.id !== profile.id),
+          }));
+        },
+        profiles: [],
+      };
+    },
+    { name: "profiles" }
+  )
+);
+
 export const ProfileProvier = ({ children }: { children: React.ReactNode }) => {
-  const [profiles, setProfiles] = useState<GenericProfile[]>([]);
+  const [profiles, setProfiles] = useState<GenericProfile[]>(globalColurs);
 
   useEffect(() => {
     reloadProfiles();
@@ -71,8 +111,8 @@ export const ProfileProvier = ({ children }: { children: React.ReactNode }) => {
     const data = await database.getAll("genericProfiles");
     console.log("GOT Profiles", data);
 
-    if (data.length > 0) setProfiles(data);
-  }
+    if (data.length > 0) setProfiles([...globalColurs, ...data]);
+  };
 
   return (
     <ProfileContext.Provider

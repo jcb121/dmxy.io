@@ -5,9 +5,7 @@ import {
   Fixture,
 } from "../../context/fixtures";
 import styles from "./light.module.scss";
-import {
-  setCSSVarsFromDmx,
-} from "../../utils";
+import { setCSSVarsFromDmx } from "../../utils";
 import { useEffect, useRef } from "react";
 
 export const RGBA = ({
@@ -132,11 +130,11 @@ export const RGBA = ({
   useEffect(() => {
     if (!ref.current || !dmxValues) return;
 
-    setCSSVarsFromDmx(ref.current, fixture, dmxValues);
+    // setCSSVarsFromDmx(ref.current, fixture, dmxValues);
   }, [dmxValues, fixture]);
 
   return (
-    <div className={`${styles[fixture.fixtureShape]}`} ref={ref}>
+    <div className={`${styles.root}`} ref={ref}>
       <div className={styles.inner}></div>
     </div>
   );

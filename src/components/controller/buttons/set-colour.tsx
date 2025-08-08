@@ -1,80 +1,97 @@
-import { SetColour as SetColourEvent } from "../../../context/events";
+import { Colours } from "../../../colours";
+import { PlayColour as PlayColourEvent } from "../../../context/events";
 import { useGlobals } from "../../../context/globals";
-import { MidiCallback, useMidiTriggers } from "../../../context/midi";
-import { AttachMidiButton } from "../../attach-midi-button";
-import styles from "../controller.module.scss";
+import { MidiCallback, MidiEventTypes } from "../../../context/midi";
+import { BaseButton } from "./base-button";
+import { useScenes } from "../../../context/scenes";
 
 export const SetColour = ({
-  buttonId,
   editMode,
   payload,
-  onEventChange: _onEventChange,
+  onEventChange,
+  active,
 }: {
-  buttonId: string;
+  active?: boolean;
   editMode: boolean;
-  payload?: SetColourEvent;
-  onEventChange: (s: SetColourEvent) => void;
+  payload?: PlayColourEvent;
+  onEventChange: (s: PlayColourEvent) => void;
 }) => {
-  const setGlobalColour = useGlobals((state) => state.handlers.setColour);
-  const setMidiTrigger = useMidiTriggers((state) => state.setMidiTrigger);
-  const midiTriggers = useMidiTriggers((state) => state.midiTriggers);
+  const playColour = useGlobals((state) => state.handlers.playColour);
 
-  const midiTrigger = buttonId ? midiTriggers[`${buttonId}_press`] : undefined;
-  const onEventChange = (a: SetColourEvent) => {
-    if (midiTrigger) {
-      setMidiTrigger(`${buttonId}_press`, {
-        ...midiTrigger,
-        payload: a,
-      });
-    }
-    _onEventChange(a);
-  };
+  const scenes = useScenes(s => s.scenes);
 
   return (
-    <div className={styles.root}>
-      <button
-        className={styles.mainButton}
-        onClick={() => {
+    <>
+      <BaseButton
+        active={active}
+        onMouseDown={() => {
           if (!payload) return;
-          setGlobalColour(payload);
+          playColour(payload, MidiEventTypes.onPress);
+        }}
+        onHold={() => {
+          if (!payload) return;
+          playColour(payload, MidiEventTypes.onHoldRelease);
+        }}
+        onMouseUp={() => {
+          if (!payload) return;
+          playColour(payload, MidiEventTypes.onRelease);
         }}
         style={{
-          border:
-            payload?.colour?.length === 6
-              ? `10px solid #${payload.colour}`
-              : undefined,
+          border: payload?.colour ? `10px solid ${payload.colour}` : undefined,
         }}
       >
         Set Colour {payload?.colour}
-      </button>
+      </BaseButton>
       {editMode && (
         <div>
           Pick Colour
           <input
+            list={"colours"}
+            defaultValue={payload?.colour || ''}
             type="text"
-            max={6}
-            value={payload?.colour || ""}
-            placeholder="ffffff"
-            onChange={(e) =>
-              onEventChange({
-                colour: e.target.value,
-                function: MidiCallback.setColour,
-              })
-            }
-          />
-          <AttachMidiButton
-            value={midiTriggers[`${buttonId}_press`]}
-            onMidiDetected={(midiTrigger) => {
-              if (payload)
-                setMidiTrigger(`${buttonId}_press`, {
-                  ...midiTrigger,
-                  payload,
+            onChange={(e) => {
+              // @ts-expect-error this is a weird
+              if (typeof e.nativeEvent.data === "undefined") {
+                onEventChange({
+                  ...payload,
+                  colour: e.target.value as keyof typeof Colours,
+                  function: MidiCallback.playColour,
                 });
+              }
             }}
-            label="Attach Down"
           />
+          <datalist id={"colours"}>
+            {Object.keys(Colours).map((colour) => (
+              <option key={colour} value={colour} />
+            ))}
+          </datalist>
+
+          Pick Scene
+          <input
+            list={"scenes"}
+            defaultValue={scenes.find(s => s.name === payload?.sceneId)?.name}
+            type="text"
+            onChange={(e) => {
+
+
+              // @ts-expect-error this is a weird
+              if (typeof e.nativeEvent.data === "undefined") {
+                onEventChange({
+                  ...payload,
+                  sceneId: scenes.find(s => s.name === e.target.value)?.id,
+                  function: MidiCallback.playColour,
+                });
+              }
+            }}
+          />
+          <datalist id={"scenes"}>
+            {scenes.map((scene) => (
+              <option key={scene.id} value={scene.name} />
+            ))}
+          </datalist>
+
         </div>
       )}
-    </div>
+    </>
   );
 };

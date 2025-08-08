@@ -1,8 +1,14 @@
-import { Fixture as FictureType } from "../../context/fixtures";
-import { Light } from "../light";
+import { Fixture } from "../../../context/fixtures";
 import styles from "./fixtures.module.scss";
+import { FixtureComponent } from "../fixture";
 
-export const Fixture = ({ f }: { f: FictureType }) => {
+export const FixtureItem = ({
+  f,
+  onDrag,
+}: {
+  onDrag: (fixture: Fixture, e: React.DragEvent<HTMLDivElement>) => void;
+  f: Fixture;
+}) => {
   return (
     <div className={styles.fixture}>
       {/* <button
@@ -13,17 +19,15 @@ export const Fixture = ({ f }: { f: FictureType }) => {
       </button> */}
       {/* {addModes ? <FixtureProfiles fixtureId={f.id} /> : null} */}
 
-      <div>{`${f.model} (${f.channels}ch)`}</div>
+      <div>{`${f.model} (${f.channelFunctions.length}ch)`}</div>
+
       <div className={styles.dragWrapper}>
         <div
           draggable
-          onDragStart={(e) => {
-            e.dataTransfer.setData("fixtureId", f.id);
-            console.log("Settings", "fixtureId", f.id);
-          }}
+          onDragStart={(e) => onDrag(f, e)}
           className={styles.drag}
         >
-          <Light fixture={f} />
+          <FixtureComponent fixture={f} />
         </div>
       </div>
     </div>

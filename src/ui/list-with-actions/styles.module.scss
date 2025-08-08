@@ -1,0 +1,22 @@
+.root {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.item {
+  padding: 4px 8px;
+  display: flex;
+  border-bottom: 1px solid #161616;
+  align-items: center;
+  gap: 10px;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.name {
+  flex: 1;
+  text-transform: capitalize;
+}

@@ -1,70 +1,20 @@
-.Bar,
-.Square,
-.Circle {
-  height: 50px;
-  width: 50px;
-  border: 4px solid black;
-  opacity: 1;
-  overflow: hidden;
-  display: flex;
-  position: relative;
-  background-color: rgb(61, 61, 61);
-
-  // &.small {
-  //   height: 25px;
-  //   width: 25px;
-  //   border-width: 2px;
-  // }
-}
-
-.Circle {
-  border-radius: 100%;
-  .inner {
-    &::after {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      right: 10px;
-      bottom: 10px;
-      content: "";
-      border-radius: 20px;
-
-      background-color: rgba(
-        var(--White),
-        var(--White),
-        var(--White),
-        var(--Brightness)
-      );
-    }
-  }
-}
-
-.Bar {
-  width: 100px;
-}
-
 .root {
-
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
+.beam,
 .inner {
-
-
+  z-index: 1000;
   position: relative;
-
   box-sizing: border-box;
-  // flex: 1;
-  height: 100%;
-  width: 100%;
   animation-name: strobe;
   animation-direction: alternate;
   animation-iteration-count: infinite;
-  // border-width: 15px;
-  // border-style: solid;
-  // border-radius: 30px;
-
   animation-duration: var(--StrobeTime);
-
   background-color: rgba(
     var(--Red),
     var(--Green),
@@ -73,11 +23,9 @@
   );
 }
 
-.Strobe {
-  --Brightness: 255;
-  .inner {
-    opacity: 0;
-  }
+.inner {
+  height: 100%;
+  width: 100%;
 }
 
 @keyframes strobe {

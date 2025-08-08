@@ -1,219 +1,220 @@
-import { useContext, useState } from "react";
+import { useEffect } from "react";
 import styles from "./App.module.css";
-import { CreateFixture } from "./components/createFixture";
-import { FixtureContext } from "./context/fixtures";
-import { Fixtures } from "./components/fixtures";
-import { Stage } from "./components/stage";
-import { Venue } from "./components/venue";
-import { SceneContext } from "./context/scenes";
-import { Venue as VenueType, VenueContext } from "./context/venues";
-import { ProfileContext } from "./context/profiles";
-import { GenericLight } from "./components/generic-light";
-import { CreateGenericProfile } from "./components/createGenericProfile";
-import { Globals } from "./components/globals";
-import { connect, startDMX } from "./dmx";
+// import { FixtureContext } from "./context/fixtures";
+// import { Fixtures } from "./domain/fixtures/list";
+// import { Stage } from "./components/stage";
+// import { Venue } from "./components/venue";
+import { useScenes } from "./context/scenes";
+import { useVenues } from "./context/venues";
+// import { GenericLight } from "./components/generic-light";
+// import { CreateGenericProfile } from "./components/createGenericProfile";
+// import { Globals } from "./components/globals";
+// import { connect, startDMX } from "./dmx";
 import { GlobalTypes, useGlobals } from "./context/globals";
+// import { Controller } from "./components/controller/controller";
+// import { useUI } from "./context/ui";
+// import { HotSpots } from "./components/hot-spots/hot-spots";
+import { useActiveScene } from "./context/active-scene";
+import { BasicPage } from "./ui/layout/basic-page";
+import { NewStage } from "./components/stage/new-stage";
+import { NewStageFixture } from "./components/stage/new-state-fixture";
+import { ListWithAction } from "./ui/list-with-actions";
+// import { Controller } from "./components/controller/controller";
+import { Globals } from "./components/globals";
+import { ConnectedLight } from "./components/connectedLight";
+import { useFixtures } from "./context/fixtures";
 import { Controller } from "./components/controller/controller";
-import { useUI } from "./context/ui";
+import { useProfiles } from "./context/profiles";
+const urlParams = new URLSearchParams(window.location.search);
+const id = urlParams.get("venue_id");
 
 function App() {
-  const editMode = useUI((state) => state.venueEditMode);
-  const setVenueEditMode = useUI((state) => state.setVenueEditMode);
+  const venue = useVenues((state) => state.venues.find((v) => v.id === id));
+  const fixtures = useFixtures((state) => state.fixtures);
+  const scenes = useScenes((state) => state.scenes);
+  const setGlobalValue = useGlobals((state) => state.setGlobalValue);
+  const { setActiveScenes, activeScene } = useActiveScene((state) => state);
 
-  const { fixtures, saveFixture } = useContext(FixtureContext);
-  const { venues, saveVenue, updateVenue } = useContext(VenueContext);
-  const { scenes, updateScene, saveScene, createScene, reloadScenes } =
-    useContext(SceneContext);
-  const { profiles, reloadProfiles } = useContext(ProfileContext);
-  const [showFixture, setShowFixture] = useState(false);
-  const [showProfiles, setShowProfiles] = useState(true);
-  const activeScenes = useGlobals(
+  const activeSceneIds = useGlobals(
     (state) => state.values["ActiveScene"]?.value as string[]
   ) as string[];
 
-  const activeSceneId = activeScenes[activeScenes.length - 1];
-
-  const setGlobalValue = useGlobals((state) => state.setGlobalValue);
-
-  const scene = activeSceneId
-    ? scenes.find((s) => s.id === activeSceneId)
-    : undefined;
-  const venue = venues[0] as VenueType | undefined;
-
-  if (!scene || !venue) return null;
+  useEffect(() => {
+    if (activeSceneIds) {
+      const scene = activeSceneIds
+        .map((id) => scenes.find((s) => s.id === id))
+        .filter((a) => !!a);
+      setActiveScenes(scene);
+    }
+  }, [scenes, activeSceneIds, setActiveScenes]);
 
   return (
-    <div className={styles.root}>
-      <div className={styles.header}>
-        <input
-          value={venue?.name}
-          onChange={(e) => {
-            venue &&
-              updateVenue({
-                ...venue,
-                name: e.target.value,
-              });
-          }}
-        />
-        <button
-          onClick={() => {
-            setShowFixture((s) => !s);
-          }}
-        >
-          Fixtures
-        </button>
-        <button
-          onClick={() => {
-            setShowProfiles((s) => !s);
-          }}
-        >
-          Profiles
-        </button>
-        <button
-          onClick={() => {
-            venue && saveVenue(venue);
-          }}
-        >
-          Save Venue
-        </button>
-
-        <button
-          onClick={() => {
-            setVenueEditMode(!editMode);
-          }}
-        >
-          Venue Edit Mode
-        </button>
-
-        <span className={styles.spacer}></span>
-
-        {/* <button onClick={() => {}}>⏸︎</button> */}
-
-        <button
-          onClick={async () => {
-            const port = await connect();
-            if (port) {
-              // setPort(port);
-              startDMX(port);
-            }
-          }}
-        >
-          DMX Connect
-        </button>
-      </div>
-
-      <div className={styles.body}>
-        {showFixture && (
-          <div className={styles.left}>
-            <Fixtures fixtures={fixtures} />
-            <CreateFixture onSubmit={saveFixture} />
-          </div>
-        )}
-
-        {showProfiles && (
-          <div className={styles.left}>
-            <div className={styles.genericProfiles}>
-              <button onClick={reloadProfiles}>
-                <div className={styles.leftTitle}>Profiles ⟳</div>
-              </button>
-
-              {profiles.map((profile) => {
-                return (
-                  <div key={profile.name} className={styles.genericProfile}>
-                    <div className={styles.genericProfileName}>
-                      {profile.name}
-                    </div>
-                    <div
-                      key={profile.id}
-                      draggable
-                      onDragStart={(e) => {
-                        e.dataTransfer.setData("profileId", profile.id);
-                        console.log("Settings", "profileId", profile.id);
-                      }}
-                    >
-                      <GenericLight profile={profile} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        <div className={styles.left}>
+    <BasicPage
+      header={
+        <>
+          <button>
+            <a href="/fixtures" target="_blank">
+              Fixtures
+            </a>
+          </button>
+          <button>
+            <a href={`/venue?venue_id=${venue?.id}`} target="_blank">
+              Edit Venue
+            </a>
+          </button>
+          <button>
+            <a target="_blank" href={`/scene?venue_id=${venue?.id}`}>
+              Scenes
+            </a>
+          </button>
+          <button
+            onClick={() => {
+              useProfiles.persist.rehydrate();
+              useFixtures.persist.rehydrate();
+              useVenues.persist.rehydrate();
+              useScenes.persist.rehydrate();
+            }}
+          >
+            Reload
+          </button>
+        </>
+      }
+      left={
+        <>
           <div className={styles.scenes}>
-            <button
-              onClick={() => {
-                createScene();
-              }}
-            >
-              Create new scene
-            </button>
-
-            <button onClick={reloadScenes}>
-              <div className={styles.leftTitle}>Secenes ⟳</div>
-            </button>
-
-            {scenes &&
-              scenes.map((s) => (
-                <button
-                  disabled={s.id === activeSceneId}
-                  key={s.id}
-                  onClick={() => {
+            <ListWithAction
+              items={scenes}
+              actions={[
+                {
+                  name: "edit",
+                  onClick: (s) => {
+                    window
+                      .open(
+                        `/scene?venue_id=${venue?.id}&scene_id=${s.id}`,
+                        "_blank"
+                      )
+                      ?.focus();
+                  },
+                },
+                {
+                  name: "apply",
+                  disabled: (s) => s.id === activeScene?.id,
+                  onClick: (s) => {
                     setGlobalValue("ActiveScene", {
                       type: GlobalTypes.scene,
                       value: [s.id],
                     });
-                  }}
-                >
-                  {s.name}
-                </button>
-              ))}
+                  },
+                },
+              ]}
+            />
           </div>
-        </div>
+        </>
+      }
+    >
+      <NewStage>
+        {venue?.venueFixtures.map((venueFixture) => {
+          // either the ID is defined OR it tries to find by tags
+          // const directProfileIds = activeScene?.profiles[venueFixture.id];
 
-        <div className={styles.main}>
-          <input
-            value={scene?.name}
-            onChange={(e) => {
-              scene &&
-                updateScene({
-                  ...scene,
-                  name: e.target.value,
-                });
-            }}
-          />
-          <button
-            onClick={() => {
-              scene && saveScene(scene);
-            }}
-          >
-            Save Scene
-          </button>
-          <Stage scene={scene} />
+          // const tagProfileIds = venueFixture.tags.reduce(
+          //   (profileIds, tag) => {
+          //     if (activeScene?.profiles[tag]) {
+          //       return [...profileIds, ...activeScene.profiles[tag]];
+          //     }
+          //     return profileIds;
+          //   },
+          //   [] as string[]
+          // );
+          // const profileIds = directProfileIds || tagProfileIds;
 
-          <Controller />
+          // const subProfiles = profileIds
+          //   .map((id) => profiles.find((p) => p.id == id))
+          //   .filter((a) => !!a) as GenericProfile[];
 
-          {/* <Tempo /> */}
+          // const profileIds = activeScene
+          //   ? activeScene.profiles[venueFixture.id] ||
+          //     venueFixture.tags.reduce((profileIds, tag) => {
+          //       if (activeScene.profiles[tag]) {
+          //         return [...profileIds, ...(activeScene.profiles[tag] || [])];
+          //       }
+          //       return profileIds;
+          //     }, [] as string[])
+          //   : [];
 
-          {/* <SetColour /> */}
+          // const activeProfiles = profileIds
+          //   .map((id) => profiles.find((p) => p.id == id))
+          //   .filter((a) => !!a) as GenericProfile[];
 
-          {/* <SetScene /> */}
+          const fixture = fixtures.find((f) => f.id === venueFixture.fixtureId);
 
-          {/* <SetScene /> */}
+          if (!fixture) {
+            return <button>Delete</button>;
+          }
 
-          <Globals />
+          return (
+            <ConnectedLight
+              venueFixture={venueFixture}
+              channel={venueFixture.channel}
+              fixture={fixture}
+              key={venueFixture.id}
+              scene={activeScene}
+            >
+              <NewStageFixture
+                venueFixture={venueFixture}
+                info={
+                  <>
+                    <div>{fixture.model}</div>
+                    {/* {subProfiles?.map((prof) => (
+                        <button
+                          key={prof.id}
+                          className={styles.button}
+                          onClick={() => {
+                            if (!activeScene) return;
 
-          {/* <div className={styles.bottom}> */}
-          <CreateGenericProfile />
-          {/* </div> */}
-        </div>
+                            // if (activeScene.profiles[venueFixture.id]) {
+                            //   const newProfiles = profileIds.filter(
+                            //     (p) => p != prof.id
+                            //   );
 
-        <div className={styles.right}>
-          <Venue />
-        </div>
-      </div>
-    </div>
+                            //   updateScene({
+                            //     ...activeScene,
+                            //     profiles: {
+                            //       ...activeScene.profiles,
+                            //       [venueFixture.id]:
+                            //         newProfiles.length === 0
+                            //           ? undefined
+                            //           : newProfiles,
+                            //     },
+                            //   });
+                            // }
+                          }}
+                        >
+                          {prof.name}
+                        </button>
+                      ))} */}
+                  </>
+                }
+              />
+            </ConnectedLight>
+          );
+        })}
+      </NewStage>
+
+      <Controller />
+
+      {/* <Tempo /> */}
+
+      {/* <SetColour /> */}
+
+      {/* <SetScene /> */}
+
+      {/* <SetScene /> */}
+
+      <Globals />
+
+      {/* {activeScene && venue && <HotSpots scene={activeScene} venue={venue} />} */}
+    </BasicPage>
   );
 }
 

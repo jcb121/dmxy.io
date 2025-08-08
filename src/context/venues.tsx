@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { getDatabase } from "../db";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export type VenueFixture = {
   id: string;
   x: number;
   y: number;
+  tags: Array<string>; // selectors
   /**
    *  this should be there, becuase in a venue you can't always change the channels
    */
+  overwrites: Record<number, string>,
   channel: number;
   fixtureId: string;
 };
@@ -20,21 +24,70 @@ export type Venue = {
   // channels: []
 };
 
-const sampleVenue: Venue = {
-  name: "Underdogs",
+export const sampleVenue = (name?: string): Venue => ({
+  name: name || "New Venue",
   venueFixtures: [],
   id: crypto.randomUUID(),
-};
+});
+
+type UpdateVenuteFixture = Partial<Omit<VenueFixture, "id">> & { id: string };
+
+export const useVenues = create<{
+  venues: Venue[];
+  add: (f: Venue) => void;
+  update: (f: Venue) => void;
+  remove: (f: Venue) => void;
+}>()(
+  persist(
+    (set) => {
+      return {
+        venues: [],
+        add: (venue) => {
+          set((state) => {
+            const original = !state.venues.find((v) => v.id === venue.id);
+            return {
+              ...state,
+              venues: original
+                ? [...state.venues, venue]
+                : state.venues.map((v) => (v.id === venue.id ? venue : v)),
+            };
+          });
+        },
+        update: (venue) => {
+          set((state) => ({
+            ...state,
+            venues: state.venues.map((f) => (f.id === venue.id ? venue : f)),
+          }));
+        },
+        remove: (venue) => {
+          set((state) => ({
+            ...state,
+            venues: state.venues.filter((f) => f.id !== venue.id),
+          }));
+        },
+      };
+    },
+    {
+      name: "venues",
+    }
+  )
+);
 
 export const VenueContext = React.createContext<{
   venues: Venue[];
+  createVenue: (name: string) => string;
   updateVenue: (v: Venue) => void;
   saveVenue: (v: Venue) => void;
+  updateVenueFixture: (v: string, f: UpdateVenuteFixture) => void;
   // setVenue: React.Dispatch<React.SetStateAction<Venue>>;
 }>({
   venues: [],
+  createVenue: () => {
+    return "";
+  },
   saveVenue: () => {},
   updateVenue: () => {},
+  updateVenueFixture: () => {},
 });
 
 export const VenueProvider = ({ children }: { children: React.ReactNode }) => {
@@ -46,7 +99,7 @@ export const VenueProvider = ({ children }: { children: React.ReactNode }) => {
       const data = await database.getAll("venues");
       console.log("GOT VEUES", data);
 
-      setVenues(data.length > 0 ? data : [sampleVenue]);
+      setVenues(data.length > 0 ? data : [sampleVenue()]);
     })();
   }, []);
 
@@ -62,11 +115,38 @@ export const VenueProvider = ({ children }: { children: React.ReactNode }) => {
     });
   };
 
+  const updateVenueFixture = (
+    venueId: string,
+    venueFixture: UpdateVenuteFixture
+  ) => {
+    const venue = venues.find((v) => v.id === venueId);
+
+    venue &&
+      updateVenue({
+        ...venue,
+        venueFixtures: venue.venueFixtures.map((f) => {
+          if (f.id === venueFixture.id) {
+            return {
+              ...f,
+              ...venueFixture,
+            };
+          }
+          return f;
+        }),
+      });
+  };
+
   const saveVenue = async (venue: Venue) => {
     console.log("SAVING VENUE", venue);
 
     const database = await getDatabase();
     database.put("venues", venue);
+  };
+
+  const createVenue = (name: string) => {
+    const newVenue = sampleVenue(name);
+    setVenues((state) => [...state, newVenue]);
+    return newVenue.id;
   };
 
   return (
@@ -75,6 +155,8 @@ export const VenueProvider = ({ children }: { children: React.ReactNode }) => {
         venues,
         updateVenue,
         saveVenue,
+        updateVenueFixture,
+        createVenue,
       }}
     >
       {children}

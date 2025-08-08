@@ -56,9 +56,9 @@ const fixture = {
 };
 
 export const GenericLight = ({
-  profile,
+  profiles,
 }: {
-  profile: Omit<GenericProfile, "id">;
+  profiles: Omit<GenericProfile, "id">[];
 }) => {
-  return <ConnectedLight fixture={fixture} profiles={[profile]} />;
+  return <ConnectedLight fixture={fixture} profiles={profiles} />;
 };

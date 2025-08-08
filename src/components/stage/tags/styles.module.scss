@@ -1,0 +1,26 @@
+.tag {
+  border: 1px solid black;
+  background-color: transparent;
+  padding: 1px 6px;
+  border-radius: 20px;
+
+  &:hover {
+    border-color: blue;
+  }
+  background-color: #525252;
+}
+
+.tags {
+  padding: 2px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  background: #2c2c2c;
+  border: 1px solid black;
+}
+
+.input {
+  border: none;
+  background-color: transparent;
+  flex: 1;
+}

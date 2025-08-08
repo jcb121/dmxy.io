@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getDatabase } from "../db";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export type DMXValues = Record<number, number>; // 0: 0 -> 255
 
@@ -12,16 +14,26 @@ export type FixtureProfile = {
 
 export enum ChannelSimpleFunction {
   unknow = "",
-  // colour = "Colour",
+  colour = "Colour",
+  fixedColour = "Fixed Colour",
   red = "Red",
   white = "White",
   green = "Green",
   blue = "Blue",
-  brightness = "Brightness",
+  intensity = "Intensity",
   strobe = "Strobe",
   function = "Function",
   speed = "Speed",
   sound = "Sound",
+
+  //
+  goboWheel = "Gobo Wheel",
+  goboRotation = "Gobo Rotation",
+  pan = "Pan",
+  tilt = "Tilt",
+  colourWheel = "Colour Wheel",
+  prism = "Prism",
+  reset = "Reset",
 }
 
 export enum ColourMode {
@@ -41,12 +53,9 @@ export interface SubChannelFunction<
   value?: string; // can be a HTML color code
 }
 
-export type ChannelFunction = Record<
-  number,
-  SubChannelFunction<ChannelSimpleFunction>
->;
+export type ChannelFunction = SubChannelFunction<ChannelSimpleFunction>[];
 
-export type ChannelFunctions = Record<number, ChannelFunction>;
+export type ChannelFunctions = ChannelFunction[];
 
 export enum FixtureShape {
   circle = "Circle",
@@ -57,12 +66,50 @@ export enum FixtureShape {
 export type Fixture = {
   id: string;
   model: string;
-  channels: number;
+  // channels: number;
   channelFunctions: ChannelFunctions;
   fixtureShape: FixtureShape;
-  colourMode: ColourMode;
-  colour?: string;
+  // colourMode: ColourMode;
+  // colour?: string;
 };
+
+export const useFixtures = create<{
+  fixtures: Fixture[];
+  add: (f: Fixture) => void;
+  update: (f: Fixture) => void;
+  remove: (f: Fixture) => void;
+}>()(
+  persist(
+    (set) => {
+      return {
+        fixtures: [],
+        add: (fixture) => {
+          set((state) => ({
+            ...state,
+            fixtures: [...state.fixtures, fixture],
+          }));
+        },
+        update: (fixture) => {
+          set((state) => ({
+            ...state,
+            fixtures: state.fixtures.map((f) =>
+              f.id === fixture.id ? fixture : f
+            ),
+          }));
+        },
+        remove: (fixture) => {
+          set((state) => ({
+            ...state,
+            fixtures: state.fixtures.filter((f) => f.id === fixture.id),
+          }));
+        },
+      };
+    },
+    {
+      name: "fixtures",
+    }
+  )
+);
 
 export const FixtureContext = React.createContext<{
   fixtures: Fixture[];

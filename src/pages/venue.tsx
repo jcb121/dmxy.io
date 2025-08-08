@@ -1,0 +1,261 @@
+import ReactDOM from "react-dom/client";
+import { BasicPage } from "../ui/layout/basic-page";
+import "../index.css";
+import { sampleVenue, useVenues, Venue } from "../context/venues";
+import { useFixtures } from "../context/fixtures";
+import { Fixtures } from "../domain/fixtures/list";
+import { NewStage } from "../components/stage/new-stage";
+import { NewStageFixture } from "../components/stage/new-state-fixture";
+import { Tags } from "../components/stage/tags/tags";
+import { Globals } from "../components/globals";
+import { useMemo, useState } from "react";
+import { LockChannels } from "../components/lock-channels/lock-channels";
+
+const urlParams = new URLSearchParams(window.location.search);
+const id = urlParams.get("venue_id");
+
+const _venue =
+  useVenues.getState().venues.find((v) => v.id === id) || sampleVenue();
+
+const CreateVenue = () => {
+  const [venue, setVenue] = useState<Venue>(_venue);
+
+  // const venue = useVenue((state) => state.venue);
+  const fixtures = useFixtures((s) => s.fixtures);
+  const addVenue = useVenues((s) => s.add);
+  const original = useVenues((state) =>
+    state.venues.find((a) => a.id == venue.id)
+  );
+
+  const [activeVenueFixtureId, setActiveVenueFixtureId] = useState<string>();
+
+  // const fixtures = useFixtures((state) =>
+  //   state.fixtures.find((f) => f.id === activeVenueFixtureId)
+  // );
+
+  const activeVenueFixture = useMemo(() => {
+    return venue.venueFixtures.find((vf) => vf.id === activeVenueFixtureId);
+  }, [venue, activeVenueFixtureId]);
+
+  const activeFixture = useMemo(() => {
+    return fixtures.find((vf) => vf.id === activeVenueFixture?.fixtureId);
+  }, [fixtures, activeVenueFixture]);
+
+  return (
+    <BasicPage
+      header={
+        <div>
+          <input
+            onChange={(e) => {
+              setVenue((state) => ({
+                ...state,
+                name: e.target.value,
+              }));
+            }}
+            value={venue.name}
+          />
+          <button
+            onClick={() => {
+              const urlParams = new URLSearchParams(window.location.search);
+              if (!urlParams.get("venue_id")) {
+                urlParams.set("venue_id", venue.id);
+                window.location.search = urlParams.toString();
+              }
+              addVenue(venue);
+            }}
+          >
+            {original ? "Save" : "Save As"}
+          </button>
+        </div>
+      }
+      left={
+        <Fixtures
+          fixtures={fixtures}
+          onDrag={(fixture, e) => {
+            e.dataTransfer.setData("fixtureId", fixture.id);
+            console.log("Settings", "fixtureId", fixture.id);
+          }}
+        />
+      }
+    >
+      <NewStage
+        onDrop={(e) => {
+          const { top, left } = e.currentTarget.getBoundingClientRect();
+          const fixtureId = e.dataTransfer.getData("fixtureId");
+          if (fixtureId) {
+            const fixture = fixtures.find((f) => f.id === fixtureId);
+            if (!fixture) return;
+            const id = crypto.randomUUID();
+            setVenue({
+              ...venue,
+              venueFixtures: [
+                ...venue.venueFixtures,
+                {
+                  overwrites: {},
+                  tags: [],
+                  channel: 1,
+                  id,
+                  fixtureId,
+                  x: e.clientX - left,
+                  y: e.clientY - top,
+                },
+              ],
+            });
+          }
+
+          const id = e.dataTransfer.getData("id");
+          if (id) {
+            setVenue({
+              ...venue,
+              venueFixtures: venue.venueFixtures.map((f) =>
+                f.id === id
+                  ? { ...f, x: e.clientX - left, y: e.clientY - top }
+                  : f
+              ),
+            });
+          }
+        }}
+      >
+        {venue.venueFixtures.map((venueFixture) => {
+          const fixture = fixtures.find((f) => f.id === venueFixture.fixtureId);
+          if (!fixture) return;
+
+          return (
+            <NewStageFixture
+              key={venueFixture.id}
+              onDrag={(e) => {
+                e.dataTransfer.setData("id", venueFixture.id);
+              }}
+              info={
+                <>
+                  <div>
+                    {`${fixture.model} (ch: ${fixture.channelFunctions.length})`}
+                  </div>
+                  <div>
+                    <button
+                      onClick={() => {
+                        setActiveVenueFixtureId(venueFixture.id);
+                      }}
+                    >
+                      {activeVenueFixture?.id === venueFixture?.id
+                        ? "Active"
+                        : "Select"}
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setVenue({
+                          ...venue,
+                          venueFixtures: venue.venueFixtures.filter(
+                            (v) => v.id !== venueFixture.id
+                          ),
+                        });
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+
+                  <div>
+                    <Tags
+                      selector="stage-fixture"
+                      tags={venueFixture.tags}
+                      updateTags={(tags) => {
+                        const _tags = new Set(tags);
+                        setVenue({
+                          ...venue,
+                          venueFixtures: venue.venueFixtures.map((v) =>
+                            v.id === venueFixture.id
+                              ? { ...v, tags: [..._tags] }
+                              : v
+                          ),
+                        });
+                      }}
+                    />
+                  </div>
+                  <div>
+                    CH: {venueFixture.channel}-
+                    {venueFixture.channel + fixture.channelFunctions.length}
+                  </div>
+                  <div>
+                    <button
+                      disabled={venueFixture.channel < 10}
+                      onClick={() => {
+                        setVenue({
+                          ...venue,
+                          venueFixtures: venue.venueFixtures.map((v) =>
+                            v.id === venueFixture.id
+                              ? { ...v, channel: v.channel - 10 }
+                              : v
+                          ),
+                        });
+                      }}
+                    >
+                      --
+                    </button>
+                    <button
+                      disabled={venueFixture.channel < 1}
+                      onClick={() => {
+                        setVenue({
+                          ...venue,
+                          venueFixtures: venue.venueFixtures.map((v) =>
+                            v.id === venueFixture.id
+                              ? { ...v, channel: v.channel - 1 }
+                              : v
+                          ),
+                        });
+                      }}
+                    >
+                      -
+                    </button>
+                    <button
+                      onClick={() => {
+                        setVenue({
+                          ...venue,
+                          venueFixtures: venue.venueFixtures.map((v) =>
+                            v.id === venueFixture.id
+                              ? { ...v, channel: v.channel + 1 }
+                              : v
+                          ),
+                        });
+                      }}
+                    >
+                      +
+                    </button>
+                    <button
+                      onClick={() => {
+                        setVenue({
+                          ...venue,
+                          venueFixtures: venue.venueFixtures.map((v) =>
+                            v.id === venueFixture.id
+                              ? { ...v, channel: v.channel + 10 }
+                              : v
+                          ),
+                        });
+                      }}
+                    >
+                      ++
+                    </button>
+                  </div>
+                </>
+              }
+              venueFixture={venueFixture}
+            />
+          );
+        })}
+      </NewStage>
+
+      {activeFixture && activeVenueFixture && (
+        <LockChannels
+          setVenue={setVenue}
+          fixture={activeFixture}
+          venueFixture={activeVenueFixture}
+        />
+      )}
+
+      <Globals />
+    </BasicPage>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById("root")!).render(<CreateVenue />);

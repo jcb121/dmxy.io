@@ -1,14 +1,14 @@
 import { memo } from "react";
 import {
-  ChannelSimpleFunction,
-  ColourMode,
+  // ChannelSimpleFunction,
+  // ColourMode,
   DMXValues,
   Fixture,
 } from "../../context/fixtures";
 // import styles from "./light.module.scss";
 import { RGBA } from "./rgba";
-import { Simple } from "./simple";
-import { Strobe } from "./strobe";
+// import { Simple } from "./simple";
+// import { Strobe } from "./strobe";
 
 export const _Light = ({
   fixture,
@@ -23,35 +23,44 @@ export const _Light = ({
    */
   dmxValues?: DMXValues;
 }) => {
-  const funcs = Object.values(fixture.channelFunctions).reduce(
-    (funcs, channel) => {
-      return [
-        ...funcs,
-        ...Object.values(channel).reduce(
-          (_funcs, func) => [..._funcs, func.function],
-          [] as ChannelSimpleFunction[]
-        ),
-      ];
-    },
-    [] as ChannelSimpleFunction[]
-  );
+  // const light = useMemo(() => {
+  //   const red = fixture.channelFunctions.find((channel) =>
+  //     channel.find((a) => a.function === ChannelSimpleFunction.red)
+  //   );
+  //   const blue = fixture.channelFunctions.find((channel) =>
+  //     channel.find((a) => a.function === ChannelSimpleFunction.blue)
+  //   );
+  //   const green = fixture.channelFunctions.find((channel) =>
+  //     channel.find((a) => a.function === ChannelSimpleFunction.green)
+  //   );
 
-  if (funcs.length === 1) {
-    if (funcs[0] === ChannelSimpleFunction.brightness) {
-      return <Simple fixture={fixture} dmxValues={dmxValues} />;
-    } else if (funcs[0] === ChannelSimpleFunction.strobe) {
-      return <Strobe fixture={fixture} dmxValues={dmxValues} />;
-    }
-  }
+  //   if (red || green || blue) {
+  //     return "RGB";
+  //   }
+  // }, [fixture]);
+  // const funcs = Object.values(fixture.channelFunctions).reduce(
+  //   (funcs, channel) => {
+  //     return [
+  //       ...funcs,
+  //       ...Object.values(channel).reduce(
+  //         (_funcs, func) => [..._funcs, func.function],
+  //         [] as ChannelSimpleFunction[]
+  //       ),
+  //     ];
+  //   },
+  //   [] as ChannelSimpleFunction[]
+  // );
 
-  if (
-    fixture.colourMode === ColourMode.rgbw ||
-    fixture.colourMode === ColourMode.rgb
-  ) {
-    return <RGBA fixture={fixture} dmxValues={dmxValues} />;
-  }
+  // if (funcs.length === 1) {
+  //   if (funcs[0] === ChannelSimpleFunction.brightness) {
+  //     return <Simple fixture={fixture} dmxValues={dmxValues} />;
+  //   } else if (funcs[0] === ChannelSimpleFunction.strobe) {
+  //     return <Strobe fixture={fixture} dmxValues={dmxValues} />;
+  //   }
+  // }
 
-  return <div>no match</div>;
+  // if (light === "RGB") {
+  return <RGBA fixture={fixture} dmxValues={dmxValues} />;
 };
 
 export const Light = memo(_Light);
