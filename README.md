@@ -1,30 +1,21 @@
-# React + TypeScript + Vite
+# dmxy.io
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Named from the DMX protocol used to control lights and devices on stages, see https://en.wikipedia.org/wiki/DMX512
 
-Currently, two official plugins are available:
+This project started out as a tool to generate QLC+ save files, but it has become a full suite in itself. see https://www.qlcplus.org/
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Demo
 
-## Expanding the ESLint configuration
+https://dmxy-949e1.web.app/
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+## Technology
 
-- Configure the top-level `parserOptions` property like this:
+Dmxy.io run completely in the browser and uses modern web APIs to communicate with lights.
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
-```
-
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+* Web Midi API - https://developer.mozilla.org/en-US/docs/Web/API/Web_MIDI_API
+  Used for reading the state of Midi devices like the AKAI LPD8
+* Web Serial API - https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API
+  Used for sending the DMX messages to devices
+* Vite with React + TS - https://vite.dev/
+* Zustand for state management
+* Firebase for hosting and data storage
