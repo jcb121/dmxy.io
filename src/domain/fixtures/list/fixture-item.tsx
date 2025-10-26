@@ -11,14 +11,6 @@ export const FixtureItem = ({
 }) => {
   return (
     <div className={styles.fixture}>
-      {/* <button
-        className={styles.button}
-        onClick={() => setAddModes((state) => !state)}
-      >
-        {!addModes ? "↓" : "↑"}
-      </button> */}
-      {/* {addModes ? <FixtureProfiles fixtureId={f.id} /> : null} */}
-
       <div>{`${f.model} (${f.channelFunctions.length}ch)`}</div>
 
       <div className={styles.dragWrapper}>

@@ -1,12 +1,11 @@
 import styles from "./controller.module.scss";
-import { MidiCallback, useMidiTriggers } from "../../context/midi";
+import { MidiCallback } from "../../context/midi";
 import { Tempo } from "./buttons/tempo";
 import { SetScene } from "./buttons/set-scene";
 import { CycleScene } from "./buttons/cycle-scene";
 import { UserEvent, useEvents } from "../../context/events";
 import { Empty } from "./knobs/empty";
 import { AttachMidiButton } from "../attach-midi-button";
-import { useGlobals } from "../../context/globals";
 
 import { MergeScene } from "./buttons/merge-scene";
 import { PadButton } from "../pad-button";
@@ -20,6 +19,8 @@ import { TempoEdit } from "./edit/tempo";
 import { SetVarEdit } from "./edit/set-var";
 import { SetChannelValueEdit } from "./edit/set-channel-value";
 import { SetChannelValue } from "./knobs/set-channel-value.";
+import { useMidiState } from "../../context/midi-state";
+import { useMidiTriggers } from "../../context/midi-triggers";
 
 export type Layout =
   | {
@@ -79,14 +80,13 @@ export const ControllerButton = ({
 }) => {
   const buttonFuncs = useEvents((state) => state.buttonFuncs);
   const buttonFunc = buttonFuncs[id];
-  const z = useGlobals((state) => state.values[id]);
-  const active = z?.type == "byte" && z.value > 0; // using globals, I don't want this...
+  const buttonState = useMidiState((state) => state[id]);
+  const active = buttonState > 0;
 
   return (
     <div
       className={styles.button}
       onClick={() => {
-        console.log("id", id);
         onClick(id);
       }}
     >
@@ -122,6 +122,7 @@ export const ControllerDial = ({
 }) => {
   const buttonFuncs = useEvents((state) => state.buttonFuncs);
   const buttonFunc = buttonFuncs[id];
+  const dialValue = (useMidiState((state) => state[id]) || 0) * 2;
 
   return (
     <div
@@ -130,21 +131,31 @@ export const ControllerDial = ({
       }}
     >
       {buttonFunc?.function == MidiCallback.setVar && (
-        <SetVar payload={buttonFunc} />
+        <SetVar payload={{ ...buttonFunc, value: dialValue }} />
       )}
 
       {buttonFunc?.function == MidiCallback.setChannelValue && (
-        <SetChannelValue payload={buttonFunc} />
+        <SetChannelValue payload={{ ...buttonFunc, value: dialValue }} />
       )}
 
-      {!buttonFunc?.function && <Empty buttonId={id} />}
+      {!buttonFunc?.function && (
+        <Empty
+          payload={{
+            value: dialValue,
+          }}
+          onChange={(e) => {
+            useMidiState.setState((state) => ({
+              ...state,
+              [id]: parseInt(e.target.value) / 2,
+            }));
+          }}
+        />
+      )}
     </div>
   );
 };
 
 export const Controller = () => {
-  // const editMode = useEvents((state) => state.editMode);
-  // const setEditMode = useEvents((state) => state.setEditMode);
   const [id, setId] = useState<string>();
   const setButtonFuncs = useEvents((state) => state.setButtonFuncs);
   const buttonFuncs = useEvents((state) => state.buttonFuncs);

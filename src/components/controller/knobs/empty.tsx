@@ -1,26 +1,15 @@
-import { GlobalTypes, useGlobals } from "../../../context/globals";
 import { PadDial } from "../../pad-dial";
 
 export const Empty = ({
-  buttonId,
+  payload,
+  onChange,
 }: {
-  buttonId: string;
+  payload: {
+    value: number;
+  };
+  onChange: React.ChangeEventHandler<HTMLInputElement>;
 }) => {
-  const globals = useGlobals((state) => state.values);
-  const setGlobalValue = useGlobals((state) => state.setGlobalValue);
-
   return (
-    <>
-      <PadDial
-        value={(globals[buttonId]?.value as number) || 0}
-        label={"NONE"}
-        onChange={(e) =>
-          setGlobalValue(buttonId, {
-            type: GlobalTypes.byte,
-            value: parseInt(e.target.value),
-          })
-        }
-      />
-    </>
+    <PadDial value={payload.value || 0} label={"NONE"} onChange={onChange} />
   );
 };

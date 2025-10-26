@@ -41,7 +41,6 @@ export const ConnectedLight = ({
   return (
     <div ref={ref}>
       {children}
-      {/* <Light fixture={fixture} /> */}
     </div>
   );
 };

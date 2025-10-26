@@ -6,7 +6,6 @@ import {
   SetChannelValue,
   SetScene,
   SetVar,
-  useEvents,
   UserEvent,
 } from "../../context/events";
 import { GlobalTypes, useGlobals } from "../../context/globals";
@@ -31,10 +30,6 @@ export const handleEvent = (e: UserEvent, t: MidiEventTypes) => {
 
 const setChannelValue = (e: SetChannelValue, type: MidiEventTypes) => {
   if (type === MidiEventTypes.onPress || MidiEventTypes.onTurn) {
-    if (type === MidiEventTypes.onTurn && e.functionId) {
-      useEvents.getState().setButtonFuncs(e.functionId, e);
-    }
-
     useGlobals.setState((state) => ({
       ...state,
       values: {
@@ -94,9 +89,6 @@ const mergeScene = (e: MergeScene, type: MidiEventTypes) => {
 const setVar = (e: SetVar, type: MidiEventTypes) => {
   if (!e.varName || typeof e.value === "undefined") return;
   if (type === MidiEventTypes.onPress || type === MidiEventTypes.onTurn) {
-    if (type === MidiEventTypes.onTurn && e.functionId) {
-      useEvents.getState().setButtonFuncs(e.functionId, e);
-    }
     // sets scene
     useActiveScene.setState((state) => ({
       ...state,

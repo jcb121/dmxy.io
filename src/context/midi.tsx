@@ -1,35 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
 import { SetVar, useEvents } from "./events";
 import { handleEvent } from "../domain/events";
-
-// function listInputsAndOutputs(midiAccess: MIDIAccess) {
-//   for (const entry of midiAccess.inputs) {
-//     const input = entry[1];
-//     console.log(
-//       `Input port [type:'${input.type}']` +
-//         ` id:'${input.id}'` +
-//         ` manufacturer:'${input.manufacturer}'` +
-//         ` name:'${input.name}'` +
-//         ` version:'${input.version}'`
-//     );
-//     input.onmidimessage = (message) => {
-//       console.log(message, message.data);
-//     };
-//   }
-
-//   for (const entry of midiAccess.outputs) {
-//     const output = entry[1];
-//     console.log(
-//       `Output port [type:'${output.type}'] id:'${output.id}' manufacturer:'${output.manufacturer}' name:'${output.name}' version:'${output.version}'`
-//     );
-//   }
-// }
-
-// function onMIDIFailure(msg: string) {
-//   console.error(`Failed to get MIDI access - ${msg}`);
-// }
+import { useMidiState } from "./midi-state";
+import { useMidiTriggers } from "./midi-triggers";
 
 export type MIDIMessageEventWithData = MIDIMessageEvent & {
   currentTarget: EventTarget & {
@@ -39,30 +12,6 @@ export type MIDIMessageEventWithData = MIDIMessageEvent & {
   data: [number, number, number];
 };
 
-export const useMidiTriggers = create(
-  persist<{
-    midiTriggers: Record<string, MidiTrigger>;
-    setMidiTrigger: (id: string, midiTrigger: MidiTrigger) => void;
-  }>(
-    (set) => {
-      return {
-        midiTriggers: {},
-        setMidiTrigger: (key, midiTrigger) =>
-          set((state) => ({
-            ...state,
-            midiTriggers: {
-              ...state.midiTriggers,
-              [key]: midiTrigger,
-            },
-          })),
-      };
-    },
-    {
-      name: "midi-events", // name of the item in the storage (must be unique)
-      storage: createJSONStorage(() => localStorage), // (optional) by default, 'localStorage' is used
-    }
-  )
-);
 
 const press: Record<string, number> = {};
 
@@ -127,6 +76,11 @@ export const MidiProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       if (id) {
+        useMidiState.setState((state) => ({
+          ...state,
+          [id]: value,
+        }));
+
         const payload = buttonFuncs[id];
         if (!payload) return;
 
@@ -181,21 +135,13 @@ export enum MidiCallback {
   mergeScene = "mergeScene",
   setVar = "setVar",
   setChannelValue = "setChannelValue",
-
-  // setColour = "setColour",
-  // playColour = "playColour",
-  // setState = "setState",
-  // removeScene = "removeScene",
-  // toggleColour = "toggleColour",
-  // changeZone = "changeZone",
-  // setRenderMode = "setRenderMode",
 }
 
 export type MidiTrigger = {
   name: string;
   controlId: number;
-  // value: number; // this happends om the event...
   deviceId: string;
+  // value: number; // this happends om the event...
 };
 
 export type CustomMidiEvent = Event & {

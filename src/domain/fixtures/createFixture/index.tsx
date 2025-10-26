@@ -2,24 +2,18 @@ import { useEffect, useState } from "react";
 import {
   Fixture,
   FixtureShape,
-  // useFixtures,
-  // ChannelFunctions,
-  // ColourMode,
-  // ColourMode,
+  SupportedFixtures,
 } from "../../../context/fixtures";
 
 import styles from "./createFixture.module.scss";
-// import { FunctionSelect } from "./function-select";
-// import { connect } from "../../../dmx";
-// import { LightMode } from "./light-mode";
 import { Channel, defaultValue } from "./channel";
-// import { Light } from "../../../components/light";
-// import { Fixture } from "../list/fixture";
 import { FixtureComponent } from "../fixture";
 import { DMXState } from "../../../dmx";
 import { Functions } from "./functions/functions";
+import { ConnectedLight } from "../../../components/connectedLight";
 
 const BASIC_FIXTURE = (): Fixture => ({
+  type: SupportedFixtures.light,
   id: crypto.randomUUID(),
   model: "",
   channelFunctions: [],
@@ -40,16 +34,6 @@ export const CreateFixture = ({
     setFixture(_fixture || BASIC_FIXTURE());
   }, [_fixture]);
   const original = !_fixture;
-
-  // const [model, setModel] = useState<string>("");
-  // const [channels, setChannels] = useState<number>(1);
-  // const [fixtureShape, setFixtureShape] = useState<FixtureShape>(
-  //   FixtureShape.circle
-  // );
-  // const [channels, setChannels] = useState<ChannelFunctions>([[defaultValue]]);
-  // const [colourMode, setColourMode] = useState<ColourMode>(ColourMode.fixed);
-  // const [colour, setColour] = useState<string>();
-
   const [dmxValues, setDmxValues] = useState<Record<number, number>>({});
   const [dmxChannel, setDmxChannel] = useState<number>(1);
 
@@ -59,15 +43,23 @@ export const CreateFixture = ({
     });
   }, [dmxValues, dmxChannel]);
 
-  // useEffect(() => {
-  //   port && sendUniverse(port, dmxValues);
-  // }, [port, dmxValues]);
-
   return (
     <div className={styles.root}>
       <div className={styles.title}>Create Fixture</div>
-
-      <FixtureComponent dmxValues={dmxValues} fixture={fixture} />
+      <ConnectedLight
+        fixture={fixture}
+        venueFixture={{
+          channel: dmxChannel,
+          fixtureId: fixture.id,
+          id: "TempFixture",
+          x: 0,
+          y: 0,
+          overwrites: {},
+          tags: [],
+        }}
+      >
+        <FixtureComponent fixture={fixture} />
+      </ConnectedLight>
 
       <table>
         <tbody>
