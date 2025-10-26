@@ -1,8 +1,7 @@
 import { create } from "zustand";
 import { MidiCallback } from "./midi";
-import { NewGlobalsValue } from "./globals";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { Colours } from "../colours";
+import { ChannelSimpleFunction } from "./fixtures";
 
 export type UserEvent = ValueOf<UserEventMap>;
 
@@ -12,49 +11,9 @@ export type SetBeatLength = {
   timeStamp: number | undefined;
 };
 
-export type SetColour = {
-  function: MidiCallback.setColour;
-  colour?: string;
-  sceneId?: string
-};
-
-export type PlayColour = {
-  function: MidiCallback.playColour;
-  colour?: keyof typeof Colours;
-  sceneId?: string
-};
-
 export type SetScene = {
   function: MidiCallback.setScene;
   sceneId?: string;
-  remove: boolean,
-};
-export type removeScene = {
-  function: MidiCallback.removeScene;
-  sceneId?: string;
-};
-
-export type setState = {
-  function: MidiCallback.setState;
-  globalVar?: string;
-  payload?: NewGlobalsValue[keyof NewGlobalsValue];
-};
-
-export type ToggleColour = {
-  function: MidiCallback.toggleColour;
-  profileId: string;
-};
-
-export enum RenderModes {
-  // still = 'still',
-  cycle = "cycle",
-  rotate = "rotate",
-  random = "random",
-}
-
-export type SetRenderMode = {
-  function: MidiCallback.setRenderMode;
-  renderMode: RenderModes;
 };
 
 export type CycleScene = {
@@ -63,22 +22,32 @@ export type CycleScene = {
   cycleName: string;
 };
 
-export type ChangeZone = {
-  function: MidiCallback.changeZone;
-  reverse: boolean;
+export type MergeScene = {
+  function: MidiCallback.mergeScene;
+  scene: string;
+};
+
+export type SetVar = {
+  function: MidiCallback.setVar;
+  varName: string;
+  value: number;
+  functionId?: string;
+};
+export type SetChannelValue = {
+  function: MidiCallback.setChannelValue;
+  channel: ChannelSimpleFunction;
+  value: number;
+  functionId?: string;
+  type: "MAX" | "MIN";
 };
 
 export type UserEventMap = {
   [MidiCallback.setBeatLength]: SetBeatLength;
-  [MidiCallback.setColour]: SetColour;
-  [MidiCallback.playColour]: PlayColour;
   [MidiCallback.setScene]: SetScene;
-  [MidiCallback.removeScene]: removeScene;
-  [MidiCallback.setState]: setState;
   [MidiCallback.cycleScene]: CycleScene;
-  [MidiCallback.toggleColour]: ToggleColour;
-  [MidiCallback.setRenderMode]: SetRenderMode;
-  [MidiCallback.changeZone]: ChangeZone;
+  [MidiCallback.mergeScene]: MergeScene;
+  [MidiCallback.setVar]: SetVar;
+  [MidiCallback.setChannelValue]: SetChannelValue;
 };
 
 type ValueOf<T> = T[keyof T];

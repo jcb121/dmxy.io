@@ -2,14 +2,16 @@ import { useFixtures } from "../../../context/fixtures";
 import { VenueFixture } from "../../../context/venues";
 import { FixtureComponent } from "../../../domain/fixtures/fixture";
 
-import styles from "../stage-fixture/stage-fixture.module.scss";
+import styles from "./styles.module.scss";
 
 export const NewStageFixture = ({
+  onClick,
   venueFixture,
   onDrop,
   onDrag,
   info,
 }: {
+  onClick?: () => void;
   info?: React.ReactNode;
   venueFixture: VenueFixture;
   onDrop?: (e: React.DragEvent<HTMLDivElement>) => void;
@@ -35,6 +37,7 @@ export const NewStageFixture = ({
     >
       <div className={styles.info}>{info}</div>
       <div
+        onClick={onClick}
         draggable={onDrag ? true : false}
         onDragStart={(e) => onDrag && onDrag(e)}
       >

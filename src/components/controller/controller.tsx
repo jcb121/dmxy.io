@@ -2,21 +2,24 @@ import styles from "./controller.module.scss";
 import { MidiCallback, useMidiTriggers } from "../../context/midi";
 import { Tempo } from "./buttons/tempo";
 import { SetScene } from "./buttons/set-scene";
-import { SetColour as SetColourButton } from "./buttons/set-colour";
-import { RemoveScene } from "./buttons/remove-scene";
-import { SetState as SetStateButton } from "./buttons/set-state";
 import { CycleScene } from "./buttons/cycle-scene";
-import { SetColour as SetColourKnob } from "./knobs/set-color";
-import { SetState as SetStateKnob } from "./knobs/set-state";
 import { UserEvent, useEvents } from "../../context/events";
-import { Empty } from "./knobs/empy";
-import { ToggleColour } from "./buttons/toggle-colour";
-import { SetRenderMode } from "./buttons/set-render-mode";
-import { ChangeZone } from "./buttons/change-zone";
+import { Empty } from "./knobs/empty";
 import { AttachMidiButton } from "../attach-midi-button";
 import { useGlobals } from "../../context/globals";
-import { BaseButton } from "./buttons/base-button";
-import { LPD8, MPD218 } from "./controller-json";
+
+import { MergeScene } from "./buttons/merge-scene";
+import { PadButton } from "../pad-button";
+import { SetVar } from "./knobs/set-var";
+import { LDP8Controller } from "../midi-controllers/lpd8";
+import { useState } from "react";
+import { CycleSceneEdit } from "./edit/cycle-scene";
+import { MergeSceneEdit } from "./edit/merge-scene";
+import { SetSceneEdit } from "./edit/set-scene";
+import { TempoEdit } from "./edit/tempo";
+import { SetVarEdit } from "./edit/set-var";
+import { SetChannelValueEdit } from "./edit/set-channel-value";
+import { SetChannelValue } from "./knobs/set-channel-value.";
 
 export type Layout =
   | {
@@ -30,7 +33,15 @@ export type Layout =
       flex?: number;
     };
 
-export const Layout = ({ layout, id }: { id: string; layout: Layout }) => {
+export const Layout = ({
+  layout,
+  id,
+  onClick,
+}: {
+  id: string;
+  layout: Layout;
+  onClick: (id: string) => void;
+}) => {
   return (
     <div
       className={styles[layout.type]}
@@ -38,261 +49,218 @@ export const Layout = ({ layout, id }: { id: string; layout: Layout }) => {
         flex: layout.flex || undefined,
       }}
     >
-      {/* {layout.type} */}
       {layout.type == "row" &&
         layout.children.map((child, index) => (
-          <Layout key={index} layout={child} id={id} />
+          <Layout key={index} layout={child} id={id} onClick={onClick} />
         ))}
 
       {layout.type == "column" &&
         layout.children.map((child, index) => (
-          <Layout key={index} layout={child} id={id} />
+          <Layout key={index} layout={child} id={id} onClick={onClick} />
         ))}
 
       {layout.type === "button" && (
-        <ControllerButton id={`_${id}_button_${layout.id}`} />
+        <ControllerButton id={`_${id}_button_${layout.id}`} onClick={onClick} />
       )}
 
       {layout.type === "dial" && (
-        <ControllerDial id={`_${id}_dial_${layout.id}`} />
+        <ControllerDial id={`_${id}_dial_${layout.id}`} onClick={onClick} />
       )}
     </div>
   );
 };
 
-export const ControllerButton = ({ id }: { id: string }) => {
-  const editMode = useEvents((state) => state.editMode);
-  const setButtonFuncs = useEvents((state) => state.setButtonFuncs);
+export const ControllerButton = ({
+  id,
+  onClick,
+}: {
+  id: string;
+  onClick: (id: string) => void;
+}) => {
   const buttonFuncs = useEvents((state) => state.buttonFuncs);
   const buttonFunc = buttonFuncs[id];
-
-  const midiTriggers = useMidiTriggers((state) => state.midiTriggers);
-  const setMidiTrigger = useMidiTriggers((state) => state.setMidiTrigger);
-
   const z = useGlobals((state) => state.values[id]);
-
-  const active = z?.type == "byte" && z.value > 0;
+  const active = z?.type == "byte" && z.value > 0; // using globals, I don't want this...
 
   return (
-    <>
-      {editMode && (
-        <div>
-          <div>Select funcion</div>
-          <select
-            value={buttonFunc?.function}
-            onChange={(e) => {
-              setButtonFuncs(id, {
-                function: e.target.value as MidiCallback,
-              } as UserEvent);
-            }}
-          >
-            <option></option>
-            {Object.values(MidiCallback).map((o) => (
-              <option key={o}>{o}</option>
-            ))}
-          </select>
-        </div>
-      )}
-
+    <div
+      className={styles.button}
+      onClick={() => {
+        console.log("id", id);
+        onClick(id);
+      }}
+    >
       {buttonFunc?.function === MidiCallback.setBeatLength && (
-        <Tempo
-          active={active}
-          payload={buttonFunc}
-          onEventChange={(payload) => {
-            if (payload) setButtonFuncs(id, payload);
-          }}
-          editMode={editMode}
-        />
+        <Tempo active={active} payload={buttonFunc} />
       )}
 
       {buttonFunc?.function === MidiCallback.setScene && (
-        <SetScene
-          active={active}
-          editMode={editMode}
-          payload={buttonFunc}
-          onEventChange={(payload) => {
-            if (payload) setButtonFuncs(id, payload);
-          }}
-        />
+        <SetScene active={active} payload={buttonFunc} />
       )}
 
-      {buttonFunc?.function === MidiCallback.removeScene && (
-        <RemoveScene
-          active={active}
-          editMode={editMode}
-          payload={buttonFunc}
-          onEventChange={(payload) => {
-            if (payload) setButtonFuncs(id, payload);
-          }}
-        />
-      )}
-
-      {buttonFunc?.function === MidiCallback.playColour && (
-        <SetColourButton
-          active={active}
-          editMode={editMode}
-          payload={buttonFunc}
-          onEventChange={(payload) => {
-            if (payload) setButtonFuncs(id, payload);
-          }}
-        />
-      )}
-
-      {buttonFunc?.function === MidiCallback.toggleColour && (
-        <ToggleColour
-          active={active}
-          editMode={editMode}
-          payload={buttonFunc}
-          onEventChange={(payload) => {
-            if (payload) setButtonFuncs(id, payload);
-          }}
-        />
-      )}
-
-      {buttonFunc?.function === MidiCallback.setRenderMode && (
-        <SetRenderMode
-          active={active}
-          editMode={editMode}
-          payload={buttonFunc}
-          onEventChange={(payload) => {
-            if (payload) setButtonFuncs(id, payload);
-          }}
-        />
-      )}
-
-      {buttonFunc?.function === MidiCallback.changeZone && (
-        <ChangeZone
-          active={active}
-          editMode={editMode}
-          payload={buttonFunc}
-          onEventChange={(payload) => {
-            if (payload) setButtonFuncs(id, payload);
-          }}
-        />
-      )}
-
-      {buttonFunc?.function === MidiCallback.setState && (
-        <SetStateButton
-          active={active}
-          editMode={editMode}
-          payload={buttonFunc}
-          onEventChange={(payload) => {
-            if (payload) setButtonFuncs(id, payload);
-          }}
-        />
+      {buttonFunc?.function === MidiCallback.mergeScene && (
+        <MergeScene active={active} payload={buttonFunc} />
       )}
 
       {buttonFunc?.function === MidiCallback.cycleScene && (
-        <CycleScene
-          active={active}
-          editMode={editMode}
-          payload={buttonFunc}
-          onEventChange={(payload) => {
-            if (payload) setButtonFuncs(id, payload);
-          }}
-        />
+        <CycleScene active={active} payload={buttonFunc} />
       )}
 
-      {!buttonFuncs[id]?.function && <BaseButton active={active} />}
-
-      {editMode && (
-        <div>
-          <AttachMidiButton
-            value={midiTriggers[id]}
-            onMidiDetected={(midiTrigger) => setMidiTrigger(id, midiTrigger)}
-            label="Attach Button"
-          />
-        </div>
+      {!buttonFuncs[id]?.function && (
+        <PadButton label="Empty" active={active} />
       )}
-    </>
+    </div>
   );
 };
 
-export const ControllerDial = ({ id }: { id: string }) => {
-  const editMode = useEvents((state) => state.editMode);
-  const setButtonFuncs = useEvents((state) => state.setButtonFuncs);
+export const ControllerDial = ({
+  id,
+  onClick,
+}: {
+  id: string;
+  onClick: (id: string) => void;
+}) => {
   const buttonFuncs = useEvents((state) => state.buttonFuncs);
   const buttonFunc = buttonFuncs[id];
 
-  const midiTriggers = useMidiTriggers((state) => state.midiTriggers);
-  const setMidiTrigger = useMidiTriggers((state) => state.setMidiTrigger);
-
   return (
-    <>
-      {editMode && (
-        <div>
-          <div>Select funcion</div>
-          <select
-            value={buttonFunc?.function}
-            onChange={(e) => {
-              setButtonFuncs(id, {
-                function: e.target.value as MidiCallback,
-              } as UserEvent);
-            }}
-          >
-            <option></option>
-            {Object.values(MidiCallback).map((o) => (
-              <option key={o}>{o}</option>
-            ))}
-          </select>
-        </div>
+    <div
+      onClick={() => {
+        onClick(id);
+      }}
+    >
+      {buttonFunc?.function == MidiCallback.setVar && (
+        <SetVar payload={buttonFunc} />
       )}
 
-      {!buttonFunc?.function && <Empty buttonId={id} editMode={editMode} />}
-
-      {buttonFunc?.function === MidiCallback.setColour && (
-        <SetColourKnob
-          buttonId={id}
-          editMode={editMode}
-          payload={buttonFunc}
-          onEventChange={(payload) => {
-            if (payload) setButtonFuncs(id, payload);
-          }}
-        />
+      {buttonFunc?.function == MidiCallback.setChannelValue && (
+        <SetChannelValue payload={buttonFunc} />
       )}
 
-      {buttonFunc?.function === MidiCallback.setState && (
-        <SetStateKnob
-          buttonId={id}
-          payload={buttonFunc}
-          onEventChange={(payload) => {
-            if (payload) setButtonFuncs(id, payload);
-          }}
-        />
-      )}
-      {editMode && (
-        <div>
-          <AttachMidiButton
-            value={midiTriggers[id]}
-            onMidiDetected={(midiTrigger) => {
-              console.log("GOT DIAL", midiTrigger);
-              setMidiTrigger(id, midiTrigger);
-            }}
-            label={"Attach Knob"}
-          />
-        </div>
-      )}
-    </>
+      {!buttonFunc?.function && <Empty buttonId={id} />}
+    </div>
   );
 };
 
 export const Controller = () => {
-  const editMode = useEvents((state) => state.editMode);
-  const setEditMode = useEvents((state) => state.setEditMode);
+  // const editMode = useEvents((state) => state.editMode);
+  // const setEditMode = useEvents((state) => state.setEditMode);
+  const [id, setId] = useState<string>();
+  const setButtonFuncs = useEvents((state) => state.setButtonFuncs);
+  const buttonFuncs = useEvents((state) => state.buttonFuncs);
+  const buttonFunc = id ? buttonFuncs[id] : undefined;
+  const midiTriggers = useMidiTriggers((state) => state.midiTriggers);
+  const setMidiTrigger = useMidiTriggers((state) => state.setMidiTrigger);
 
   return (
     <div>
-      <button onClick={() => setEditMode(!editMode)}>EditMode</button>
       <div className={styles.root}>
-        <h1>MPC</h1>
+        {/* <button
+          className={styles.editButton}
+          style={{
+            border: (editMode && "1px solid red") || undefined,
+          }}
+          onClick={() => setEditMode(!editMode)}
+        >
+          ⚙
+        </button> */}
+        {/* <h1>MPC</h1>
         <div className={styles.controller}>
           <Layout layout={MPD218} id="MPC" />
-        </div>
+        </div> */}
 
-        <h1>LPD8</h1>
-        <div className={styles.controller}>
-          <Layout layout={LPD8} id="LPD8" />
-        </div>
+        <LDP8Controller
+          onClick={(id) => {
+            setId(id);
+          }}
+        />
+
+        {id && (
+          <div>
+            <div className={styles.edit}>
+              <div className={styles.header}>
+                <h2>{id}</h2>
+                <AttachMidiButton
+                  value={midiTriggers[id]}
+                  onMidiDetected={(midiTrigger) => {
+                    setMidiTrigger(id, midiTrigger);
+                  }}
+                  label={"Attach"}
+                />
+              </div>
+
+              <div className={styles.content}>
+                <label>Function:</label>
+                <select
+                  value={buttonFunc?.function}
+                  onChange={(e) => {
+                    setButtonFuncs(id, {
+                      function: e.target.value as MidiCallback,
+                    } as UserEvent);
+                  }}
+                >
+                  <option></option>
+                  {Object.values(MidiCallback).map((o) => (
+                    <option key={o}>{o}</option>
+                  ))}
+                </select>
+              </div>
+              {buttonFunc?.function === MidiCallback.cycleScene && (
+                <CycleSceneEdit
+                  name={id}
+                  payload={buttonFunc}
+                  onEventChange={(payload) => {
+                    setButtonFuncs(id, payload);
+                  }}
+                />
+              )}
+              {buttonFunc?.function === MidiCallback.mergeScene && (
+                <MergeSceneEdit
+                  payload={buttonFunc}
+                  onEventChange={(payload) => {
+                    setButtonFuncs(id, payload);
+                  }}
+                />
+              )}
+
+              {buttonFunc?.function === MidiCallback.setScene && (
+                <SetSceneEdit
+                  payload={buttonFunc}
+                  onEventChange={(payload) => {
+                    setButtonFuncs(id, payload);
+                  }}
+                />
+              )}
+
+              {buttonFunc?.function === MidiCallback.setBeatLength && (
+                <TempoEdit
+                  payload={buttonFunc}
+                  onEventChange={(payload) => {
+                    setButtonFuncs(id, payload);
+                  }}
+                />
+              )}
+
+              {buttonFunc?.function === MidiCallback.setVar && (
+                <SetVarEdit
+                  payload={buttonFunc}
+                  onEventChange={(payload) => {
+                    setButtonFuncs(id, payload);
+                  }}
+                />
+              )}
+
+              {buttonFunc?.function === MidiCallback.setChannelValue && (
+                <SetChannelValueEdit
+                  payload={buttonFunc}
+                  onEventChange={(payload) => {
+                    setButtonFuncs(id, payload);
+                  }}
+                />
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

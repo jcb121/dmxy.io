@@ -32,6 +32,7 @@ export const FunctionSelect = ({
           {" "}
           <input
             placeholder="Function name"
+            value={value.value}
             onChange={(e) => {
               onChange({
                 ...value,
@@ -46,28 +47,28 @@ export const FunctionSelect = ({
         value.function === ChannelSimpleFunction.colourWheel ||
         value.function === ChannelSimpleFunction.strobe ||
         value.function === ChannelSimpleFunction.colour) && (
-          <span>
-            <span
-              style={{
-                background: `#${value.value}`,
-              }}
-            >
-              #
-            </span>
-            <input
-              placeholder="HTML color Code"
-              // type="number"
-              prefix="#"
-              value={value.value}
-              onChange={(e) => {
-                onChange({
-                  ...value,
-                  value: e.target.value.replace("#", ""),
-                });
-              }}
-            />
+        <span>
+          <span
+            style={{
+              background: `#${value.value}`,
+            }}
+          >
+            #
           </span>
-        )}
+          <input
+            placeholder="HTML color Code"
+            // type="number"
+            prefix="#"
+            value={value.value}
+            onChange={(e) => {
+              onChange({
+                ...value,
+                value: e.target.value.replace("#", ""),
+              });
+            }}
+          />
+        </span>
+      )}
 
       <label>
         from{" "}

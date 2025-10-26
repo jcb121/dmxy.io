@@ -1,0 +1,9 @@
+.root {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.span2 {
+  grid-column: span 2;
+}

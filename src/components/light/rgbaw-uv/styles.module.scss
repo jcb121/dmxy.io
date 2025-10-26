@@ -1,0 +1,58 @@
+.root {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.root {
+  animation-name: strobe;
+  animation-direction: alternate;
+  animation-iteration-count: infinite;
+  animation-duration: var(--StrobeTime);
+  background-color: rgba(
+    var(--Red),
+    var(--Green),
+    var(--Blue),
+    var(--Brightness)
+  );
+
+  &::after {
+    position: absolute;
+    content: "";
+    height: 33%;
+    width: 33%;
+    border-radius: 50%;
+    background-color: rgba(
+      var(--White),
+      var(--White),
+      var(--White),
+      var(--Brightness)
+    );
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  &::before {
+    position: absolute;
+    content: "";
+    height: 66%;
+    width: 66%;
+    border-radius: 50%;
+    background-color: rgba(83, 0, 223, var(--UV));
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+}
+
+@keyframes strobe {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

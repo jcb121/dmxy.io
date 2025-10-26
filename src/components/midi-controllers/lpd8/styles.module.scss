@@ -1,0 +1,112 @@
+.root {
+  // display: flex;
+  width: 35cm;
+
+  display: grid;
+
+  grid-template-rows: 1fr;
+  grid-template-columns: 0.25fr 1fr 1fr;
+
+  padding: 32px;
+  gap: 32px;
+  position: relative;
+  background-color: rgb(13, 13, 13);
+  margin: 4px 8px;
+
+  &::after {
+    content: "";
+    position: absolute;
+    display: block;
+    background-color: red;
+    top: -4px;
+    bottom: -4px;
+    right: -8px;
+    width: 8px;
+  }
+  &::before {
+    position: absolute;
+    content: "";
+    display: block;
+    background-color: red;
+    top: -4px;
+    bottom: -4px;
+    left: -8px;
+    width: 8px;
+  }
+}
+
+.left {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  overflow: hidden;
+}
+
+.brand {
+  display: flex;
+  justify-content: space-between;
+  font-weight: bolder;
+  font-size: 40px;
+  line-height: 0.8;
+}
+
+.brand_subline {
+  display: flex;
+  justify-content: space-between;
+  text-transform: uppercase;
+  font-weight: bolder;
+}
+
+.model {
+  font-size: 40px;
+  font-weight: bolder;
+  color: red;
+  display: flex;
+  justify-content: space-between;
+  line-height: 0.8;
+  .number {
+    color: white;
+  }
+}
+
+.tagline {
+  color: red;
+  text-transform: uppercase;
+}
+
+.controller {
+  flex: 1;
+}
+
+.button {
+  flex: 1;
+  aspect-ratio: 1/1;
+  // height: 70px;
+  // width: 70px;
+  border: 4px solid rgb(161, 161, 161);
+  background-color: black;
+  border-radius: 8px;
+}
+
+.buttons {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+
+  > div {
+    text-align: center;
+  }
+}
+
+.programButton {
+  color: red;
+  .button {
+    border-color: rgb(44, 44, 44);
+  }
+}
+
+.layout {
+  display: flex;
+}

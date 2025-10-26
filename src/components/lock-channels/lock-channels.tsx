@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Fixture } from "../../context/fixtures";
+import { ChannelSimpleFunction, Fixture } from "../../context/fixtures";
 import { useGlobals } from "../../context/globals";
 import { Venue, VenueFixture } from "../../context/venues";
+import { CreateGlobal } from "../../domain/globals/create";
 
 export const LockChannels = ({
   fixture,
@@ -14,32 +15,35 @@ export const LockChannels = ({
   venueFixture: VenueFixture;
 }) => {
   const globals = useGlobals((state) => state.values);
-  const [channelIndex, setChannelIndex] = useState<number>();
+  const [func, setFunction] = useState<ChannelSimpleFunction>();
   const [globalName, setGlobalName] = useState<string>();
 
-  // TODO: don't allow the same
-  // const channelOptions = fixture.channelFunctions.filter((_c, index) => {
-  //   return venueFixture.overwrites[index];
-  // });
+  const functions = [
+    ...new Set(
+      fixture.channelFunctions.reduce((functions, channel) => {
+        return channel.reduce((functions, func) => {
+          return [...functions, func.function];
+        }, functions);
+      }, [] as ChannelSimpleFunction[])
+    ),
+  ];
 
   return (
     <div>
-      <p>LockChannel</p>
+      <CreateGlobal />
+
+      <p>Lock Function - this cannot be overwritten by a profile!</p>
+
       <div>
         <select
           onChange={(e) => {
-            setChannelIndex(parseInt(e.target.value));
+            setFunction(e.target.value as ChannelSimpleFunction);
           }}
         >
           <option>none</option>
-          {fixture.channelFunctions.map((_func, index) => (
-            <option key={index} value={index}>
-              {`(${index})`}
-              {_func
-                .map((f) => f.function)
-                .join(",")
-                .substring(0, 10)}
-            </option>
+
+          {functions.map((func) => (
+            <option key={func}>{func}</option>
           ))}
         </select>
         to global
@@ -56,9 +60,9 @@ export const LockChannels = ({
           ))}
         </select>
         <button
-          disabled={channelIndex === undefined || !globalName}
+          disabled={func === undefined || !globalName}
           onClick={() => {
-            if (channelIndex === undefined || !globalName) return;
+            if (func === undefined || !globalName) return;
             setVenue((venue) => ({
               ...venue,
               venueFixtures: venue.venueFixtures.map((v) =>
@@ -67,7 +71,7 @@ export const LockChannels = ({
                       ...v,
                       overwrites: {
                         ...v.overwrites,
-                        [channelIndex]: globalName,
+                        [func]: globalName,
                       },
                     }
                   : v
@@ -81,7 +85,7 @@ export const LockChannels = ({
       <div>
         {Object.keys(venueFixture.overwrites).map((key) => (
           <div key={key}>
-            Channel {key} is locked to {venueFixture.overwrites[key as number]}
+            Channel {key} is locked to {venueFixture.overwrites[key as ChannelSimpleFunction]}
             <button
               onClick={() => {
                 setVenue((venue) => ({
@@ -89,13 +93,12 @@ export const LockChannels = ({
                   venueFixtures: venue.venueFixtures.map((v) => {
                     if (v.id === venueFixture.id) {
                       const overwrites = { ...v.overwrites };
-                      delete overwrites[key as number];
+                      delete overwrites[key as ChannelSimpleFunction];
                       return {
                         ...v,
                         overwrites,
                       };
                     }
-
                     return v;
                   }),
                 }));

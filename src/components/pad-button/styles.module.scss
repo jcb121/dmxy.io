@@ -1,0 +1,29 @@
+.button {
+  aspect-ratio: 1/1;
+  width: 100%;
+  padding: 4px;
+  word-break: break-all;
+  overflow: hidden;
+
+  border-radius: 4px;
+
+  border: none;
+
+  &:hover {
+    outline: none;
+    border-color: none;
+  }
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.item {
+  // no styles needed
+}
+
+.label {
+  font-size: x-small;
+  margin-bottom: 3px;
+}

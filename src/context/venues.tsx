@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import { getDatabase } from "../db";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { ChannelSimpleFunction } from "./fixtures";
+
+import { Scene } from "./scenes";
 
 export type VenueFixture = {
   id: string;
@@ -11,7 +14,7 @@ export type VenueFixture = {
   /**
    *  this should be there, becuase in a venue you can't always change the channels
    */
-  overwrites: Record<number, string>,
+  overwrites: Partial<Record<ChannelSimpleFunction, string>>;
   channel: number;
   fixtureId: string;
 };
@@ -20,6 +23,7 @@ export type Venue = {
   name: string;
   id: string;
   venueFixtures: VenueFixture[];
+  scenes: Record<string, Scene>;
   // slots: string[][];
   // channels: []
 };
@@ -28,6 +32,7 @@ export const sampleVenue = (name?: string): Venue => ({
   name: name || "New Venue",
   venueFixtures: [],
   id: crypto.randomUUID(),
+  scenes: {},
 });
 
 type UpdateVenuteFixture = Partial<Omit<VenueFixture, "id">> & { id: string };
@@ -72,6 +77,41 @@ export const useVenues = create<{
     }
   )
 );
+
+export const useActiveVenue = create<{
+  venue?: Venue;
+  setActiveVenue: (id: string) => void;
+  addScene: (s: Scene) => void;
+}>((set) => ({
+  addScene: (scene) => {
+    set((state) => {
+      if (state.venue) {
+        const venuesState = useVenues.getState();
+        const venue = {
+          ...state.venue,
+          scenes: {
+            ...state.venue.scenes,
+            [scene.id]: scene,
+          },
+        };
+        venuesState.update(venue);
+
+        return {
+          ...state,
+          venue,
+        };
+      }
+      return state;
+    });
+  },
+  setActiveVenue: (id: string) => {
+    const venue = useVenues.getState().venues.find((v) => v.id === id);
+    set((state) => ({
+      ...state,
+      venue,
+    }));
+  },
+}));
 
 export const VenueContext = React.createContext<{
   venues: Venue[];

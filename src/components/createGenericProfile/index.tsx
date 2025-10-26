@@ -7,7 +7,7 @@ import {
 import { ChannelSimpleFunction, useFixtures } from "../../context/fixtures";
 import styles from "./createGenericProfile.module.scss";
 import { useGlobals } from "../../context/globals";
-import { getRGB } from "../../utils";
+import { getRGB } from "../../utils/rgb";
 
 export const defaultState = (globals: string[]): GenericProfile => ({
   name: "",

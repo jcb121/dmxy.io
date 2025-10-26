@@ -1,0 +1,31 @@
+.row {
+  display: flex;
+}
+
+.header {
+  border-bottom: 1px solid #454545;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sceneName {
+  font-weight: bolder;
+}
+
+.rule {
+  padding: 4px;
+  flex-grow: 0;
+  flex-shrink: 1;
+  border: 1px solid #cdcdcd;
+  border-radius: 3px;
+}
+
+.root {
+  display: flex;
+}
+
+.delete {
+  background-color: transparent;
+  padding: 0;
+}

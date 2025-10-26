@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import { DMXValues, Fixture } from "../../context/fixtures";
-import { setCSSVarsFromDmx } from "../../utils";
 import styles from "./light.module.scss";
 
 export const Simple = ({

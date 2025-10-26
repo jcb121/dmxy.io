@@ -13,18 +13,23 @@ export type FixtureProfile = {
 };
 
 export enum ChannelSimpleFunction {
-  unknow = "",
+  unknown = "",
   colour = "Colour",
   fixedColour = "Fixed Colour",
+  uv = "UV",
+  amber = "Amber",
   red = "Red",
   white = "White",
   green = "Green",
   blue = "Blue",
   intensity = "Intensity",
   strobe = "Strobe",
-  function = "Function",
+
+  function = "Function", // do I want to keep this here....
+  functions = "Functions",
+
   speed = "Speed",
-  sound = "Sound",
+  // sound = "Sound", // sound is a mode
 
   //
   goboWheel = "Gobo Wheel",
@@ -63,14 +68,24 @@ export enum FixtureShape {
   bar = "Bar",
 }
 
+export type FixtureFunction = {
+  id: string;
+  label: string;
+  values: Record<string, number>;
+};
+
+export enum SupportedFixtures {
+  light = "Light",
+  smokeMachine = "smokeMachine"
+}
+
 export type Fixture = {
+  type: SupportedFixtures;
   id: string;
   model: string;
-  // channels: number;
-  channelFunctions: ChannelFunctions;
+  channelFunctions: ChannelFunctions; // index is bad here now..
+  deviceFunctions?: FixtureFunction[];
   fixtureShape: FixtureShape;
-  // colourMode: ColourMode;
-  // colour?: string;
 };
 
 export const useFixtures = create<{
@@ -100,7 +115,7 @@ export const useFixtures = create<{
         remove: (fixture) => {
           set((state) => ({
             ...state,
-            fixtures: state.fixtures.filter((f) => f.id === fixture.id),
+            fixtures: state.fixtures.filter((f) => f.id !== fixture.id),
           }));
         },
       };

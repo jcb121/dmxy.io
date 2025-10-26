@@ -9,7 +9,7 @@ import styles from "./channel.module.scss";
 
 export const defaultValue: SubChannelFunction = {
   range: [0, 255],
-  function: ChannelSimpleFunction.unknow,
+  function: ChannelSimpleFunction.unknown,
 };
 
 export const Channel = ({
@@ -25,15 +25,14 @@ export const Channel = ({
   channelFunction: ChannelFunction;
   onChange: (f: ChannelFunction) => void;
 }) => {
-  console.log(channelFunction)
   return (
-    <tr>
+    <tr key={index}>
       <td>
         <div>{`Channel ${index + 1}: `}</div>
 
         {channelFunction.map((func, index) => {
           return (
-            <div className={styles.function}>
+            <div className={styles.function} key={`${func.function}-${index}`}>
               {/* <div>Function: {index}</div> */}
               <button
                 className={styles.delete}
@@ -49,7 +48,6 @@ export const Channel = ({
                 key={`${index}`}
                 value={func}
                 onChange={(subChannelFunction) => {
-                  console.log(channelFunction);
                   onChange(
                     channelFunction.map((i, _index) =>
                       _index === index ? subChannelFunction : i
@@ -84,6 +82,7 @@ export const Channel = ({
             }));
           }}
         />
+        {dmxValues[index] || 0}
       </td>
     </tr>
   );

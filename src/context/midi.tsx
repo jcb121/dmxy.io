@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { useEvents } from "./events";
-import { GlobalTypes, useGlobals } from "./globals";
-import { animateColour } from "../utils";
+import { SetVar, useEvents } from "./events";
+import { handleEvent } from "../domain/events";
 
 // function listInputsAndOutputs(midiAccess: MIDIAccess) {
 //   for (const entry of midiAccess.inputs) {
@@ -98,8 +97,8 @@ export const MidiProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     (async () => {
       const result = await navigator.permissions.query({
-        // @ts-expect-error Missing type
         name: "midi",
+        // @ts-expect-error Missing type
         sysex: true,
       });
       console.log("MIDI RESULT", result.state);
@@ -115,8 +114,6 @@ export const MidiProvider = ({ children }: { children: React.ReactNode }) => {
       const deviceId = e.currentTarget?.id as string;
       const { midiTriggers } = useMidiTriggers.getState();
       const { buttonFuncs } = useEvents.getState();
-      const applyAction = useGlobals.getState().apply;
-      const setGlobalValue = useGlobals.getState().setGlobalValue;
 
       const [, controlId, value] = e.data;
       const type = getMidiEventType(e);
@@ -130,60 +127,22 @@ export const MidiProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       if (id) {
-        if (
-          type === MidiEventTypes.onTurn ||
-          type === MidiEventTypes.onPress ||
-          type === MidiEventTypes.onHoldRelease ||
-          type === MidiEventTypes.onRelease
-        ) {
-          setGlobalValue(id, {
-            value: value * 2,
-            type: GlobalTypes.byte,
-          });
-        }
-
         const payload = buttonFuncs[id];
         if (!payload) return;
 
-        if (
-          type == MidiEventTypes.onTurn &&
-          payload.function === MidiCallback.setColour
-        ) {
-          // setValue(parseInt(e.target.value));
-          const third = 127 / 2;
-          const state = value / third;
-          const frame = Math.floor(state);
-
-          let colour = "0000ff";
-          if (frame === 0) {
-            colour = animateColour("ff0000", "00ff00", 1, state - frame);
-          } else if (frame === 1) {
-            colour = animateColour("00ff00", "0000ff", 1, state - frame);
-          }
-          applyAction({ ...payload, colour }, type);
-        } else if (
-          type == MidiEventTypes.onTurn &&
-          payload.function === MidiCallback.setState
-        ) {
-          applyAction(
-            {
-              ...payload,
-              payload: {
-                value: value * 2,
-                type: GlobalTypes.byte,
-              },
-            },
+        if (payload.function === MidiCallback.setBeatLength) {
+          handleEvent({ ...payload, timeStamp: e.timeStamp }, type);
+        } else if (type === MidiEventTypes.onTurn) {
+          handleEvent(
+            { ...payload, value: value * 2, functionId: id } as SetVar,
             type
           );
-        } else if (payload.function === MidiCallback.setBeatLength) {
-          applyAction({ ...payload, timeStamp: e.timeStamp }, type);
         } else if (
-          type === MidiEventTypes.onTurn ||
           type === MidiEventTypes.onPress ||
           type === MidiEventTypes.onHoldRelease ||
           type === MidiEventTypes.onRelease
         ) {
-          applyAction(payload, type);
+          handleEvent(payload, type);
         }
       }
     };
@@ -217,15 +176,19 @@ export enum MidiEventTypes {
 
 export enum MidiCallback {
   cycleScene = "cycleScene",
-  setBeatLength = "setBeatLength",
-  setColour = "setColour",
-  playColour = "playColour",
   setScene = "setScene",
-  setState = "setState",
-  removeScene = "removeScene",
-  toggleColour = "toggleColour",
-  changeZone = "changeZone",
-  setRenderMode = "setRenderMode",
+  setBeatLength = "setBeatLength",
+  mergeScene = "mergeScene",
+  setVar = "setVar",
+  setChannelValue = "setChannelValue",
+
+  // setColour = "setColour",
+  // playColour = "playColour",
+  // setState = "setState",
+  // removeScene = "removeScene",
+  // toggleColour = "toggleColour",
+  // changeZone = "changeZone",
+  // setRenderMode = "setRenderMode",
 }
 
 export type MidiTrigger = {

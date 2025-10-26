@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Fixture,
   FixtureShape,
+  // useFixtures,
   // ChannelFunctions,
   // ColourMode,
   // ColourMode,
@@ -9,22 +10,37 @@ import {
 
 import styles from "./createFixture.module.scss";
 // import { FunctionSelect } from "./function-select";
-import { connect } from "../../../dmx";
+// import { connect } from "../../../dmx";
 // import { LightMode } from "./light-mode";
 import { Channel, defaultValue } from "./channel";
 // import { Light } from "../../../components/light";
 // import { Fixture } from "../list/fixture";
 import { FixtureComponent } from "../fixture";
+import { DMXState } from "../../../dmx";
+import { Functions } from "./functions/functions";
+
+const BASIC_FIXTURE = (): Fixture => ({
+  id: crypto.randomUUID(),
+  model: "",
+  channelFunctions: [],
+  fixtureShape: FixtureShape.square,
+});
 
 export const CreateFixture = ({
-  fixture,
-  onChange,
+  fixture: _fixture,
   onSubmit,
+  onClose,
 }: {
-  fixture: Fixture;
-  onChange: React.Dispatch<React.SetStateAction<Fixture>>;
-  onSubmit: () => void;
+  fixture?: Fixture;
+  onSubmit: (fixture: Fixture) => void;
+  onClose: () => void;
 }) => {
+  const [fixture, setFixture] = useState<Fixture>(_fixture || BASIC_FIXTURE());
+  useEffect(() => {
+    setFixture(_fixture || BASIC_FIXTURE());
+  }, [_fixture]);
+  const original = !_fixture;
+
   // const [model, setModel] = useState<string>("");
   // const [channels, setChannels] = useState<number>(1);
   // const [fixtureShape, setFixtureShape] = useState<FixtureShape>(
@@ -35,47 +51,24 @@ export const CreateFixture = ({
   // const [colour, setColour] = useState<string>();
 
   const [dmxValues, setDmxValues] = useState<Record<number, number>>({});
-  const [port, setPort] = useState<SerialPort>();
+  const [dmxChannel, setDmxChannel] = useState<number>(1);
+
+  useEffect(() => {
+    Object.keys(dmxValues).forEach((key) => {
+      DMXState[parseInt(key) + dmxChannel] = dmxValues[parseInt(key)];
+    });
+  }, [dmxValues, dmxChannel]);
 
   // useEffect(() => {
   //   port && sendUniverse(port, dmxValues);
   // }, [port, dmxValues]);
 
-  // const _onSave = () => {
-  //   // console.log("Saving Fixture", channels);
-  //   // if (model && channels)
-  //   // onSubmit({
-  //   //   id: crypto.randomUUID(),
-  //   //   model,
-  //   //   channels,
-  //   //   channelFunctions: channelFunctions,
-  //   //   fixtureShape,
-  //   //   colourMode,
-  //   //   colour: colourMode === ColourMode.single ? colour : undefined,
-  //   // });
-  // };
-
   return (
     <div className={styles.root}>
       <div className={styles.title}>Create Fixture</div>
-      <button
-        onClick={async () => {
-          const port = await connect();
-          setPort(port);
-        }}
-      >
-        Live Preview
-      </button>
 
       <FixtureComponent dmxValues={dmxValues} fixture={fixture} />
-      {/* <button
-        onClick={() => {
-          console.log(port);
-          // port && sendUniverse(port, dmxValues);
-        }}
-      >
-        send
-      </button> */}
+
       <table>
         <tbody>
           <tr>
@@ -86,11 +79,23 @@ export const CreateFixture = ({
               <input
                 value={fixture.model}
                 onChange={(e) =>
-                  onChange((state) => ({
+                  setFixture((state) => ({
                     ...state,
                     model: e.target.value,
                   }))
                 }
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label>Channel:</label>
+            </td>
+            <td>
+              <input
+                type="number"
+                value={dmxChannel}
+                onChange={(e) => setDmxChannel(parseInt(e.target.value))}
               />
             </td>
           </tr>
@@ -106,8 +111,7 @@ export const CreateFixture = ({
                   const target = parseInt(e.target.value);
 
                   if (fixture.channelFunctions.length < target) {
-                    // FIX THIS HERE
-                    onChange((state) => {
+                    setFixture((state) => {
                       while (state.channelFunctions.length < target) {
                         state.channelFunctions.push([defaultValue]);
                       }
@@ -117,7 +121,7 @@ export const CreateFixture = ({
                       };
                     });
                   } else if (fixture.channelFunctions.length > target) {
-                    onChange((state) => {
+                    setFixture((state) => {
                       return {
                         ...state,
                         channelFunctions: state.channelFunctions.slice(
@@ -139,7 +143,7 @@ export const CreateFixture = ({
               <select
                 value={fixture.fixtureShape}
                 onChange={(e) => {
-                  onChange((state) => ({
+                  setFixture((state) => ({
                     ...state,
                     fixtureShape: e.target.value as FixtureShape,
                   }));
@@ -169,12 +173,13 @@ export const CreateFixture = ({
           {fixture.channelFunctions.map((channel, i) => {
             return (
               <Channel
+                key={i}
                 setDmxValues={setDmxValues}
                 index={i}
                 dmxValues={dmxValues}
                 channelFunction={channel}
                 onChange={(c) => {
-                  onChange((state) => ({
+                  setFixture((state) => ({
                     ...state,
                     channelFunctions: state.channelFunctions.map((s, index) =>
                       index == i ? c : s
@@ -187,7 +192,33 @@ export const CreateFixture = ({
         </tbody>
       </table>
 
-      <button onClick={onSubmit}>save</button>
+      <Functions
+        channels={fixture.channelFunctions}
+        functions={fixture.deviceFunctions}
+        setFunctions={(action) => {
+          if (typeof action === "function") {
+            setFixture((state) => ({
+              ...state,
+              deviceFunctions: action(state.deviceFunctions),
+            }));
+          } else {
+            setFixture((state) => ({
+              ...state,
+              deviceFunctions: action,
+            }));
+          }
+        }}
+      />
+      {original ? (
+        <>
+          <button onClick={() => onSubmit(fixture)}>Save As</button>
+        </>
+      ) : (
+        <>
+          <button onClick={() => onClose()}>close</button>
+          <button onClick={() => onSubmit(fixture)}>Save</button>
+        </>
+      )}
     </div>
   );
 };

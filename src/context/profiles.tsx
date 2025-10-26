@@ -3,9 +3,9 @@ import { ChannelSimpleFunction } from "./fixtures";
 import { getDatabase } from "../db";
 import React from "react";
 import { Colours } from "../colours";
-import { getRGB } from "../utils";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { getRGB } from "../utils/rgb";
 
 export type ProfileState = Record<ChannelSimpleFunction, number>;
 // this is just one simple state...
@@ -16,6 +16,13 @@ export type GenericProfile = {
   state: Partial<ProfileState>;
   // value: Record<ChannelSimpleFunction, string>;
   globals: Partial<Record<ChannelSimpleFunction, string>>;
+};
+
+export type New_GenericProfile = {
+  state: Partial<ProfileState>;
+  targetFunction?: string;
+  // value: Record<ChannelSimpleFunction, string>;
+  globals: Partial<Record<ChannelSimpleFunction, string>>; // this is useless
 };
 
 const globalColurs: GenericProfile[] = Object.keys(Colours).map((name) => {
@@ -109,7 +116,6 @@ export const ProfileProvier = ({ children }: { children: React.ReactNode }) => {
   const reloadProfiles = async () => {
     const database = await getDatabase();
     const data = await database.getAll("genericProfiles");
-    console.log("GOT Profiles", data);
 
     if (data.length > 0) setProfiles([...globalColurs, ...data]);
   };

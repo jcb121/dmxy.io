@@ -1,0 +1,47 @@
+.row {
+  display: flex;
+}
+
+.functions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.function {
+  padding: 2px;
+  border: 1px solid #cdcdcd;
+  border-radius: 3px;
+
+  table {
+    width: 100%;
+  }
+
+  .header {
+    display: flex;
+    border-bottom: 1px solid #454545;
+
+    input {
+      border: none;
+      background-color: transparent;
+      font-size: larger;
+      font-weight: bold;
+      flex: 1;
+    }
+  }
+}
+
+.addFunction {
+  margin: 16px;
+  background-color: #454545;
+  height: 45px;
+  width: 45px;
+  align-self: center;
+  border-radius: 50%;
+  padding: 0;
+  line-height: 0.3;
+}
+
+.functionValue {
+ //
+}

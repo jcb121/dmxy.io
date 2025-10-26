@@ -16,7 +16,7 @@ const Main = () => {
         <div>
           <button>
             <a href={`/fixtures`} target="_blank">
-              Fixures
+              Fixures / create
             </a>
           </button>
           <ListWithAction
@@ -36,6 +36,11 @@ const Main = () => {
           <button>
             <a href={`/venues`} target="_blank">
               venues
+            </a>
+          </button>
+          <button>
+            <a href={`/venue`} target="_blank">
+              Create venue
             </a>
           </button>
           <ListWithAction items={venues} actions={[]}>

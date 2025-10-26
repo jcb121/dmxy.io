@@ -1,11 +1,6 @@
 import ReactDOM from "react-dom/client";
 import "../index.css";
-import {
-  Fixture,
-  FixtureProvider,
-  FixtureShape,
-  useFixtures,
-} from "../context/fixtures.tsx";
+import { Fixture, FixtureProvider, useFixtures } from "../context/fixtures.tsx";
 import { VenueProvider } from "../context/venues.tsx";
 import { ProfileProvier } from "../context/profiles.tsx";
 import { MidiProvider } from "../context/midi.tsx";
@@ -14,17 +9,10 @@ import { CreateFixture } from "../domain/fixtures/createFixture/index.tsx";
 import { BasicPage } from "../ui/layout/basic-page.tsx";
 import { ListWithAction } from "../ui/list-with-actions/index.tsx";
 
-const BASIC_FIXTURE: Fixture = {
-  id: "DEFAULT",
-  model: "",
-  channelFunctions: [],
-  fixtureShape: FixtureShape.square,
-};
-
 const FixturesPage = () => {
   const { fixtures, add, update, remove } = useFixtures();
 
-  const [fixture, setFixture] = useState<Fixture>(BASIC_FIXTURE);
+  const [fixture, setFixture] = useState<Fixture>();
 
   return (
     <BasicPage
@@ -49,8 +37,8 @@ const FixturesPage = () => {
     >
       <CreateFixture
         fixture={fixture}
-        onChange={setFixture}
-        onSubmit={() => {
+        onClose={() => setFixture(undefined)}
+        onSubmit={(fixture) => {
           const existst = fixtures.find((f) => f.id == fixture.id);
           if (existst) {
             update({
