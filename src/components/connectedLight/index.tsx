@@ -1,24 +1,24 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { ChannelSimpleFunction, Fixture } from "../../context/fixtures";
 import { useGlobals } from "../../context/globals";
-import {
-  GenericProfile,
-  ProfileState,
-  useProfiles,
-} from "../../context/profiles";
+import { New_GenericProfile, ProfileState } from "../../context/profiles";
 import {
   animateRGB,
   mapProfileStateToDMX,
   setCSSVarsFromDmx,
 } from "../../utils";
-// import { Light } from "../light";
 import { DMXState } from "../../dmx";
 import { VenueFixture } from "../../context/venues";
 import { Scene } from "../../context/scenes";
 
+const RGB = [
+  ChannelSimpleFunction.red,
+  ChannelSimpleFunction.green,
+  ChannelSimpleFunction.blue,
+];
+
 export const ConnectedLight = ({
   fixture,
-  // profiles,
   channel,
   children,
   venueFixture,
@@ -28,80 +28,90 @@ export const ConnectedLight = ({
   channel?: number;
   fixture: Fixture;
   venueFixture: VenueFixture;
-  // profiles?: Omit<GenericProfile, "id">[];
   scene?: Scene;
 }) => {
   const globals = useGlobals((state) => state.values);
-  const hold = parseInt(`${globals["Beatlength"]?.value || 0}`);
-  const fade = parseInt(`${globals["Fade"]?.value || 0}`);
-  const fadeGap = parseInt(`${globals["FadeGap"]?.value || 0}`);
+
+  const hold = parseInt(
+    `${
+      typeof scene?.vars?.["Beatlength"]?.value !== "undefined"
+        ? scene?.vars?.["Beatlength"]?.value
+        : globals["Beatlength"]?.value || 0
+    }`
+  );
+  const fade = parseInt(
+    `${
+      typeof scene?.vars?.["Fade"]?.value !== "undefined"
+        ? scene?.vars?.["Fade"]?.value
+        : globals["Fade"]?.value || 0
+    }`
+  );
+  const fadeGap = parseInt(
+    `${
+      typeof scene?.vars?.["FadeGap"]?.value !== "undefined"
+        ? scene?.vars?.["FadeGap"]?.value
+        : globals["FadeGap"]?.value || 0
+    }`
+  );
+
   const ref = useRef<HTMLDivElement>(null);
 
-  const allProfiles = useProfiles((state) => state.profiles);
+  const profiles = useMemo<New_GenericProfile[]>(() => {
+    if (!scene || !scene?.new_profiles) return [];
 
-  const profiles = useMemo(() => {
-    if (!scene) return [];
+    const id = `#${venueFixture.id}`;
 
-    const profileIds =
-      scene.profiles[venueFixture.id] ||
-      ["all", ...venueFixture.tags].reduce((profileIds, tag) => {
+    if (scene?.new_profiles[id]) {
+      return scene.new_profiles[id];
+    }
 
-        if (scene.profiles[tag]) {
-          return [...profileIds, ...(scene.profiles[tag] || [])];
-        }
-        return profileIds;
-      }, [] as string[]);
+    const profile = venueFixture.tags.find(
+      (tag) => scene.new_profiles[`.${tag}`]
+    );
 
-    return profileIds
-      .map((id) => allProfiles.find((p) => p.id == id))
-      .filter((a) => !!a) as GenericProfile[];
-  }, [allProfiles, venueFixture, scene]);
+    if (scene.new_profiles[`.${profile}`]) {
+      return scene.new_profiles[`.${profile}`];
+    }
 
-  // const state =
-  //   profiles &&
-  //   profiles[0] &&
-  //   Object.keys(profiles[0].globals).reduce((state, key) => {
-  //     return profiles[0].globals[key as ChannelSimpleFunction]
-  //       ? { ...state, [key]: globals[key].value }
-  //       : state;
-  //   }, profiles[0].state);
+    if (scene.new_profiles["*"]) {
+      return scene.new_profiles["*"];
+    }
 
-  // const [dmxVals, setDmxVals] = useState<DMXValues>(
-  //   profiles && profiles[0] && state
-  //     ? mapRGBASToDMX(
-  //         fixture.channelFunctions,
-  //         `${state.Red.toString(16).padStart(2, "0")}${state.Green.toString(
-  //           16
-  //         ).padStart(2, "0")}${state.Blue.toString(16).padStart(2, "0")}`,
-  //         state.Brightness,
-  //         state.Strobe
-  //       )
-  //     : {}
-  // );
+    return [];
+  }, [scene, venueFixture]);
+
+  const activeProfile = useCallback(
+    (timeStamp: number): New_GenericProfile | undefined => {
+      if (!profiles || profiles.length === 0) return; // we have no profiles, but is this correct?
+      const stepDuration = hold; // 1000
+      const step = (timeStamp / stepDuration) % profiles.length;
+      const frameIndex = Math.floor(step);
+
+      return profiles[frameIndex];
+    },
+    [hold, profiles]
+  );
 
   const animationRef = useRef<number>();
 
-  const animate = useCallback(
+  const animateRGBFade = useCallback(
     (timeStamp: number) => {
       if (!profiles || profiles.length === 0) return;
 
       const stepDuration = hold; // 1000
 
       const gapTime = (stepDuration / 255) * fadeGap;
-
       const onTime = stepDuration - gapTime;
-
       const fadeTime = (onTime / 510) * fade; // 250
-
       const normalTime = stepDuration - gapTime - fadeTime - fadeTime;
+
+      let currentColour: [number, number, number] | undefined = undefined;
 
       if (stepDuration) {
         const step = (timeStamp / stepDuration) % profiles.length;
         const frameIndex = Math.floor(step);
 
         const stepTime = (step - frameIndex) * stepDuration;
-
-        let currentColour: [number, number, number] | undefined = undefined;
 
         if (stepTime < fadeTime) {
           const lastProfile =
@@ -150,48 +160,67 @@ export const ConnectedLight = ({
         } else {
           // console.log("normal");
         }
-        if (!profiles[frameIndex]) return;
+      }
 
-        const state = Object.keys(profiles[frameIndex].globals).reduce(
-          (state, key) => {
-            const globalName =
-              profiles[frameIndex].globals[key as ChannelSimpleFunction];
+      return currentColour;
+    },
+    [hold, fadeGap, fade, profiles]
+  );
 
-            if (!globalName) return state;
-            return profiles[frameIndex].globals[key as ChannelSimpleFunction]
-              ? { ...state, [key]: globals[globalName]?.value }
-              : state;
-          },
-          {
-            ...profiles[frameIndex].state,
-            ...(currentColour
-              ? {
-                  Red: currentColour[0],
-                  Green: currentColour[1],
-                  Blue: currentColour[2],
-                }
-              : {}),
-          } as ProfileState
-        );
+  const isRGB = RGB.every((func) => {
+    return fixture.channelFunctions.find((channel) => {
+      return channel.find((f) => f.function === func);
+    });
+  });
 
-        const dmxVals = mapProfileStateToDMX(fixture.channelFunctions, state);
+  const animate = useCallback(
+    (timeStamp: number) => {
+      const profile = activeProfile(timeStamp);
 
-        venueFixture.overwrites &&
-          Object.keys(venueFixture?.overwrites).forEach((channel) => {
-            const globalName = venueFixture.overwrites[channel as number];
-            dmxVals[channel] = globals[globalName].value;
-          });
+      // if it is not RGB, this will set the colours to zero, and this will mess with the solid colours.
+      const targetColour = (isRGB && animateRGBFade(timeStamp)) || undefined;
 
-        if (ref.current) setCSSVarsFromDmx(ref.current, fixture, dmxVals);
+      const state = Object.keys(venueFixture.overwrites).reduce(
+        (state, key) => ({
+          ...state,
+          [key]:
+            globals[venueFixture.overwrites[key as ChannelSimpleFunction]]
+              .value,
+        }),
+        {
+          ...profile?.state,
+          ...(targetColour && {
+            Red: targetColour[0],
+            Green: targetColour[1],
+            Blue: targetColour[2],
+          }),
+        } satisfies Partial<ProfileState>
+      );
 
-        if (typeof channel !== "undefined") {
-          Object.keys(dmxVals).forEach((key) => {
-            DMXState[parseInt(key) + channel] = dmxVals[parseInt(key)];
-          });
-        }
+      const dmxVals = mapProfileStateToDMX(
+        fixture.channelFunctions,
+        state,
+        profile?.targetFunction,
+        fixture.deviceFunctions
+      );
+
+      if (ref.current) setCSSVarsFromDmx(ref.current, fixture, dmxVals);
+
+      if (typeof channel !== "undefined") {
+        Object.keys(dmxVals).forEach((key) => {
+          DMXState[parseInt(key) + channel] = dmxVals[parseInt(key)];
+        });
       }
     },
-    [hold, profiles, fixture, globals, channel, fade, fadeGap, venueFixture]
+    [
+      fixture,
+      globals,
+      channel,
+      animateRGBFade,
+      isRGB,
+      activeProfile,
+      venueFixture,
+    ]
   );
 
   useEffect(() => {
@@ -201,6 +230,7 @@ export const ConnectedLight = ({
         () => animate(performance.now()),
         // 46
         23 // more like 60fps
+        // 1000
       );
     } else {
       animate(performance.now());

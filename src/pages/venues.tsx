@@ -11,8 +11,6 @@ const VenuesPage = () => {
   const venues = useVenues((state) => state.venues);
   const remove = useVenues((state) => state.remove);
 
-  console.log("VENUES", venues);
-
   return (
     <BasicPage
       left={

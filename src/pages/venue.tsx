@@ -7,7 +7,6 @@ import { Fixtures } from "../domain/fixtures/list";
 import { NewStage } from "../components/stage/new-stage";
 import { NewStageFixture } from "../components/stage/new-state-fixture";
 import { Tags } from "../components/stage/tags/tags";
-import { Globals } from "../components/globals";
 import { useMemo, useState } from "react";
 import { LockChannels } from "../components/lock-channels/lock-channels";
 
@@ -128,8 +127,8 @@ const CreateVenue = () => {
               }}
               info={
                 <>
-                  <div>
-                    {`${fixture.model} (ch: ${fixture.channelFunctions.length})`}
+                  <div title={`(ch: ${fixture.channelFunctions.length})`}>
+                    {`${fixture.model}`}
                   </div>
                   <div>
                     <button
@@ -252,8 +251,6 @@ const CreateVenue = () => {
           venueFixture={activeVenueFixture}
         />
       )}
-
-      <Globals />
     </BasicPage>
   );
 };

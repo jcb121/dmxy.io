@@ -84,7 +84,7 @@ export const getRGB = (colour: string): [number, number, number] => {
 export const rgbToHex = ([r, g, b]: [number, number, number]) => {
   return `${r.toString(16).padStart(2, "0")}${g
     .toString(16)
-    .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+    .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`.toUpperCase();
 };
 
 export const isWhite = (a: string) => {
