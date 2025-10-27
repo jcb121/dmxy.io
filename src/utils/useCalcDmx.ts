@@ -11,7 +11,7 @@ export const useCalcDmx = (
   scene: Scene | undefined,
   venueFixtures: VenueFixture[] | undefined
 ) => {
-  const animationRef = useRef<number>();
+  const animationRef = useRef<NodeJS.Timeout>();
 
   const globals = useGlobals((state) => state.values);
 

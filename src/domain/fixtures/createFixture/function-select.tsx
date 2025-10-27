@@ -12,37 +12,30 @@ export const FunctionSelect = ({
 }) => {
   return (
     <div>
-      <select
-        value={value.function}
-        onChange={(e) => {
-          onChange({
-            ...value,
-            function: e.target.value as ChannelSimpleFunction,
-          });
-        }}
-      >
-        {Object.keys(ChannelSimpleFunction).map((key) => {
-          // @ts-expect-error key is the wrong type
-          return <option key={key}>{ChannelSimpleFunction[key]}</option>;
-        })}
-      </select>
-
-      {value.function === ChannelSimpleFunction.function && (
-        <span>
-          {" "}
-          <input
-            placeholder="Function name"
-            value={value.value}
-            onChange={(e) => {
-              onChange({
-                ...value,
-                value: e.target.value,
-              });
-            }}
-          />
-        </span>
-      )}
-
+      <label>
+        Function:
+        <select
+          value={value.function}
+          onChange={(e) => {
+            onChange({
+              ...value,
+              function: e.target.value as ChannelSimpleFunction,
+            });
+          }}
+        >
+          {Object.keys(ChannelSimpleFunction).map((key) => {
+            return (
+              <option key={key}>
+                {
+                  ChannelSimpleFunction[
+                    key as keyof typeof ChannelSimpleFunction
+                  ]
+                }
+              </option>
+            );
+          })}
+        </select>
+      </label>
       {(value.function === ChannelSimpleFunction.fixedColour ||
         value.function === ChannelSimpleFunction.colourWheel ||
         value.function === ChannelSimpleFunction.strobe ||
@@ -69,9 +62,8 @@ export const FunctionSelect = ({
           />
         </span>
       )}
-
       <label>
-        from{" "}
+        From:
         <input
           value={value.range[0]}
           onChange={(e) => {
@@ -87,7 +79,7 @@ export const FunctionSelect = ({
         />
       </label>
       <label>
-        to{" "}
+        To:
         <input
           value={value.range[1]}
           onChange={(e) => {

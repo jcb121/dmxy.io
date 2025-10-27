@@ -30,27 +30,32 @@ export const Channel = ({
       <td>
         <div>{`Channel ${index + 1}: `}</div>
 
-        {channelFunction.map((func, index) => {
+        {channelFunction.map((func, functionIndex) => {
           return (
-            <div className={styles.function} key={`${func.function}-${index}`}>
+            <div
+              className={styles.function}
+              key={`${func.function}-${functionIndex}`}
+            >
               {/* <div>Function: {index}</div> */}
               <button
                 className={styles.delete}
                 onClick={() => {
                   onChange(
-                    channelFunction.filter((_i, _index) => _index !== index)
+                    channelFunction.filter(
+                      (_i, _index) => _index !== functionIndex
+                    )
                   );
                 }}
               >
-                ╳
+                🗑️
               </button>
               <FunctionSelect
-                key={`${index}`}
+                key={functionIndex}
                 value={func}
                 onChange={(subChannelFunction) => {
                   onChange(
                     channelFunction.map((i, _index) =>
-                      _index === index ? subChannelFunction : i
+                      _index === functionIndex ? subChannelFunction : i
                     )
                   );
                 }}

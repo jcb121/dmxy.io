@@ -17,7 +17,7 @@ export const ConnectedLight = ({
 }) => {
   const ref = useRef<HTMLDivElement>(null);
 
-  const animationRef = useRef<number>();
+  const animationRef = useRef<NodeJS.Timeout>();
 
   const animate = useCallback(() => {
     if (ref.current)

@@ -150,7 +150,7 @@ const cycleScene = (e: CycleScene, type: MidiEventTypes) =>
   });
 
 let lastClickTime: number | undefined;
-let lastClickTimeout: number | undefined;
+let lastClickTimeout: NodeJS.Timeout | undefined;
 
 const setBeatLength = (e: SetBeatLength, type: MidiEventTypes) => {
   if (type !== MidiEventTypes.onPress) return;

@@ -49,6 +49,7 @@ export const Functions = ({
           />
         ))}
         <button
+          title="Add Function"
           className={styles.addFunction}
           onClick={() => {
             setFunctions((state) => {

@@ -14,9 +14,10 @@ export const DeviceFunction = ({
   setFunction: React.Dispatch<React.SetStateAction<FixtureFunction>>;
 }) => {
   return (
-    <div className={styles.function}>
+    <div className={styles.function} data-testid="function">
       <div className={styles.header}>
         <input
+          placeholder="Function name"
           className={styles.input}
           value={func.label}
           onChange={(e) => {

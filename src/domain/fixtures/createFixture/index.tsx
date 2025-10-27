@@ -65,10 +65,12 @@ export const CreateFixture = ({
         <tbody>
           <tr>
             <td>
-              <label>Name:</label>
+              <label htmlFor="fixture_name">Name:</label>
             </td>
             <td>
               <input
+                id="fixture_name"
+                name="fixture_name"
                 value={fixture.model}
                 onChange={(e) =>
                   setFixture((state) => ({
@@ -93,11 +95,13 @@ export const CreateFixture = ({
           </tr>
           <tr>
             <td>
-              <label>Channels:</label>
+              <label htmlFor="fixture_channels">Channels:</label>
             </td>
             <td>
               <input
                 type="number"
+                id="fixture_channels"
+                name="fixture_channels"
                 value={fixture.channelFunctions.length}
                 onChange={(e) => {
                   const target = parseInt(e.target.value);
@@ -129,10 +133,12 @@ export const CreateFixture = ({
           </tr>
           <tr>
             <td>
-              <label>Shape:</label>
+              <label htmlFor="fixture_shape">Shape:</label>
             </td>
             <td>
               <select
+                id="fixture_shape"
+                name="fixture_shape"
                 value={fixture.fixtureShape}
                 onChange={(e) => {
                   setFixture((state) => ({

@@ -20,7 +20,7 @@ export const connect = async (): Promise<SerialPort> => {
 
 const interval = 46; //46; //options.dmx_speed ? (1000 / options.dmx_speed) : 46;
 
-let intervalhandle = 0;
+let intervalhandle: NodeJS.Timeout | undefined;
 
 export const startDMX = async (port: SerialPort) => {
   const writer = port.writable.getWriter();
@@ -40,7 +40,7 @@ export const DMXState = new Uint8Array(513);
 
 export const sendUniverse = async (
   port: SerialPort,
-  writer: WritableStreamDefaultWriter<any>
+  writer: WritableStreamDefaultWriter<unknown>
 ) => {
   // console.time("sendingUniverse");
 

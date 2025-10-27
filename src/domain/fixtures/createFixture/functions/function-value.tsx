@@ -19,6 +19,8 @@ export const FunctionValue = ({
     <tr className={styles.functionValue}>
       <td>
         <select
+          name="functionChannel"
+          data-testid="functionChannel"
           disabled={disabled}
           value={channel}
           onChange={(e) => {
@@ -35,6 +37,8 @@ export const FunctionValue = ({
       </td>
       <td>
         <input
+          name="functionValue"
+          data-testid="functionValue"
           disabled={disabled}
           type="number"
           value={value}
