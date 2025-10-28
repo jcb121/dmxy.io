@@ -122,6 +122,7 @@ export const useDmx = (
 
         if (type === "USB") {
           const device = usbDevices[parseInt(deviceIndex)];
+          if (!device) return;
           const stopDMX = await startUSBDMX(device, universe);
           cancelDMX.current.push(stopDMX);
         }
@@ -129,7 +130,6 @@ export const useDmx = (
         if (type === "SERIAL") {
           const port = ports[parseInt(deviceIndex)];
           if (!port) return;
-
           const stopDMX = await startSerialDMX(port, universe);
           cancelDMX.current.push(stopDMX);
         }
