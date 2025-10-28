@@ -13,14 +13,11 @@ export const SetChannelValueEdit = ({
     <div className={styles.root}>
       <label>Channel:</label>
       <select
-        value={payload.channel}
+        value={payload.channel || ""}
         onChange={(e) => {
           onEventChange({
             ...payload,
-            channel:
-              ChannelSimpleFunction[
-                e.target.value as keyof typeof ChannelSimpleFunction
-              ],
+            channel: e.target.value as ChannelSimpleFunction,
           });
         }}
       >
