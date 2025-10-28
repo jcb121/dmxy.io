@@ -11,7 +11,7 @@ import {
 } from "../domain/fixtures/createFixture/index.tsx";
 import { BasicPage } from "../ui/layout/basic-page.tsx";
 import { ListWithAction } from "../ui/list-with-actions/index.tsx";
-import { registerSerialDevice, startDMX } from "../context/dmx/serial.ts";
+import { registerSerialDevice, startDMX as startSerialDMX } from "../context/dmx/serial.ts";
 import {
   registerUsbDevice,
   startDMX as startUSBDMX,
@@ -41,7 +41,7 @@ const FixturesPage = () => {
           <button
             onClick={async () => {
               const port = await registerSerialDevice();
-              port && startDMX(port, DEFAULT_DMX_UNIVERSE);
+              port && startSerialDMX(port, DEFAULT_DMX_UNIVERSE);
             }}
           >
             SERIAL

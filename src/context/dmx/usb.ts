@@ -9,64 +9,37 @@ export const registerUsbDevice = async () => {
   return device;
 };
 
-export const connnectUsbDevice = async (vendorId: number) => {
+export const getUsbDevices = async () => {
   const devices = await navigator.usb.getDevices();
 
-  const device = devices.find((d) => {
-    return !d.opened && d.vendorId === vendorId;
-  });
+  for (const usbDevice of devices) {
+    await usbDevice.open();
+  }
 
-  if (!device) return;
-
-  await device.open();
-
-  // if (
-  //   device.configuration === null ||
-  //   device.configuration.configurationValue !== 1
-  // ) {
-  //   await device.selectConfiguration(1);
-  // }
-
-  // // Claim interface 0
-  // const ifaceNumber = device.configuration.interfaces[0].interfaceNumber;
-
-  // await device.claimInterface(ifaceNumber);
-
-  // await new Promise((r) => setTimeout(r, 100));
-
-  // await device.selectAlternateInterface(ifaceNumber, 0);
-
-  return device;
+  return devices;
 };
 
 export const sendUniverse = async (
   device: USBDevice,
   universe: Uint8Array<ArrayBuffer>
 ) => {
-  for (let i = 1; i < universe.length; i++) {
-    const channel = i; // DMX Channel (0-indexed, so 0 = DMX 1)
-    const value = universe[i]; // DMX Value (0-255)
-
-    // This is the "set single channel" command
-    // We are guessing request: 1, as 0 is your non-working "set multiple"
-    // Some firmware might use a different request number, but 1 is common.
-    await device.controlTransferOut(
-      {
-        requestType: "vendor",
-        recipient: "device",
-        request: 1, // Vendor-specific request for "Set Single Channel"
-        value: value, // The DMX value to set
-        index: channel - 1, // The DMX channel to set
-      },
-      new Uint8Array(0) // No data payload is sent
-    );
-  }
+  const dmxData = universe.slice(1);
+  await device.controlTransferOut(
+    {
+      requestType: "vendor",
+      recipient: "device",
+      request: 2,
+      value: 512,
+      index: 0,
+    },
+    dmxData
+  );
 };
 
 export const startDMX = async (port: USBDevice, universe: number) => {
   const intervalhandle = setInterval(
     () => sendUniverse(port, DMXState[universe]),
-    interval / 2
+    interval
   );
   return () => {
     clearInterval(intervalhandle);

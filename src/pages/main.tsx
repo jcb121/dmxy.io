@@ -5,13 +5,35 @@ import { useVenues } from "../context/venues";
 import { useFixtures } from "../context/fixtures";
 import { ListWithAction } from "../ui/list-with-actions";
 import styles from "./main.module.scss";
+import { registerUsbDevice } from "../context/dmx/usb";
+import { registerSerialDevice } from "../context/dmx/serial";
 
 const Main = () => {
   const venues = useVenues((state) => state.venues);
   const fixtures = useFixtures((state) => state.fixtures);
 
   return (
-    <BasicPage>
+    <BasicPage
+      header={
+        <>
+          <button
+            onClick={() => {
+              registerUsbDevice();
+            }}
+          >
+            Register USB Device
+          </button>
+
+          <button
+            onClick={() => {
+              registerSerialDevice();
+            }}
+          >
+            Register Serial Port
+          </button>
+        </>
+      }
+    >
       <div className={styles.root}>
         <div>
           <button>

@@ -35,9 +35,16 @@ function App() {
   const activeScene = activeScenes[0] as Scene | undefined;
 
   useCalcDmx(activeScene, venue?.venueFixtures);
-  const connect = useDmx();
+  const connect = useDmx(true);
 
   const [showStage, setShowStage] = useState(true);
+
+  const universes = venue?.venueFixtures.reduce((universes, vf) => {
+    if (universes.includes(vf.universe || 0)) {
+      return universes;
+    }
+    return [...universes, vf.universe || 0];
+  }, [] as number[]);
 
   return (
     <BasicPage
@@ -85,7 +92,31 @@ function App() {
           </button>
         </>
       }
-      headerRight={<button onClick={connect}>DMX Connect</button>}
+      headerRight={
+        <>
+          {connect.devices.map(({ type, deviceIndex }) => (
+            <div key={`${type}_${deviceIndex}`}>
+              {type} Device {deviceIndex} UNI:
+              <select
+                value={connect.connections[`${type}_${deviceIndex}`] ?? ""}
+                onChange={(e) => {
+                  connect.connect(
+                    { type, deviceIndex },
+                    e.target.value == "" ? undefined : parseInt(e.target.value)
+                  );
+                }}
+              >
+                <option value=""></option>
+                {universes?.map((uni) => (
+                  <option key={uni} value={uni}>
+                    {uni}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ))}
+        </>
+      }
     >
       <SceneGrid
         scenes={venue?.scenes ? Object.values(venue.scenes) : []}

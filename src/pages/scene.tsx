@@ -93,7 +93,7 @@ const CreateScene = () => {
 
   useCalcDmx(scene, venue?.venueFixtures);
 
-  const connect = useDmx();
+  const { start } = useDmx();
 
   return (
     <BasicPage
@@ -112,7 +112,15 @@ const CreateScene = () => {
           <button onClick={handleNew}>New</button>
         </>
       }
-      headerRight={<button onClick={connect}>DMX Connect</button>}
+      headerRight={
+        <button
+          onClick={() => {
+            start();
+          }}
+        >
+          DMX Connect
+        </button>
+      }
       left={
         <>
           <div>

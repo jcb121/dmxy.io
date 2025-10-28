@@ -8,8 +8,6 @@ import { NewStage } from "../components/stage/new-stage";
 import { useMemo, useState } from "react";
 import { LockChannels } from "../components/lock-channels/lock-channels";
 import { VenueFixtureComp } from "../domain/venue/create/fixture";
-import { registerSerialDevice } from "../context/dmx/serial";
-import { registerUsbDevice } from "../context/dmx/usb";
 
 const urlParams = new URLSearchParams(window.location.search);
 const id = urlParams.get("venue_id");
@@ -36,13 +34,6 @@ const CreateVenue = () => {
   const activeFixture = useMemo(() => {
     return fixtures.find((vf) => vf.id === activeVenueFixture?.fixtureId);
   }, [fixtures, activeVenueFixture]);
-
-  const universes = venue.venueFixtures.reduce((universes, vf) => {
-    if (universes.includes(vf.universe || 0)) {
-      return universes;
-    }
-    return [...universes, vf.universe || 0];
-  }, [] as number[]);
 
   return (
     <BasicPage
@@ -80,58 +71,6 @@ const CreateVenue = () => {
               console.log("Settings", "fixtureId", fixture.id);
             }}
           />
-          <h4>Universes</h4>
-          {universes.map((universe) => (
-            <div key={universe}>
-              <h5>Universe {universe}:</h5>
-              device: {venue.universes?.[universe]?.name || "NONE"}
-              <button
-                onClick={async () => {
-                  try {
-                    const port = await registerSerialDevice();
-                    port &&
-                      setVenue((state) => ({
-                        ...state,
-                        universes: {
-                          ...state.universes,
-                          [universe]: {
-                            name: "Serial",
-                            protocol: "SERIAL",
-                            vendorId: port.getInfo().usbVendorId as number,
-                          },
-                        },
-                      }));
-                  } catch (e) {
-                    // do nothing
-                  }
-                }}
-              >
-                Link to Serial
-              </button>
-              <button
-                onClick={async () => {
-                  try {
-                    const device = await registerUsbDevice();
-                    setVenue((state) => ({
-                      ...state,
-                      universes: {
-                        ...state.universes,
-                        [universe]: {
-                          name: "uDMX",
-                          protocol: "USB",
-                          vendorId: device.vendorId,
-                        },
-                      },
-                    }));
-                  } catch (e) {
-                    // do nothing
-                  }
-                }}
-              >
-                Link to USB
-              </button>
-            </div>
-          ))}
         </>
       }
     >

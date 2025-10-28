@@ -8,25 +8,28 @@ export const registerSerialDevice = async () => {
   return port;
 };
 
-export const connnectSerialDevice = async (vendorId: number) => {
+export const getSerialPorts = async () => {
   const ports = await navigator.serial.getPorts();
-
-  const port = ports.find((port) => {
-    const info = port.getInfo();
-    return info.usbVendorId === vendorId;
-  });
-
-  return port;
+  for (const port of ports) {
+    await port.open({
+      baudRate: 250000,
+      dataBits: 8,
+      stopBits: 2,
+      parity: "none",
+    });
+  }
+  return ports;
 };
 
 export const sendUniverse = async (
   port: SerialPort,
-  writer: WritableStreamDefaultWriter<unknown>,
   universe: Uint8Array<ArrayBuffer>
 ) => {
   // console.time("sendingUniverse");
 
   // console.log("sending", a);
+  const writer = port.writable.getWriter();
+  await writer.ready;
 
   // const writer = port.writable.getWriter();
   // await writer.ready;
@@ -42,7 +45,7 @@ export const sendUniverse = async (
   // setTimeout(() => {
   // console.log("Writing");
   writer.write(universe.buffer);
-  // writer.releaseLock();
+  writer.releaseLock();
   // console.timeEnd("sendingUniverse");
 
   // }, 0);
@@ -50,18 +53,8 @@ export const sendUniverse = async (
 };
 
 export const startDMX = async (port: SerialPort, universe: number) => {
-  await port.open({
-    baudRate: 250000,
-    dataBits: 8,
-    stopBits: 2,
-    parity: "none",
-  });
-
-  const writer = port.writable.getWriter();
-  await writer.ready;
-
   const intervalhandle = setInterval(
-    () => sendUniverse(port, writer, DMXState[universe]),
+    () => sendUniverse(port, DMXState[universe]),
     interval
   );
   return () => {
