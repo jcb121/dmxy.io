@@ -5,9 +5,20 @@ import { VenueProvider } from "../context/venues.tsx";
 import { ProfileProvier } from "../context/profiles.tsx";
 import { MidiProvider } from "../context/midi.tsx";
 import { useState } from "react";
-import { CreateFixture } from "../domain/fixtures/createFixture/index.tsx";
+import {
+  CreateFixture,
+  DEFAULT_DMX_UNIVERSE,
+} from "../domain/fixtures/createFixture/index.tsx";
 import { BasicPage } from "../ui/layout/basic-page.tsx";
 import { ListWithAction } from "../ui/list-with-actions/index.tsx";
+import { registerSerialDevice, startDMX } from "../context/dmx/serial.ts";
+import {
+  registerUsbDevice,
+  startDMX as startUSBDMX,
+} from "../context/dmx/usb.ts";
+import { createUniverses } from "../context/dmx/index.ts";
+
+createUniverses([DEFAULT_DMX_UNIVERSE]);
 
 const FixturesPage = () => {
   const { fixtures, add, update, remove } = useFixtures();
@@ -16,6 +27,27 @@ const FixturesPage = () => {
 
   return (
     <BasicPage
+      headerRight={
+        <>
+          Connect DMX:
+          <button
+            onClick={async () => {
+              const device = await registerUsbDevice();
+              device && startUSBDMX(device, DEFAULT_DMX_UNIVERSE);
+            }}
+          >
+            USB
+          </button>
+          <button
+            onClick={async () => {
+              const port = await registerSerialDevice();
+              port && startDMX(port, DEFAULT_DMX_UNIVERSE);
+            }}
+          >
+            SERIAL
+          </button>
+        </>
+      }
       left={
         <>
           <h2>Saved</h2>

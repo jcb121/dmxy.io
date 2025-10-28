@@ -6,6 +6,16 @@
   bottom: 0;
 }
 
+.inner {
+  &::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    content: var(--Label) "";
+  }
+}
+
 .root {
   animation-name: strobe;
   animation-direction: alternate;
@@ -18,6 +28,7 @@
     var(--Brightness)
   );
 
+  // WHITE
   &::after {
     position: absolute;
     content: "";
@@ -35,6 +46,7 @@
     transform: translate(-50%, -50%);
   }
 
+  // UV
   &::before {
     position: absolute;
     content: "";

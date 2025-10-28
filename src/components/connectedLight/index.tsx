@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { Fixture } from "../../context/fixtures";
 import { setCSSVarsFromDmx } from "../../utils";
 import { VenueFixture } from "../../context/venues";
-import { DMXState } from "../../dmx";
+import { DMXState } from "../../context/dmx";
 /**
  * This react component uses the global DMX State and maps it to CSS Variables for the children to use.
  */
@@ -21,8 +21,13 @@ export const ConnectedLight = ({
 
   const animate = useCallback(() => {
     if (ref.current)
-      setCSSVarsFromDmx(ref.current, fixture, DMXState, venueFixture.channel);
-  }, [venueFixture.channel, fixture]);
+      setCSSVarsFromDmx(
+        ref.current,
+        fixture,
+        DMXState[venueFixture.universe || 0],
+        venueFixture.channel
+      );
+  }, [venueFixture, fixture]);
 
   useEffect(() => {
     animationRef.current && clearInterval(animationRef.current);
@@ -38,9 +43,5 @@ export const ConnectedLight = ({
     };
   }, [animate]);
 
-  return (
-    <div ref={ref}>
-      {children}
-    </div>
-  );
+  return <div ref={ref}>{children}</div>;
 };

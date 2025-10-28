@@ -1,3 +1,4 @@
+import { DMXState } from "../../context/dmx";
 import { ChannelSimpleFunction, useFixtures } from "../../context/fixtures";
 import {
   GlobalTypes,
@@ -7,7 +8,6 @@ import {
 import { New_GenericProfile, ProfileState } from "../../context/profiles";
 import { Scene } from "../../context/scenes";
 import { VenueFixture } from "../../context/venues";
-import { DMXState } from "../../dmx";
 import { animateRGBFade } from "./animateRBGFade";
 import { frameToDmx } from "./frameToDmx";
 
@@ -29,7 +29,9 @@ export const sceneToDmx = ({
   timeStamp: number;
 }) => {
   // clear the DMX state
-  DMXState.fill(0);
+  Object.keys(DMXState).forEach((universe) => {
+    DMXState[parseInt(universe)].fill(0)
+  })
 
   const hold = parseInt(
     `${
@@ -165,7 +167,7 @@ export const sceneToDmx = ({
 
     if (typeof venueFixture.channel !== "undefined") {
       Object.keys(dmxVals).forEach((key) => {
-        DMXState[parseInt(key) + venueFixture.channel] = dmxVals[parseInt(key)];
+        DMXState[venueFixture.universe || 0][parseInt(key) + venueFixture.channel] = dmxVals[parseInt(key)];
       });
     }
   });

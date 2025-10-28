@@ -55,9 +55,10 @@ export const findFunction = (
 export const setCSSVarsFromDmx = (
   htmlElement: HTMLDivElement,
   { channelFunctions, deviceFunctions }: Fixture,
-  dmxValues: DMXValues,
+  dmxValues: DMXValues | undefined,
   channelNumber: number
 ) => {
+  if(!dmxValues) return
   const channels = dmxToFrame(channelFunctions, dmxValues, channelNumber);
   const { Red, Blue, Green, White, Strobe, Intensity, Colour, UV } = channels;
 

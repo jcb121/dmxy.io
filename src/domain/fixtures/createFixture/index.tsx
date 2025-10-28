@@ -8,9 +8,11 @@ import {
 import styles from "./createFixture.module.scss";
 import { Channel, defaultValue } from "./channel";
 import { FixtureComponent } from "../fixture";
-import { DMXState } from "../../../dmx";
 import { Functions } from "./functions/functions";
 import { ConnectedLight } from "../../../components/connectedLight";
+import { DMXState } from "../../../context/dmx";
+
+export const DEFAULT_DMX_UNIVERSE = 0;
 
 const BASIC_FIXTURE = (): Fixture => ({
   type: SupportedFixtures.light,
@@ -39,7 +41,8 @@ export const CreateFixture = ({
 
   useEffect(() => {
     Object.keys(dmxValues).forEach((key) => {
-      DMXState[parseInt(key) + dmxChannel] = dmxValues[parseInt(key)];
+      DMXState[DEFAULT_DMX_UNIVERSE][parseInt(key) + dmxChannel] =
+        dmxValues[parseInt(key)];
     });
   }, [dmxValues, dmxChannel]);
 
@@ -51,6 +54,7 @@ export const CreateFixture = ({
         venueFixture={{
           channel: dmxChannel,
           fixtureId: fixture.id,
+          universe: 0,
           id: "TempFixture",
           x: 0,
           y: 0,
@@ -83,7 +87,7 @@ export const CreateFixture = ({
           </tr>
           <tr>
             <td>
-              <label>Channel:</label>
+              <label>Channel (Testing only):</label>
             </td>
             <td>
               <input

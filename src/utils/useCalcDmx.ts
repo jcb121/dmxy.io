@@ -5,7 +5,7 @@ import { VenueFixture } from "../context/venues";
 import { useGlobals } from "../context/globals";
 
 /**
- * This hook create the DMX state in a single
+ * This hook create the DMX state in all universes
  */
 export const useCalcDmx = (
   scene: Scene | undefined,
@@ -33,9 +33,7 @@ export const useCalcDmx = (
     animationRef.current && clearInterval(animationRef.current);
     animationRef.current = setInterval(
       () => animate(performance.now()),
-      // 46
-      23 // more like 60fps
-      // 1000
+      16
     );
 
     return () => {

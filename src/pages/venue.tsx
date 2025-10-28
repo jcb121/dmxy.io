@@ -5,10 +5,11 @@ import { sampleVenue, useVenues, Venue } from "../context/venues";
 import { useFixtures } from "../context/fixtures";
 import { Fixtures } from "../domain/fixtures/list";
 import { NewStage } from "../components/stage/new-stage";
-import { NewStageFixture } from "../components/stage/new-state-fixture";
-import { Tags } from "../components/stage/tags/tags";
 import { useMemo, useState } from "react";
 import { LockChannels } from "../components/lock-channels/lock-channels";
+import { VenueFixtureComp } from "../domain/venue/create/fixture";
+import { registerSerialDevice } from "../context/dmx/serial";
+import { registerUsbDevice } from "../context/dmx/usb";
 
 const urlParams = new URLSearchParams(window.location.search);
 const id = urlParams.get("venue_id");
@@ -28,10 +29,6 @@ const CreateVenue = () => {
 
   const [activeVenueFixtureId, setActiveVenueFixtureId] = useState<string>();
 
-  // const fixtures = useFixtures((state) =>
-  //   state.fixtures.find((f) => f.id === activeVenueFixtureId)
-  // );
-
   const activeVenueFixture = useMemo(() => {
     return venue.venueFixtures.find((vf) => vf.id === activeVenueFixtureId);
   }, [venue, activeVenueFixtureId]);
@@ -39,6 +36,13 @@ const CreateVenue = () => {
   const activeFixture = useMemo(() => {
     return fixtures.find((vf) => vf.id === activeVenueFixture?.fixtureId);
   }, [fixtures, activeVenueFixture]);
+
+  const universes = venue.venueFixtures.reduce((universes, vf) => {
+    if (universes.includes(vf.universe || 0)) {
+      return universes;
+    }
+    return [...universes, vf.universe || 0];
+  }, [] as number[]);
 
   return (
     <BasicPage
@@ -68,13 +72,67 @@ const CreateVenue = () => {
         </div>
       }
       left={
-        <Fixtures
-          fixtures={fixtures}
-          onDrag={(fixture, e) => {
-            e.dataTransfer.setData("fixtureId", fixture.id);
-            console.log("Settings", "fixtureId", fixture.id);
-          }}
-        />
+        <>
+          <Fixtures
+            fixtures={fixtures}
+            onDrag={(fixture, e) => {
+              e.dataTransfer.setData("fixtureId", fixture.id);
+              console.log("Settings", "fixtureId", fixture.id);
+            }}
+          />
+          <h4>Universes</h4>
+          {universes.map((universe) => (
+            <div key={universe}>
+              <h5>Universe {universe}:</h5>
+              device: {venue.universes?.[universe]?.name || "NONE"}
+              <button
+                onClick={async () => {
+                  try {
+                    const port = await registerSerialDevice();
+                    port &&
+                      setVenue((state) => ({
+                        ...state,
+                        universes: {
+                          ...state.universes,
+                          [universe]: {
+                            name: "Serial",
+                            protocol: "SERIAL",
+                            vendorId: port.getInfo().usbVendorId as number,
+                          },
+                        },
+                      }));
+                  } catch (e) {
+                    // do nothing
+                  }
+                }}
+              >
+                Link to Serial
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    const device = await registerUsbDevice();
+                    setVenue((state) => ({
+                      ...state,
+                      universes: {
+                        ...state.universes,
+                        [universe]: {
+                          name: "uDMX",
+                          protocol: "USB",
+                          vendorId: device.vendorId,
+                        },
+                      },
+                    }));
+                  } catch (e) {
+                    // do nothing
+                  }
+                }}
+              >
+                Link to USB
+              </button>
+            </div>
+          ))}
+        </>
       }
     >
       <NewStage
@@ -116,129 +174,12 @@ const CreateVenue = () => {
         }}
       >
         {venue.venueFixtures.map((venueFixture) => {
-          const fixture = fixtures.find((f) => f.id === venueFixture.fixtureId);
-          if (!fixture) return;
-
           return (
-            <NewStageFixture
-              key={venueFixture.id}
-              onDrag={(e) => {
-                e.dataTransfer.setData("id", venueFixture.id);
-              }}
-              info={
-                <>
-                  <div title={`(ch: ${fixture.channelFunctions.length})`}>
-                    {`${fixture.model}`}
-                  </div>
-                  <div>
-                    <button
-                      onClick={() => {
-                        setActiveVenueFixtureId(venueFixture.id);
-                      }}
-                    >
-                      {activeVenueFixture?.id === venueFixture?.id
-                        ? "Active"
-                        : "Select"}
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setVenue({
-                          ...venue,
-                          venueFixtures: venue.venueFixtures.filter(
-                            (v) => v.id !== venueFixture.id
-                          ),
-                        });
-                      }}
-                    >
-                      Remove
-                    </button>
-                  </div>
-
-                  <div>
-                    <Tags
-                      selector="stage-fixture"
-                      tags={venueFixture.tags}
-                      updateTags={(tags) => {
-                        const _tags = new Set(tags);
-                        setVenue({
-                          ...venue,
-                          venueFixtures: venue.venueFixtures.map((v) =>
-                            v.id === venueFixture.id
-                              ? { ...v, tags: [..._tags] }
-                              : v
-                          ),
-                        });
-                      }}
-                    />
-                  </div>
-                  <div>
-                    CH: {venueFixture.channel}-
-                    {venueFixture.channel + fixture.channelFunctions.length}
-                  </div>
-                  <div>
-                    <button
-                      disabled={venueFixture.channel < 10}
-                      onClick={() => {
-                        setVenue({
-                          ...venue,
-                          venueFixtures: venue.venueFixtures.map((v) =>
-                            v.id === venueFixture.id
-                              ? { ...v, channel: v.channel - 10 }
-                              : v
-                          ),
-                        });
-                      }}
-                    >
-                      --
-                    </button>
-                    <button
-                      disabled={venueFixture.channel < 1}
-                      onClick={() => {
-                        setVenue({
-                          ...venue,
-                          venueFixtures: venue.venueFixtures.map((v) =>
-                            v.id === venueFixture.id
-                              ? { ...v, channel: v.channel - 1 }
-                              : v
-                          ),
-                        });
-                      }}
-                    >
-                      -
-                    </button>
-                    <button
-                      onClick={() => {
-                        setVenue({
-                          ...venue,
-                          venueFixtures: venue.venueFixtures.map((v) =>
-                            v.id === venueFixture.id
-                              ? { ...v, channel: v.channel + 1 }
-                              : v
-                          ),
-                        });
-                      }}
-                    >
-                      +
-                    </button>
-                    <button
-                      onClick={() => {
-                        setVenue({
-                          ...venue,
-                          venueFixtures: venue.venueFixtures.map((v) =>
-                            v.id === venueFixture.id
-                              ? { ...v, channel: v.channel + 10 }
-                              : v
-                          ),
-                        });
-                      }}
-                    >
-                      ++
-                    </button>
-                  </div>
-                </>
-              }
+            <VenueFixtureComp
+              setVenue={setVenue}
+              setActiveVenueFixtureId={setActiveVenueFixtureId}
               venueFixture={venueFixture}
+              activeVenueFixtureId={activeVenueFixtureId}
             />
           );
         })}

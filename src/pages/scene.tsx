@@ -16,6 +16,7 @@ import { SceneRules } from "../domain/scene/rules";
 import { CreateRule } from "../domain/scene/createRule";
 import { SceneVars } from "../domain/scene/sceneVars";
 import { useCalcDmx } from "../utils/useCalcDmx";
+import { useDmx } from "../context/dmx";
 
 const urlParams = new URLSearchParams(window.location.search);
 const venue_id = urlParams.get("venue_id");
@@ -92,6 +93,8 @@ const CreateScene = () => {
 
   useCalcDmx(scene, venue?.venueFixtures);
 
+  const connect = useDmx();
+
   return (
     <BasicPage
       header={
@@ -109,6 +112,7 @@ const CreateScene = () => {
           <button onClick={handleNew}>New</button>
         </>
       }
+      headerRight={<button onClick={connect}>DMX Connect</button>}
       left={
         <>
           <div>

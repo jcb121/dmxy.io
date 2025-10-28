@@ -1,6 +1,6 @@
 // import styles from "./App.module.css";
 import { Scene, useScenes } from "./context/scenes";
-import { useVenues } from "./context/venues";
+import { useActiveVenue } from "./context/venues";
 import { BasicPage } from "./ui/layout/basic-page";
 import { NewStage } from "./components/stage/new-stage";
 import { NewStageFixture } from "./components/stage/new-state-fixture";
@@ -13,13 +13,15 @@ import { useActiveScene } from "./context/active-scene";
 import { useEffect, useState } from "react";
 import { useCalcDmx } from "./utils/useCalcDmx";
 import { useEvents } from "./context/events";
+import { useDmx } from "./context/dmx";
 
 const urlParams = new URLSearchParams(window.location.search);
-const id = urlParams.get("venue_id");
+const venue_id = urlParams.get("venue_id");
+
+venue_id && useActiveVenue.getState().setActiveVenue(venue_id);
 
 function App() {
-  const venue = useVenues((state) => state.venues.find((v) => v.id === id));
-
+  const venue = useActiveVenue((state) => state.venue);
   useEffect(() => {
     if (venue) {
       useScenes.setState({
@@ -33,6 +35,7 @@ function App() {
   const activeScene = activeScenes[0] as Scene | undefined;
 
   useCalcDmx(activeScene, venue?.venueFixtures);
+  const connect = useDmx();
 
   const [showStage, setShowStage] = useState(true);
 
@@ -59,7 +62,6 @@ function App() {
             onClick={() => {
               useProfiles.persist.rehydrate();
               useFixtures.persist.rehydrate();
-              useVenues.persist.rehydrate();
             }}
           >
             Reload
@@ -83,6 +85,7 @@ function App() {
           </button>
         </>
       }
+      headerRight={<button onClick={connect}>DMX Connect</button>}
     >
       <SceneGrid
         scenes={venue?.scenes ? Object.values(venue.scenes) : []}

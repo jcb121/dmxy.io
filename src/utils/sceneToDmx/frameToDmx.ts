@@ -41,6 +41,7 @@ export const frameToDmx = (
 
       if (
         [
+          ChannelSimpleFunction.speed,
           ChannelSimpleFunction.red,
           ChannelSimpleFunction.white,
           ChannelSimpleFunction.uv,

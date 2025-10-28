@@ -17,6 +17,7 @@ export type VenueFixture = {
   overwrites: Partial<Record<ChannelSimpleFunction, string>>;
   channel: number;
   fixtureId: string;
+  universe?: number;
 };
 
 export type Venue = {
@@ -24,6 +25,11 @@ export type Venue = {
   id: string;
   venueFixtures: VenueFixture[];
   scenes: Record<string, Scene>;
+  universes?: Record<number, {
+    name: string,
+    protocol: "SERIAL" | "USB"
+    vendorId: number
+  }>;
   // slots: string[][];
   // channels: []
 };

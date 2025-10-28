@@ -1,0 +1,28 @@
+.input {
+  flex-basis: 0;
+  min-width: 24px;
+  text-align: right;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+}
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.channel {
+  display: flex;
+  justify-content: center;
+}
