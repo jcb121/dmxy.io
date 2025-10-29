@@ -11,8 +11,6 @@ export const LDP8Controller = ({
 }: {
   onClick: (id: string) => void;
 }) => {
-  console.log();
-
   const [left, right] = (LPD8.type === "row" && LPD8.children) || [];
 
   return (

@@ -10,7 +10,6 @@ import { AttachMidiButton } from "../attach-midi-button";
 import { MergeScene } from "./buttons/merge-scene";
 import { PadButton } from "../pad-button";
 import { SetVar } from "./knobs/set-var";
-import { LDP8Controller } from "../midi-controllers/lpd8";
 import { useState } from "react";
 import { CycleSceneEdit } from "./edit/cycle-scene";
 import { MergeSceneEdit } from "./edit/merge-scene";
@@ -21,6 +20,7 @@ import { SetChannelValueEdit } from "./edit/set-channel-value";
 import { SetChannelValue } from "./knobs/set-channel-value.";
 import { useMidiState } from "../../context/midi-state";
 import { useMidiTriggers } from "../../context/midi-triggers";
+import { MPD218Controller } from "../midi-controllers/mpd218";
 
 export type Layout =
   | {
@@ -180,11 +180,19 @@ export const Controller = () => {
           <Layout layout={MPD218} id="MPC" />
         </div> */}
 
-        <LDP8Controller
-          onClick={(id) => {
-            setId(id);
-          }}
-        />
+        <div>
+          {/* <LDP8Controller
+            onClick={(id) => {
+              setId(id);
+            }}
+          /> */}
+
+          <MPD218Controller
+            onClick={(id) => {
+              setId(id);
+            }}
+          />
+        </div>
 
         {id && (
           <div>
