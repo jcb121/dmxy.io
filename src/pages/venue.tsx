@@ -25,6 +25,8 @@ const CreateVenue = () => {
     state.venues.find((a) => a.id == venue.id)
   );
 
+  const [activeArea, setActiveArea] = useState(0);
+
   const [activeVenueFixtureId, setActiveVenueFixtureId] = useState<string>();
 
   const activeVenueFixture = useMemo(() => {
@@ -62,19 +64,95 @@ const CreateVenue = () => {
           </button>
         </div>
       }
+      headerRight={
+        <>
+          <button
+            onClick={() => {
+              setActiveArea((state) => {
+                if (state < 1) return 0;
+                return state - 1;
+              });
+            }}
+          >
+            Prev Area
+          </button>
+          {activeArea}
+          <button
+            onClick={() => {
+              setActiveArea((state) => {
+                return state + 1;
+              });
+            }}
+          >
+            Next Area
+          </button>
+        </>
+      }
       left={
         <>
-          <Fixtures
-            fixtures={fixtures}
-            onDrag={(fixture, e) => {
-              e.dataTransfer.setData("fixtureId", fixture.id);
-              console.log("Settings", "fixtureId", fixture.id);
-            }}
-          />
+          {activeFixture && activeVenueFixture ? (
+            <div>
+              <div>
+                <h3>{activeFixture.model}</h3>
+                <button
+                  onClick={() => {
+                    setVenue((venue) => ({
+                      ...venue,
+                      venueFixtures: venue.venueFixtures.filter(
+                        (v) => v.id !== activeVenueFixture.id
+                      ),
+                    }));
+                  }}
+                >
+                  Remove
+                </button>
+              </div>
+
+              <div>
+                <label>
+                  Area:
+                  <select
+                    value={activeVenueFixture.area || 0}
+                    onChange={(e) => {
+                      setVenue((venue) => ({
+                        ...venue,
+                        venueFixtures: venue.venueFixtures.map((v) =>
+                          v.id === activeVenueFixture.id
+                            ? { ...v, area: parseInt(e.target.value) }
+                            : v
+                        ),
+                      }));
+                    }}
+                  >
+                    <option>0</option>
+                    <option>1</option>
+                    <option>2</option>
+                  </select>
+                </label>
+              </div>
+
+              <LockChannels
+                setVenue={setVenue}
+                fixture={activeFixture}
+                venueFixture={activeVenueFixture}
+              />
+            </div>
+          ) : (
+            <Fixtures
+              fixtures={fixtures}
+              onDrag={(fixture, e) => {
+                e.dataTransfer.setData("fixtureId", fixture.id);
+                console.log("Settings", "fixtureId", fixture.id);
+              }}
+            />
+          )}
         </>
       }
     >
       <NewStage
+        onClick={() => {
+          setActiveVenueFixtureId(undefined);
+        }}
         onDrop={(e) => {
           const { top, left } = e.currentTarget.getBoundingClientRect();
           const fixtureId = e.dataTransfer.getData("fixtureId");
@@ -87,6 +165,7 @@ const CreateVenue = () => {
               venueFixtures: [
                 ...venue.venueFixtures,
                 {
+                  area: activeArea || 0,
                   overwrites: {},
                   tags: [],
                   channel: 1,
@@ -113,24 +192,17 @@ const CreateVenue = () => {
         }}
       >
         {venue.venueFixtures.map((venueFixture) => {
-          return (
+          return (venueFixture.area === undefined && activeArea === 0) ||
+            venueFixture.area === activeArea ? (
             <VenueFixtureComp
               setVenue={setVenue}
               setActiveVenueFixtureId={setActiveVenueFixtureId}
               venueFixture={venueFixture}
               activeVenueFixtureId={activeVenueFixtureId}
             />
-          );
+          ) : null;
         })}
       </NewStage>
-
-      {activeFixture && activeVenueFixture && (
-        <LockChannels
-          setVenue={setVenue}
-          fixture={activeFixture}
-          venueFixture={activeVenueFixture}
-        />
-      )}
     </BasicPage>
   );
 };

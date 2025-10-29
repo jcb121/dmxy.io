@@ -1,19 +1,27 @@
 .root {
   flex: 1;
-  display: flex;
-  flex-wrap: wrap;
+  height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: 1fr 4fr;
 }
 
 .header {
-  flex-basis: 100%;
-  flex-shrink: 0;
+  grid-column-end: span 2;
 }
 
 .left {
-  flex-basis: 20%;
-  flex-grow: 0;
+  overflow: hidden;
+  overflow-y: auto;
 }
 
 .content {
-  flex: 1;
+  grid-column-start: 1;
+
+  overflow: hidden;
+  overflow-y: auto;
+}
+
+.left + .content {
+  grid-column-start: 2;
 }

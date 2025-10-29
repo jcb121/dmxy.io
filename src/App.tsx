@@ -37,7 +37,7 @@ function App() {
   useCalcDmx(activeScene, venue?.venueFixtures);
   const connect = useDmx(true);
 
-  const [showStage, setShowStage] = useState(true);
+  const [showStage, setShowStage] = useState(false);
 
   const universes = venue?.venueFixtures.reduce((universes, vf) => {
     if (universes.includes(vf.universe || 0)) {
@@ -45,6 +45,8 @@ function App() {
     }
     return [...universes, vf.universe || 0];
   }, [] as number[]);
+
+  const [activeArea, setActiveArea] = useState(0);
 
   return (
     <BasicPage
@@ -117,36 +119,71 @@ function App() {
           ))}
         </>
       }
+      left={
+        <SceneGrid
+          scenes={venue?.scenes ? Object.values(venue.scenes) : []}
+          scene={activeScene}
+        />
+      }
     >
-      <SceneGrid
-        scenes={venue?.scenes ? Object.values(venue.scenes) : []}
-        scene={activeScene}
-      />
       {showStage && (
-        <NewStage>
-          {venue?.venueFixtures.map((venueFixture) => {
-            const fixture = fixtures.find(
-              (f) => f.id === venueFixture.fixtureId
-            );
+        <>
+          <div>
+            <button
+              onClick={() => {
+                setActiveArea((state) => {
+                  if (state < 1) return 0;
+                  return state - 1;
+                });
+              }}
+            >
+              Prev Area
+            </button>
+            {activeArea}
+            <button
+              onClick={() => {
+                setActiveArea((state) => {
+                  return state + 1;
+                });
+              }}
+            >
+              Next Area
+            </button>
+          </div>
+          <NewStage>
+            {venue?.venueFixtures.map((venueFixture) => {
+              if (venueFixture.area === undefined && activeArea !== 0) {
+                return null;
+              }
+              if (
+                venueFixture.area !== undefined &&
+                venueFixture.area !== activeArea
+              ) {
+                return null;
+              }
+              const fixture = fixtures.find(
+                (f) => f.id === venueFixture.fixtureId
+              );
 
-            if (!fixture) {
-              return <button>Delete</button>;
-            }
+              if (!fixture) {
+                return <button>Delete</button>;
+              }
 
-            return (
-              <ConnectedLight
-                venueFixture={venueFixture}
-                fixture={fixture}
-                key={venueFixture.id}
-              >
-                <NewStageFixture
+              return (
+                <ConnectedLight
                   venueFixture={venueFixture}
-                  info={<div>{fixture.model}</div>}
-                />
-              </ConnectedLight>
-            );
-          })}
-        </NewStage>
+                  fixture={fixture}
+                  key={venueFixture.id}
+                >
+                  <NewStageFixture
+                    venueFixture={venueFixture}
+                    info={<div>{fixture.model}</div>}
+                  />
+                </ConnectedLight>
+              );
+            })}
+          </NewStage>
+        </>
       )}
 
       <Controller />

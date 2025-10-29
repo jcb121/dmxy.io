@@ -1,16 +1,14 @@
 .root {
-  // display: grid;
-  // grid-template-columns: 1fr 1fr 1fr 1fr;
-
   display: flex;
   flex-wrap: wrap;
 
-  // align-items: start;
+  justify-content: space-around;
 
-  gap: 16px;
+  gap: 8px;
   padding: 8px;
 }
 
 .item {
-  flex-basis: 150px;
+  flex-grow: 0;
+  flex-basis: 100px;
 }

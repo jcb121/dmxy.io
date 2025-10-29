@@ -18,6 +18,7 @@ export type VenueFixture = {
   channel: number;
   fixtureId: string;
   universe?: number;
+  area?: number;
 };
 
 export type Venue = {

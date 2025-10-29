@@ -95,6 +95,8 @@ const CreateScene = () => {
 
   const { start } = useDmx();
 
+  const [activeArea, setActiveArea] = useState(0);
+
   return (
     <BasicPage
       header={
@@ -113,13 +115,37 @@ const CreateScene = () => {
         </>
       }
       headerRight={
-        <button
-          onClick={() => {
-            start();
-          }}
-        >
-          DMX Connect
-        </button>
+        <>
+          <div>
+            <button
+              onClick={() => {
+                setActiveArea((state) => {
+                  if (state < 1) return 0;
+                  return state - 1;
+                });
+              }}
+            >
+              Prev Area
+            </button>
+            {activeArea}
+            <button
+              onClick={() => {
+                setActiveArea((state) => {
+                  return state + 1;
+                });
+              }}
+            >
+              Next Area
+            </button>
+          </div>
+          <button
+            onClick={() => {
+              start();
+            }}
+          >
+            DMX Connect
+          </button>
+        </>
       }
       left={
         <>
@@ -140,48 +166,51 @@ const CreateScene = () => {
         />
       </div>
 
-      <div>
-        <NewStage>
-          {venue?.venueFixtures.map((venueFixture) => {
-            const fixture = fixtures.find(
-              (f) => f.id === venueFixture.fixtureId
-            );
-            if (!fixture) return;
-
-            // connected light means it's linked to the DMX STATE
-            return (
-              <ConnectedLight
-                venueFixture={venueFixture}
-                fixture={fixture}
+      <NewStage>
+        {venue?.venueFixtures.map((venueFixture) => {
+                        if (venueFixture.area === undefined && activeArea !== 0) {
+                return null;
+              }
+              if (
+                venueFixture.area !== undefined &&
+                venueFixture.area !== activeArea
+              ) {
+                return null;
+              }ProfileProvier
+          const fixture = fixtures.find((f) => f.id === venueFixture.fixtureId);
+          if (!fixture) return;
+          return (
+            <ConnectedLight
+              venueFixture={venueFixture}
+              fixture={fixture}
+              key={venueFixture.id}
+            >
+              <NewStageFixture
+                onClick={() => {
+                  setActiveSelector(`#${venueFixture.id}`);
+                }}
                 key={venueFixture.id}
-              >
-                <NewStageFixture
-                  onClick={() => {
-                    setActiveSelector(`#${venueFixture.id}`);
-                  }}
-                  key={venueFixture.id}
-                  info={
-                    <>
-                      <div>{`${fixture.model} (${fixture.channelFunctions.length})`}</div>
-                      <TagsRow
-                        active={activeSelector}
-                        tags={venueFixture.tags.map((t) => ({
-                          value: `.${t}`,
-                          label: t,
-                        }))}
-                        onClick={(selector) => {
-                          setActiveSelector(selector);
-                        }}
-                      />
-                    </>
-                  }
-                  venueFixture={venueFixture}
-                />
-              </ConnectedLight>
-            );
-          })}
-        </NewStage>
-      </div>
+                info={
+                  <>
+                    <div>{`${fixture.model} (${fixture.channelFunctions.length})`}</div>
+                    <TagsRow
+                      active={activeSelector}
+                      tags={venueFixture.tags.map((t) => ({
+                        value: `.${t}`,
+                        label: t,
+                      }))}
+                      onClick={(selector) => {
+                        setActiveSelector(selector);
+                      }}
+                    />
+                  </>
+                }
+                venueFixture={venueFixture}
+              />
+            </ConnectedLight>
+          );
+        })}
+      </NewStage>
 
       <div>
         <SceneVars vars={scene.vars} setScene={setScene} />

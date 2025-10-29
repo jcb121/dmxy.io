@@ -11,7 +11,7 @@ export const NewStageFixture = ({
   onDrag,
   info,
 }: {
-  onClick?: () => void;
+  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
   info?: React.ReactNode;
   venueFixture: VenueFixture;
   onDrop?: (e: React.DragEvent<HTMLDivElement>) => void;
@@ -34,6 +34,9 @@ export const NewStageFixture = ({
         e.preventDefault();
       }}
       onDrop={onDrop}
+      onClick={(e) => {
+        e.stopPropagation();
+      }}
     >
       <div className={styles.info}>{info}</div>
       <div

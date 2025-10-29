@@ -28,32 +28,22 @@ export const VenueFixtureComp = ({
       onDrag={(e) => {
         e.dataTransfer.setData("id", venueFixture.id);
       }}
+      onClick={() => {
+        setActiveVenueFixtureId(venueFixture.id);
+      }}
       info={
-        <div className={styles.root}>
+        <div
+          className={styles.root}
+          style={{
+            outline:
+              (activeVenueFixtureId === venueFixture.id && "1px solid red") ||
+              undefined,
+          }}
+        >
           <div title={`(ch: ${fixture.channelFunctions.length})`}>
             {`${fixture.model}`}
           </div>
           <div className={styles.buttons}>
-            <button
-              onClick={() => {
-                setActiveVenueFixtureId(venueFixture.id);
-              }}
-            >
-              {activeVenueFixtureId === venueFixture?.id ? "Active" : "Select"}
-            </button>
-
-            <button
-              onClick={() => {
-                setVenue((venue) => ({
-                  ...venue,
-                  venueFixtures: venue.venueFixtures.filter(
-                    (v) => v.id !== venueFixture.id
-                  ),
-                }));
-              }}
-            >
-              Remove
-            </button>
           </div>
 
           <div>
@@ -73,42 +63,38 @@ export const VenueFixtureComp = ({
           </div>
 
           <div className={styles.channel}>
-            <label prefix="">
-              Uni:
-            </label>
-              <input
-                className={styles.input}
-                type="number"
-                value={venueFixture.universe || 0}
-                onChange={(e) => {
-                  setVenue((venue) => ({
-                    ...venue,
-                    venueFixtures: venue.venueFixtures.map((v) =>
-                      v.id === venueFixture.id
-                        ? { ...v, universe: parseInt(e.target.value) }
-                        : v
-                    ),
-                  }));
-                }}
-              />
-            <label>
-              CH:
-            </label>
-              <input
-                className={styles.input}
-                type="number"
-                value={venueFixture.channel}
-                onChange={(e) => {
-                  setVenue((venue) => ({
-                    ...venue,
-                    venueFixtures: venue.venueFixtures.map((v) =>
-                      v.id === venueFixture.id
-                        ? { ...v, channel: parseInt(e.target.value) }
-                        : v
-                    ),
-                  }));
-                }}
-              />
+            <label>Uni:</label>
+            <input
+              className={styles.input}
+              type="number"
+              value={venueFixture.universe || 0}
+              onChange={(e) => {
+                setVenue((venue) => ({
+                  ...venue,
+                  venueFixtures: venue.venueFixtures.map((v) =>
+                    v.id === venueFixture.id
+                      ? { ...v, universe: parseInt(e.target.value) }
+                      : v
+                  ),
+                }));
+              }}
+            />
+            <label>CH:</label>
+            <input
+              className={styles.input}
+              type="number"
+              value={venueFixture.channel}
+              onChange={(e) => {
+                setVenue((venue) => ({
+                  ...venue,
+                  venueFixtures: venue.venueFixtures.map((v) =>
+                    v.id === venueFixture.id
+                      ? { ...v, channel: parseInt(e.target.value) }
+                      : v
+                  ),
+                }));
+              }}
+            />
             -{venueFixture.channel + fixture.channelFunctions.length}
           </div>
         </div>

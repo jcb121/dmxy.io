@@ -1,10 +1,6 @@
 .stage {
+  overflow-x: auto;
+  height: 100%;
   position: relative;
-  aspect-ratio: 2 / 1;
-
-  border: 2px solid gray;
   background-color: rgb(88, 88, 88);
-
-  // height: 500px;
-  // width: 500px;
 }
