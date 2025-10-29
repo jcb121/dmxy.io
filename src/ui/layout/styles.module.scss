@@ -17,6 +17,7 @@
 
 .content {
   grid-column-start: 1;
+  grid-column-end: span 2;
 
   overflow: hidden;
   overflow-y: auto;
@@ -24,4 +25,5 @@
 
 .left + .content {
   grid-column-start: 2;
+  grid-column-end: 2;
 }
