@@ -51,7 +51,17 @@ export const CycleSceneEdit = ({
       </select>
       <div className={styles.span2}>
         {payload?.scenes?.map((sId, index) => (
-          <button key={`${sId}-${index}`} onClick={() => {}}>
+          <button
+            key={`${sId}-${index}`}
+            onClick={() => {
+              payload.scenes.splice(index);
+              onEventChange({
+                function: MidiCallback.cycleScene,
+                cycleName: payload.cycleName,
+                scenes: [...payload.scenes],
+              });
+            }}
+          >
             {scenes.find((s) => s.id == sId)?.name}
           </button>
         ))}
