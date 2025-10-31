@@ -80,6 +80,12 @@ export const useVenues = create<{
   )
 );
 
+window.addEventListener("storage", (e: StorageEvent) => {
+  if (e.key === useVenues.persist.getOptions().name && e.newValue) {
+    useVenues.persist.rehydrate();
+  }
+});
+
 export const useActiveVenue = create<{
   venue?: Venue;
   setActiveVenue: (id: string) => void;

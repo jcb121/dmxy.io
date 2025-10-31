@@ -126,6 +126,12 @@ export const useFixtures = create<{
   )
 );
 
+window.addEventListener("storage", (e: StorageEvent) => {
+  if (e.key === useFixtures.persist.getOptions().name && e.newValue) {
+    useFixtures.persist.rehydrate();
+  }
+});
+
 export const FixtureContext = React.createContext<{
   fixtures: Fixture[];
   fixtureProfiles: FixtureProfile[];

@@ -1,13 +1,12 @@
 // import styles from "./App.module.css";
 import { Scene, useScenes } from "./context/scenes";
-import { useActiveVenue } from "./context/venues";
+import { useActiveVenue, useVenues } from "./context/venues";
 import { BasicPage } from "./ui/layout/basic-page";
 import { NewStage } from "./components/stage/new-stage";
 import { NewStageFixture } from "./components/stage/new-state-fixture";
 import { ConnectedLight } from "./components/connectedLight";
 import { useFixtures } from "./context/fixtures";
 import { Controller } from "./components/controller/controller";
-import { useProfiles } from "./context/profiles";
 import { SceneGrid } from "./domain/scenes/grid";
 import { useActiveScene } from "./context/active-scene";
 import { useEffect, useState } from "react";
@@ -21,7 +20,19 @@ const venue_id = urlParams.get("venue_id");
 venue_id && useActiveVenue.getState().setActiveVenue(venue_id);
 
 function App() {
+  const venues = useVenues((state) => state.venues);
+  useEffect(() => {
+    venue_id && useActiveVenue.getState().setActiveVenue(venue_id);
+  }, [venues]);
+
   const venue = useActiveVenue((state) => state.venue);
+  useEffect(() => {
+    useActiveVenue.setState((state) => ({
+      ...state,
+      venue,
+    }));
+  }, [venue]);
+
   useEffect(() => {
     if (venue) {
       useScenes.setState({
@@ -66,14 +77,6 @@ function App() {
             <a target="_blank" href={`/scene.html?venue_id=${venue?.id}`}>
               Scenes
             </a>
-          </button>
-          <button
-            onClick={() => {
-              useProfiles.persist.rehydrate();
-              useFixtures.persist.rehydrate();
-            }}
-          >
-            Reload
           </button>
           <button
             onClick={() => {
