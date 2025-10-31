@@ -1,11 +1,9 @@
 // import { useContext } from "react";
-// import { FixtureContext } from "../../context/fixtures";
 // import { Light } from "../light";
 import styles from "./venue.module.scss";
 // import { VenueContext } from "../../context/venues";
 
 export const Venue = () => {
-  // const { fixtures } = useContext(FixtureContext);
   // const { venues } = useContext(VenueContext);
   // const venue = venues[0];
 

@@ -1,5 +1,5 @@
 import { IDBPDatabase, openDB } from "idb";
-import { Fixture, FixtureProfile } from "./context/fixtures";
+import { Fixture } from "./context/fixtures";
 import { Scene } from "./context/scenes";
 import { Venue } from "./context/venues";
 import { GenericProfile } from "./context/profiles";
@@ -15,11 +15,6 @@ type MyDB = {
   fixtures: {
     key: string;
     value: Fixture;
-  };
-
-  fixtureProfiles: {
-    key: string;
-    value: FixtureProfile;
   };
 
   genericProfiles: {
@@ -61,13 +56,6 @@ export const getDatabase = async (): Promise<IDBPDatabase<MyDB>> => {
           }
           try {
             db.createObjectStore("fixtures", {
-              keyPath: "id",
-            });
-          } catch (e) {
-            //
-          }
-          try {
-            db.createObjectStore("fixtureProfiles", {
               keyPath: "id",
             });
           } catch (e) {

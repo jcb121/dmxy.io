@@ -1,15 +1,7 @@
-import React from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 export type DMXValues = Record<number, number>; // 0: 0 -> 255
-
-export type FixtureProfile = {
-  fixtureId: string;
-  id: string;
-  name: string;
-  dmxValues: DMXValues;
-};
 
 export enum ChannelSimpleFunction {
   unknown = "",
@@ -130,16 +122,4 @@ window.addEventListener("storage", (e: StorageEvent) => {
   if (e.key === useFixtures.persist.getOptions().name && e.newValue) {
     useFixtures.persist.rehydrate();
   }
-});
-
-export const FixtureContext = React.createContext<{
-  fixtures: Fixture[];
-  fixtureProfiles: FixtureProfile[];
-  saveFixture: (f: Fixture) => void;
-  saveFixtureProfile: (f: FixtureProfile) => void;
-}>({
-  fixtures: [],
-  fixtureProfiles: [],
-  saveFixture: () => {},
-  saveFixtureProfile: () => {},
 });
