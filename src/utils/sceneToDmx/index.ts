@@ -109,8 +109,6 @@ export const sceneToDmx = ({
       } satisfies Partial<ProfileState>
     );
 
-    // console.log(globals["MAX_intensity"]);
-
     // Track min/max globals
     for (const key in state) {
       const maxGlobal = globals[`MAX_${key}`];

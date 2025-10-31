@@ -44,7 +44,6 @@ export const CreateRule = ({
           return venueFixture.tags.includes(tag);
         }
         return activeSelector === "*";
-
       });
       if (matches) {
         return [...venueFixtures, venueFixture];
@@ -102,6 +101,14 @@ export const CreateRule = ({
 
         return fixture.channelFunctions.reduce((options, channel) => {
           return channel.reduce((options, channelFunction) => {
+            if (channelFunction.mapIntensity) {
+              return [
+                ...options,
+                ChannelSimpleFunction.intensity,
+                channelFunction.function,
+              ];
+            }
+
             if (
               channelFunction.function !== ChannelSimpleFunction.fixedColour &&
               channelFunction.function !== ChannelSimpleFunction.function

@@ -1,5 +1,10 @@
 import { mapNumbers } from "..";
-import { ChannelFunctions, ChannelSimpleFunction, DMXValues, FixtureFunction } from "../../context/fixtures";
+import {
+  ChannelFunctions,
+  ChannelSimpleFunction,
+  DMXValues,
+  FixtureFunction,
+} from "../../context/fixtures";
 import { ProfileState } from "../../context/profiles";
 import { rgbToHex } from "../rgb";
 
@@ -53,10 +58,15 @@ export const frameToDmx = (
           ChannelSimpleFunction.colour,
         ].includes(channelFunction.function)
       ) {
+        const finalVal =
+          channelFunction.mapIntensity && profileSate.Intensity !== undefined
+            ? mapNumbers(0, 255, targetState, 0, profileSate.Intensity)
+            : targetState;
+
         return mapNumbers(
           0,
           255,
-          targetState,
+          finalVal,
           channelFunction.range[0],
           channelFunction.range[1]
         );

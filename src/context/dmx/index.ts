@@ -104,7 +104,6 @@ export const useDmx = (
   const cancelDMX = useRef<(() => void)[]>([]);
 
   useEffect(() => {
-    console.log("RUNNING", connections, cancelDMX.current.length);
     cancelDMX.current.forEach((cancel) => cancel());
     cancelDMX.current = [];
 
@@ -135,6 +134,9 @@ export const useDmx = (
         }
       }
     })();
+    return () => {
+      cancelDMX.current.forEach((cancel) => cancel());
+    };
   }, [autoStart, connections, devices, start, ports, usbDevices]);
 
   const connect = useCallback(

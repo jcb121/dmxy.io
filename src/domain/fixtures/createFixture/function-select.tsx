@@ -94,6 +94,19 @@ export const FunctionSelect = ({
           type="number"
         />
       </label>
+      <label>
+        Map Intensity
+        <input
+          type="checkbox"
+          checked={value.mapIntensity || false}
+          onChange={(e) => {
+            onChange({
+              ...value,
+              mapIntensity: e.target.checked,
+            });
+          }}
+        />
+      </label>
     </div>
   );
 };

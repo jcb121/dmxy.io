@@ -56,6 +56,7 @@ export interface SubChannelFunction<
   range: [low, high];
   function: T;
   value?: string; // can be a HTML color code
+  mapIntensity?: boolean;
 }
 
 export type ChannelFunction = SubChannelFunction<ChannelSimpleFunction>[];
