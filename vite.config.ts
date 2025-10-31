@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "path";
+import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -16,5 +17,36 @@ export default defineConfig({
       },
     },
   },
-  plugins: [react()],
+  plugins: [
+    react(),
+    VitePWA({
+      injectRegister: "auto",
+      registerType: "autoUpdate",
+      manifest: {
+        name: "DMXY",
+        short_name: "DMXY",
+        description: "Run DMX lights",
+      },
+      workbox: {
+        ignoreURLParametersMatching: [/.*/],
+        navigateFallback: "index.html",
+        navigateFallbackDenylist: [
+          /\/fixtures/,
+          /\/main/,
+          /\/scene/,
+          /\/venue/,
+          /\/venues/,
+        ],
+        globPatterns: [
+          "**/*.{js,css,html,ico,png,svg}",
+          "fixtures.html",
+          "index.html",
+          "main.html",
+          "scene.html",
+          "venue.html",
+          "venues.html",
+        ],
+      },
+    }),
+  ],
 });

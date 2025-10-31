@@ -53,17 +53,17 @@ function App() {
       header={
         <>
           <button>
-            <a href="/fixtures" target="_blank">
+            <a href="/fixtures.html" target="_blank">
               Fixtures
             </a>
           </button>
           <button>
-            <a href={`/venue?venue_id=${venue?.id}`} target="_blank">
+            <a href={`/venue.html?venue_id=${venue?.id}`} target="_blank">
               Edit Venue
             </a>
           </button>
           <button>
-            <a target="_blank" href={`/scene?venue_id=${venue?.id}`}>
+            <a target="_blank" href={`/scene.html?venue_id=${venue?.id}`}>
               Scenes
             </a>
           </button>

@@ -37,7 +37,7 @@ const Main = () => {
       <div className={styles.root}>
         <div>
           <button>
-            <a href={`/fixtures`} target="_blank">
+            <a href={`/fixtures.html`} target="_blank">
               Fixures / create
             </a>
           </button>
@@ -47,7 +47,7 @@ const Main = () => {
           >
             {(item) => (
               <button>
-                <a href={`/fixtures?fixture_id=${item.id}`} target="_blank">
+                <a href={`/fixtures.html?fixture_id=${item.id}`} target="_blank">
                   edit
                 </a>
               </button>
@@ -56,12 +56,12 @@ const Main = () => {
         </div>
         <div>
           <button>
-            <a href={`/venues`} target="_blank">
+            <a href={`/venues.html`} target="_blank">
               venues
             </a>
           </button>
           <button>
-            <a href={`/venue`} target="_blank">
+            <a href={`/venue.html`} target="_blank">
               Create venue
             </a>
           </button>
@@ -69,17 +69,17 @@ const Main = () => {
             {(item) => (
               <>
                 <button>
-                  <a href={`/venue?venue_id=${item.id}`} target="_blank">
+                  <a href={`/venue.html?venue_id=${item.id}`} target="_blank">
                     edit
                   </a>
                 </button>
                 <button>
-                  <a href={`/scene?venue_id=${item.id}`} target="_blank">
+                  <a href={`/scene.html?venue_id=${item.id}`} target="_blank">
                     scenes
                   </a>
                 </button>
                 <button>
-                  <a href={`/main?venue_id=${item.id}`} target="_blank">
+                  <a href={`/main.html?venue_id=${item.id}`} target="_blank">
                     open
                   </a>
                 </button>
