@@ -1,7 +1,13 @@
 import { ChannelSimpleFunction } from "../../../context/fixtures";
 import { New_GenericProfile } from "../../../context/profiles";
-import { getRGB } from "../../../utils/rgb";
+import { getRGB, rgbToHex } from "../../../utils/rgb";
 import styles from "./styles.module.scss";
+
+const RGB = [
+  ChannelSimpleFunction.red,
+  ChannelSimpleFunction.green,
+  ChannelSimpleFunction.blue,
+];
 
 export const Frame = ({
   frame,
@@ -16,11 +22,72 @@ export const Frame = ({
   functions: string[];
   setFrame: React.Dispatch<React.SetStateAction<New_GenericProfile>>;
 }) => {
+  const isRGB = RGB.every((func) => {
+    return options.find((channel) => {
+      return channel === func;
+    });
+  });
+
+  const hasWhite = options.find(
+    (channel) => channel === ChannelSimpleFunction.white
+  );
+
   return (
     <div>
       <table>
         <tbody>
+          {isRGB && (
+            <tr>
+              <td>Color</td>
+              <td>
+                <input
+                  type="color"
+                  value={`#${rgbToHex([
+                    frame.state.Red!,
+                    frame.state.Green!,
+                    frame.state.Blue!,
+                  ])}`}
+                  onChange={(e) => {
+                    const [Red, Green, Blue] = getRGB(e.target.value.slice(1));
+
+                    if (hasWhite && Red === Green && Red === Blue) {
+                      setFrame((frame) => {
+                        return {
+                          ...frame,
+                          state: {
+                            ...frame.state,
+                            White: Red,
+                            Red: 0,
+                            Green: 0,
+                            Blue: 0,
+                          },
+                        };
+                      });
+                      return;
+                    }
+
+                    setFrame((frame) => {
+                      return {
+                        ...frame,
+                        state: {
+                          ...frame.state,
+                          White: 0,
+                          Red,
+                          Green,
+                          Blue,
+                        },
+                      };
+                    });
+                  }}
+                />
+              </td>
+            </tr>
+          )}
+
           {options?.map((functionName) => {
+            if (RGB.includes(functionName)) {
+              return null;
+            }
             return (
               <tr key={functionName}>
                 <td>{functionName}</td>
@@ -105,7 +172,10 @@ export const Frame = ({
               setFrame((frame) => {
                 return {
                   ...frame,
-                  targetFunction:  frame.targetFunction === functionName ? undefined : functionName,
+                  targetFunction:
+                    frame.targetFunction === functionName
+                      ? undefined
+                      : functionName,
                 };
               });
             }}
