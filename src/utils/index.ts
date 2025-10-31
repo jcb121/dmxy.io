@@ -5,6 +5,7 @@ import {
   SubChannelFunction,
   Fixture,
 } from "../context/fixtures";
+import { DEFAULT_DMX_UNIVERSE } from "../domain/fixtures/createFixture";
 import { dmxToFrame } from "./dmxToFrame";
 import { getRGB } from "./rgb";
 
@@ -55,10 +56,9 @@ export const findFunction = (
 export const setCSSVarsFromDmx = (
   htmlElement: HTMLDivElement,
   { channelFunctions, deviceFunctions }: Fixture,
-  universe: number | undefined,
+  universe: number | undefined = DEFAULT_DMX_UNIVERSE,
   channelNumber: number
 ) => {
-  if(!universe) return
   const channels = dmxToFrame(channelFunctions, universe, channelNumber);
   const { Red, Blue, Green, White, Strobe, Intensity, Colour, UV } = channels;
 
