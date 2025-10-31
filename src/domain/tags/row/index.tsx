@@ -5,17 +5,19 @@ export const TagsRow = ({
 }: {
   active?: string;
   tags: { label: string; value: string }[];
-  onClick: (tag: string) => void;
+  onClick: (tag: string, shiftKey: boolean) => void;
 }) => {
   return (
     <>
       {tags.map((tag) => (
         <button
           style={{
-            borderColor: active === tag.value ? "red" : undefined,
+            borderColor: active?.includes(tag.value) ? "red" : undefined,
           }}
           key={tag.value}
-          onClick={() => onClick(tag.value)}
+          onClick={(e) => {
+            onClick(tag.value, e.shiftKey);
+          }}
         >
           {tag.label}
         </button>

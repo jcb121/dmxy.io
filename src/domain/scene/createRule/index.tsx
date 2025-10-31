@@ -22,27 +22,35 @@ export const CreateRule = ({
 }) => {
   const venueFixtures = useMemo<VenueFixture[]>(() => {
     if (!activeSelector) return [];
-
     if (activeSelector === "*") {
       return venue.venueFixtures;
     }
 
-    if (activeSelector[0] === "@") {
-      const id = activeSelector.slice(1);
-      return venue.venueFixtures.filter((vf) => vf.fixtureId === id);
-    }
+    const selectors = activeSelector.split(" ");
 
-    if (activeSelector[0] === "#") {
-      // specific device here
-      const id = activeSelector.slice(1);
-      const fixutre = venue.venueFixtures.find((vf) => vf.id === id);
-      return fixutre ? [fixutre] : [];
-    } else if (activeSelector[0] === ".") {
-      const tag = activeSelector.slice(1);
-      return venue.venueFixtures.filter((vf) => vf.tags.includes(tag));
-    }
+    return venue.venueFixtures.reduce((venueFixtures, venueFixture) => {
+      const matches = selectors.every((activeSelector) => {
+        if (activeSelector[0] === "@") {
+          const id = activeSelector.slice(1);
+          return venueFixture.fixtureId === id;
+        }
 
-    return [];
+        if (activeSelector[0] === "#") {
+          const id = activeSelector.slice(1);
+          return venueFixture.id === id;
+        }
+        if (activeSelector[0] === ".") {
+          const tag = activeSelector.slice(1);
+          return venueFixture.tags.includes(tag);
+        }
+        return activeSelector === "*";
+
+      });
+      if (matches) {
+        return [...venueFixtures, venueFixture];
+      }
+      return venueFixtures;
+    }, [] as VenueFixture[]);
   }, [activeSelector, venue.venueFixtures]);
 
   const fixtures = useFixtures((state) => state.fixtures);

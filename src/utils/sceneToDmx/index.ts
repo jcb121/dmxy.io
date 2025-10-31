@@ -10,6 +10,7 @@ import { Scene } from "../../context/scenes";
 import { VenueFixture } from "../../context/venues";
 import { animateRGBFade } from "./animateRBGFade";
 import { frameToDmx } from "./frameToDmx";
+import { getActiveRule } from "./rules";
 
 const RGB = [
   ChannelSimpleFunction.red,
@@ -30,8 +31,8 @@ export const sceneToDmx = ({
 }) => {
   // clear the DMX state
   Object.keys(DMXState).forEach((universe) => {
-    DMXState[parseInt(universe)].fill(0)
-  })
+    DMXState[parseInt(universe)].fill(0);
+  });
 
   const hold = parseInt(
     `${
@@ -70,30 +71,7 @@ export const sceneToDmx = ({
 
     const profiles: New_GenericProfile[] = (() => {
       if (!scene || !scene?.new_profiles) return [];
-
-      const fixtureSelector = `#${venueFixture.id}`;
-      if (scene?.new_profiles[fixtureSelector]) {
-        return scene.new_profiles[fixtureSelector];
-      }
-
-      const deviceSelector = `@${venueFixture.fixtureId}`;
-      if (scene?.new_profiles[deviceSelector]) {
-        return scene.new_profiles[deviceSelector];
-      }
-
-      const profile = venueFixture.tags.find(
-        (tag) => scene.new_profiles[`.${tag}`]
-      );
-
-      if (scene.new_profiles[`.${profile}`]) {
-        return scene.new_profiles[`.${profile}`];
-      }
-
-      if (scene.new_profiles["*"]) {
-        return scene.new_profiles["*"];
-      }
-
-      return [];
+      return getActiveRule(scene, venueFixture);
     })();
 
     if (!profiles || profiles.length === 0) return; // we have no profiles, but is this correct?
@@ -167,7 +145,9 @@ export const sceneToDmx = ({
 
     if (typeof venueFixture.channel !== "undefined") {
       Object.keys(dmxVals).forEach((key) => {
-        DMXState[venueFixture.universe || 0][parseInt(key) + venueFixture.channel] = dmxVals[parseInt(key)];
+        DMXState[venueFixture.universe || 0][
+          parseInt(key) + venueFixture.channel
+        ] = dmxVals[parseInt(key)];
       });
     }
   });

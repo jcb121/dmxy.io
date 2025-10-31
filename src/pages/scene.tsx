@@ -41,7 +41,7 @@ const CreateScene = () => {
 
     const keys = {
       all: "*",
-      none: "",
+      // none: "",
 
       ...venue.venueFixtures
         .map((vf) => vf.tags)
@@ -156,27 +156,32 @@ const CreateScene = () => {
       }
     >
       <div>
-        <h5>Selectors</h5>
+        <h5>Selectors {activeSelector}</h5>
         <TagsRow
           active={activeSelector}
           tags={tags}
-          onClick={(selector) => {
-            setActiveSelector(selector);
+          onClick={(selector, shiftKey) => {
+            setActiveSelector((state) => {
+              if (shiftKey && state) {
+                return `${state} ${selector}`;
+              }
+              return selector;
+            });
           }}
         />
       </div>
 
       <NewStage>
         {venue?.venueFixtures.map((venueFixture) => {
-                        if (venueFixture.area === undefined && activeArea !== 0) {
-                return null;
-              }
-              if (
-                venueFixture.area !== undefined &&
-                venueFixture.area !== activeArea
-              ) {
-                return null;
-              }ProfileProvier
+          if (venueFixture.area === undefined && activeArea !== 0) {
+            return null;
+          }
+          if (
+            venueFixture.area !== undefined &&
+            venueFixture.area !== activeArea
+          ) {
+            return null;
+          }
           const fixture = fixtures.find((f) => f.id === venueFixture.fixtureId);
           if (!fixture) return;
           return (
