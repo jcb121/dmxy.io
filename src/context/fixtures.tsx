@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-import { getDatabase } from "../db";
+import React from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -77,7 +76,7 @@ export type FixtureFunction = {
 
 export enum SupportedFixtures {
   light = "Light",
-  smokeMachine = "smokeMachine"
+  smokeMachine = "smokeMachine",
 }
 
 export type Fixture = {
@@ -138,54 +137,3 @@ export const FixtureContext = React.createContext<{
   saveFixture: () => {},
   saveFixtureProfile: () => {},
 });
-
-export const FixtureProvider = ({
-  children,
-}: {
-  children: React.ReactNode;
-}) => {
-  useEffect(() => {
-    (async () => {
-      const database = await getDatabase();
-
-      database?.getAll("fixtures").then((res) => {
-        setFixtures(res);
-      });
-      database?.getAll("fixtureProfiles").then((res) => {
-        setFixtureProfiles(res);
-      });
-    })();
-  }, []);
-
-  const [fixtures, setFixtures] = useState<Fixture[]>([]);
-  const [fixtureProfiles, setFixtureProfiles] = useState<FixtureProfile[]>([]);
-
-  const saveFixture = async (f: Fixture) => {
-    const database = await getDatabase();
-
-    database.add("fixtures", f);
-
-    setFixtures((state) => [...state, f]);
-  };
-
-  const saveFixtureProfile = async (p: FixtureProfile) => {
-    const database = await getDatabase();
-
-    database.add("fixtureProfiles", p);
-
-    setFixtureProfiles((state) => [...state, p]);
-  };
-
-  return (
-    <FixtureContext.Provider
-      value={{
-        fixtures,
-        fixtureProfiles,
-        saveFixture,
-        saveFixtureProfile,
-      }}
-    >
-      {children}
-    </FixtureContext.Provider>
-  );
-};

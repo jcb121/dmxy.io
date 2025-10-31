@@ -6,7 +6,6 @@ import { useFixtures } from "../context/fixtures";
 import { NewStage } from "../components/stage/new-stage";
 import { NewStageFixture } from "../components/stage/new-state-fixture";
 import { useMemo, useState } from "react";
-import { ProfileProvier } from "../context/profiles";
 import { SAMPLE_SCENE, Scene } from "../context/scenes";
 import { ConnectedLight } from "../components/connectedLight";
 
@@ -259,8 +258,4 @@ const CreateScene = () => {
   );
 };
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <ProfileProvier>
-    <CreateScene />
-  </ProfileProvier>
-);
+ReactDOM.createRoot(document.getElementById("root")!).render(<CreateScene />);

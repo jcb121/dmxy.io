@@ -1,8 +1,7 @@
 import ReactDOM from "react-dom/client";
 import "../index.css";
-import { Fixture, FixtureProvider, useFixtures } from "../context/fixtures.tsx";
+import { Fixture, useFixtures } from "../context/fixtures.tsx";
 import { VenueProvider } from "../context/venues.tsx";
-import { ProfileProvier } from "../context/profiles.tsx";
 import { MidiProvider } from "../context/midi.tsx";
 import { useState } from "react";
 import {
@@ -11,7 +10,10 @@ import {
 } from "../domain/fixtures/createFixture/index.tsx";
 import { BasicPage } from "../ui/layout/basic-page.tsx";
 import { ListWithAction } from "../ui/list-with-actions/index.tsx";
-import { registerSerialDevice, startDMX as startSerialDMX } from "../context/dmx/serial.ts";
+import {
+  registerSerialDevice,
+  startDMX as startSerialDMX,
+} from "../context/dmx/serial.ts";
 import {
   registerUsbDevice,
   startDMX as startUSBDMX,
@@ -91,13 +93,9 @@ const FixturesPage = () => {
 ReactDOM.createRoot(document.getElementById("root")!).render(
   // <React.StrictMode>
   <MidiProvider>
-    <FixtureProvider>
-      <ProfileProvier>
-        <VenueProvider>
-          <FixturesPage />
-        </VenueProvider>
-      </ProfileProvier>
-    </FixtureProvider>
+    <VenueProvider>
+      <FixturesPage />
+    </VenueProvider>
   </MidiProvider>
   // </React.StrictMode>
 );

@@ -1,8 +1,6 @@
 import ReactDOM from "react-dom/client";
 import "../index.css";
-import { FixtureProvider } from "../context/fixtures.tsx";
 import { useVenues, VenueProvider } from "../context/venues.tsx";
-import { ProfileProvier } from "../context/profiles.tsx";
 import { MidiProvider } from "../context/midi.tsx";
 import { BasicPage } from "../ui/layout/basic-page.tsx";
 import { ListWithAction } from "../ui/list-with-actions/index.tsx";
@@ -74,13 +72,9 @@ const VenuesPage = () => {
 ReactDOM.createRoot(document.getElementById("root")!).render(
   // <React.StrictMode>
   <MidiProvider>
-    <FixtureProvider>
-      <ProfileProvier>
-        <VenueProvider>
-            <VenuesPage />
-        </VenueProvider>
-      </ProfileProvier>
-    </FixtureProvider>
+    <VenueProvider>
+      <VenuesPage />
+    </VenueProvider>
   </MidiProvider>
   // </React.StrictMode>
 );
