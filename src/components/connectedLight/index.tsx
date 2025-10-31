@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef } from "react";
 import { Fixture } from "../../context/fixtures";
 import { setCSSVarsFromDmx } from "../../utils";
 import { VenueFixture } from "../../context/venues";
-import { DMXState } from "../../context/dmx";
 /**
  * This react component uses the global DMX State and maps it to CSS Variables for the children to use.
  */
@@ -24,7 +23,7 @@ export const ConnectedLight = ({
       setCSSVarsFromDmx(
         ref.current,
         fixture,
-        DMXState[venueFixture.universe || 0],
+        venueFixture.universe,
         venueFixture.channel
       );
   }, [venueFixture, fixture]);

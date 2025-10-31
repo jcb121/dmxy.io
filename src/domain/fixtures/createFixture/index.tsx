@@ -41,7 +41,7 @@ export const CreateFixture = ({
 
   useEffect(() => {
     Object.keys(dmxValues).forEach((key) => {
-      DMXState[DEFAULT_DMX_UNIVERSE][parseInt(key) + dmxChannel] =
+      DMXState[DEFAULT_DMX_UNIVERSE][parseInt(key) + dmxChannel - 1] =
         dmxValues[parseInt(key)];
     });
   }, [dmxValues, dmxChannel]);

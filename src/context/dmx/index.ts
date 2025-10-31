@@ -11,7 +11,7 @@ export const interval = 46; //46; //options.dmx_speed ? (1000 / options.dmx_spee
 
 export const createUniverses = (universes: number[]) => {
   Object.values(universes).forEach((universe) => {
-    DMXState[universe] = new Uint8Array(513);
+    DMXState[universe] = new Uint8Array(512);
   });
 };
 

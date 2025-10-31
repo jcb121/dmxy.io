@@ -1,8 +1,8 @@
+import { DMXState } from "../context/dmx";
 import {
   ChannelFunctions,
   ChannelSimpleFunction,
   SubChannelFunction,
-  DMXValues,
   Fixture,
 } from "../context/fixtures";
 import { dmxToFrame } from "./dmxToFrame";
@@ -55,11 +55,11 @@ export const findFunction = (
 export const setCSSVarsFromDmx = (
   htmlElement: HTMLDivElement,
   { channelFunctions, deviceFunctions }: Fixture,
-  dmxValues: DMXValues | undefined,
+  universe: number | undefined,
   channelNumber: number
 ) => {
-  if(!dmxValues) return
-  const channels = dmxToFrame(channelFunctions, dmxValues, channelNumber);
+  if(!universe) return
+  const channels = dmxToFrame(channelFunctions, universe, channelNumber);
   const { Red, Blue, Green, White, Strobe, Intensity, Colour, UV } = channels;
 
   const cssStobeTime = getCSSStrobeDuration(Strobe);
@@ -90,8 +90,8 @@ export const setCSSVarsFromDmx = (
       (func) =>
         func.function === ChannelSimpleFunction.fixedColour &&
         func.value &&
-        func.range[0] <= dmxValues[channelIndex + channelNumber] &&
-        dmxValues[channelIndex + channelNumber] <= func.range[1]
+        func.range[0] <=  DMXState[universe][channelIndex + channelNumber - 1] &&
+        DMXState[universe][channelIndex + channelNumber - 1] <= func.range[1]
     );
 
     if (channelFunction?.value) {

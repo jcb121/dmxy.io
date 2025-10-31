@@ -144,7 +144,7 @@ export const sceneToDmx = ({
     if (typeof venueFixture.channel !== "undefined") {
       Object.keys(dmxVals).forEach((key) => {
         DMXState[venueFixture.universe || 0][
-          parseInt(key) + venueFixture.channel
+          parseInt(key) + venueFixture.channel - 1
         ] = dmxVals[parseInt(key)];
       });
     }

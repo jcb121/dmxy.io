@@ -23,7 +23,6 @@ export const sendUniverse = async (
   device: USBDevice,
   universe: Uint8Array<ArrayBuffer>
 ) => {
-  const dmxData = universe.slice(1);
   await device.controlTransferOut(
     {
       requestType: "vendor",
@@ -32,7 +31,7 @@ export const sendUniverse = async (
       value: 512,
       index: 0,
     },
-    dmxData
+    universe
   );
 };
 
