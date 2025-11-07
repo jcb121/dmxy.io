@@ -1,5 +1,3 @@
-import React, { useEffect, useState } from "react";
-import { getDatabase } from "../db";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { ChannelSimpleFunction } from "./fixtures";
@@ -26,8 +24,6 @@ export type Venue = {
   id: string;
   venueFixtures: VenueFixture[];
   scenes: Record<string, Scene>;
-  // slots: string[][];
-  // channels: []
 };
 
 export const sampleVenue = (name?: string): Venue => ({
@@ -36,8 +32,6 @@ export const sampleVenue = (name?: string): Venue => ({
   id: crypto.randomUUID(),
   scenes: {},
 });
-
-type UpdateVenuteFixture = Partial<Omit<VenueFixture, "id">> & { id: string };
 
 export const useVenues = create<{
   venues: Venue[];
@@ -120,94 +114,3 @@ export const useActiveVenue = create<{
     }));
   },
 }));
-
-export const VenueContext = React.createContext<{
-  venues: Venue[];
-  createVenue: (name: string) => string;
-  updateVenue: (v: Venue) => void;
-  saveVenue: (v: Venue) => void;
-  updateVenueFixture: (v: string, f: UpdateVenuteFixture) => void;
-  // setVenue: React.Dispatch<React.SetStateAction<Venue>>;
-}>({
-  venues: [],
-  createVenue: () => {
-    return "";
-  },
-  saveVenue: () => {},
-  updateVenue: () => {},
-  updateVenueFixture: () => {},
-});
-
-export const VenueProvider = ({ children }: { children: React.ReactNode }) => {
-  const [venues, setVenues] = useState<Venue[]>([]);
-
-  useEffect(() => {
-    (async () => {
-      const database = await getDatabase();
-      const data = await database.getAll("venues");
-      console.log("GOT VEUES", data);
-
-      setVenues(data.length > 0 ? data : [sampleVenue()]);
-    })();
-  }, []);
-
-  const updateVenue = (venue: Venue) => {
-    setVenues((state) => {
-      const index = state.findIndex((v) => v.id === venue.id);
-      if (index > -1) {
-        state[index] = venue;
-        return [...state];
-      } else {
-        return [...state, venue];
-      }
-    });
-  };
-
-  const updateVenueFixture = (
-    venueId: string,
-    venueFixture: UpdateVenuteFixture
-  ) => {
-    const venue = venues.find((v) => v.id === venueId);
-
-    venue &&
-      updateVenue({
-        ...venue,
-        venueFixtures: venue.venueFixtures.map((f) => {
-          if (f.id === venueFixture.id) {
-            return {
-              ...f,
-              ...venueFixture,
-            };
-          }
-          return f;
-        }),
-      });
-  };
-
-  const saveVenue = async (venue: Venue) => {
-    console.log("SAVING VENUE", venue);
-
-    const database = await getDatabase();
-    database.put("venues", venue);
-  };
-
-  const createVenue = (name: string) => {
-    const newVenue = sampleVenue(name);
-    setVenues((state) => [...state, newVenue]);
-    return newVenue.id;
-  };
-
-  return (
-    <VenueContext.Provider
-      value={{
-        venues,
-        updateVenue,
-        saveVenue,
-        updateVenueFixture,
-        createVenue,
-      }}
-    >
-      {children}
-    </VenueContext.Provider>
-  );
-};

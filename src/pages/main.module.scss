@@ -1,4 +1,24 @@
 .root {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
+  display: flex;
+  gap: 32px;
+  padding: 16px;
+
+  > * {
+    flex-basis: 8vw;
+    flex-grow: 0;
+  }
+}
+
+.links {
+  a {
+    font-weight: bold;
+    color: var(--color-5);
+    display: block;
+    text-decoration: none;
+    padding: 10px;
+    &:hover {
+      background-color: var(--color-1);
+      border-radius: 15px;
+    }
+  }
 }

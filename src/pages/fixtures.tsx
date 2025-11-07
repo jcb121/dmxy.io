@@ -1,7 +1,6 @@
 import ReactDOM from "react-dom/client";
 import "../index.css";
 import { Fixture, useFixtures } from "../context/fixtures.tsx";
-import { VenueProvider } from "../context/venues.tsx";
 import { MidiProvider } from "../context/midi.tsx";
 import { useState } from "react";
 import {
@@ -19,6 +18,7 @@ import {
   startDMX as startUSBDMX,
 } from "../context/dmx/usb.ts";
 import { createUniverses } from "../context/dmx/index.ts";
+import { Button } from "../ui/buttonLink/index.tsx";
 
 createUniverses([DEFAULT_DMX_UNIVERSE]);
 
@@ -29,39 +29,36 @@ const FixturesPage = () => {
 
   return (
     <BasicPage
+      header={<h2>Fixtures</h2>}
       headerRight={
         <>
           Connect DMX:
-          <button
+          <Button
             onClick={async () => {
               const device = await registerUsbDevice();
               device && startUSBDMX(device, DEFAULT_DMX_UNIVERSE);
             }}
           >
             USB
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={async () => {
               const port = await registerSerialDevice();
               port && startSerialDMX(port, DEFAULT_DMX_UNIVERSE);
             }}
           >
             SERIAL
-          </button>
+          </Button>
         </>
       }
       left={
         <>
-          <h2>Saved</h2>
           <ListWithAction
             items={fixtures.map((f) => ({ ...f, name: f.model }))}
+            onClick={setFixture}
             actions={[
               {
-                name: "edit",
-                onClick: setFixture,
-              },
-              {
-                name: "remove",
+                name: "🗑",
                 onClick: remove,
               },
             ]}
@@ -93,9 +90,7 @@ const FixturesPage = () => {
 ReactDOM.createRoot(document.getElementById("root")!).render(
   // <React.StrictMode>
   <MidiProvider>
-    <VenueProvider>
-      <FixturesPage />
-    </VenueProvider>
+    <FixturesPage />
   </MidiProvider>
   // </React.StrictMode>
 );

@@ -1,0 +1,14 @@
+.head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.name {
+  font-size: larger;
+  background-color: transparent;
+  border-style: solid;
+  padding: 8px;
+  border-radius: var(--small-rad);
+  border: 2px solid var(--color-4)
+}

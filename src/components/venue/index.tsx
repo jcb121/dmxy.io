@@ -1,11 +1,8 @@
 // import { useContext } from "react";
 // import { Light } from "../light";
 import styles from "./venue.module.scss";
-// import { VenueContext } from "../../context/venues";
 
 export const Venue = () => {
-  // const { venues } = useContext(VenueContext);
-  // const venue = venues[0];
 
   return (
     <div className={styles.root}>

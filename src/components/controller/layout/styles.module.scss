@@ -1,0 +1,63 @@
+.row {
+  display: flex;
+  flex: 1;
+  flex-direction: row;
+  gap: 16px;
+  align-items: center;
+}
+
+.column {
+  display: flex;
+  flex: 1;
+  gap: 5px;
+  flex-direction: column;
+}
+
+// this is item
+.dial {
+  flex-direction: column;
+  // outline: 1px solid blue;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.button {
+  flex-basis: 150px;
+  flex-grow: 1;
+}
+
+.editMode {
+  &.row,
+  &.column {
+    transition: border-color 200ms ease;
+    border: 2px solid var(--color-4);
+    border-radius: var(--small-rad);
+    padding: 8px;
+  }
+
+  &:has(> .actions > button:hover) {
+    border-color: var(--color-5);
+  }
+
+  .actions {
+    display: flex;
+    align-self: flex-start;
+    gap: 8px;
+    button {
+      padding: 5px;
+    }
+  }
+
+  &.row {
+    > .actions {
+      flex-direction: column;
+    }
+  }
+  &.column {
+    > .actions {
+      flex-direction: row;
+    }
+  }
+}

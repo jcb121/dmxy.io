@@ -59,19 +59,29 @@ export type MapToFunction<T, Z> = {
 export const useEvents = create(
   persist<{
     editMode: boolean;
-    buttonFuncs: Record<string, ValueOf<UserEventMap> | undefined>;
+    buttonFuncs: Record<
+      string,
+      Record<string, ValueOf<UserEventMap> | undefined>
+    >;
     setEditMode: (v: boolean) => void;
-    setButtonFuncs: (id: string, val: UserEvent) => void;
+    setButtonFuncs: (venueId: string, id: string, val: UserEvent) => void;
   }>(
     (set) => {
       return {
         buttonFuncs: {},
-        setButtonFuncs: (id: string, val: ValueOf<UserEventMap>) =>
+        setButtonFuncs: (
+          venueId: string,
+          id: string,
+          val: ValueOf<UserEventMap>
+        ) =>
           set((state) => ({
             ...state,
             buttonFuncs: {
               ...state.buttonFuncs,
-              [id]: val,
+              [venueId]: {
+                ...state.buttonFuncs[venueId],
+                [id]: val,
+              },
             },
           })),
         editMode: true,

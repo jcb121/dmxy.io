@@ -1,0 +1,23 @@
+.button {
+  border-radius: var(--small-rad);
+  color: var(--color-5);
+  background-color: transparent;
+  border: 1px solid var(--color-4);
+  padding: 4px;
+
+  &:hover {
+    border: 1px solid var(--color-5);
+  }
+
+  &[data-primary="true"] {
+    background-color: var(--color-5);
+    color: var(--color-1);
+    font-weight: bold;
+    // font-size: 16px;
+    text-transform: uppercase;
+  }
+
+  &[data-icon="true"] {
+    border-color: transparent;
+  }
+}

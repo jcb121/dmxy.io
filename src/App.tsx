@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { useCalcDmx } from "./utils/useCalcDmx";
 import { useEvents } from "./context/events";
 import { useDmx } from "./context/dmx";
+import { useActiveControllers, useControllers } from "./context/controllers";
 
 const urlParams = new URLSearchParams(window.location.search);
 const venue_id = urlParams.get("venue_id");
@@ -59,6 +60,10 @@ function App() {
 
   const [activeArea, setActiveArea] = useState(0);
 
+  const controllers = useControllers((state) => state.controllers);
+  const activeControlers =
+    useActiveControllers((state) => venue?.id && state[venue?.id]) || [];
+
   return (
     <BasicPage
       header={
@@ -85,6 +90,26 @@ function App() {
           >
             Stage
           </button>
+          <select
+            data-testid="add_controller"
+            value={""}
+            onChange={(e) => {
+              useActiveControllers.setState((state) => {
+                if (!venue?.id || !e) return state;
+                return {
+                  ...state,
+                  [venue.id]: [...(state[venue.id] || []), e.target.value],
+                };
+              });
+            }}
+          >
+            <option value={""}>Add Controller</option>
+            {controllers.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
           <button
             onClick={() => {
               useEvents.setState((state) => ({
@@ -93,7 +118,7 @@ function App() {
               }));
             }}
           >
-            Edit Controller Function
+            Edit Controllers
           </button>
         </>
       }
@@ -189,7 +214,21 @@ function App() {
         </>
       )}
 
-      <Controller />
+      {activeControlers?.map((controller, index) => (
+        <Controller
+          controller={controller}
+          onRemove={() => {
+            useActiveControllers.setState((state) => {
+              if (!venue?.id) return state;
+              state[venue.id].splice(index, 1);
+              return {
+                ...state,
+                [venue.id]: [...state[venue.id]],
+              };
+            });
+          }}
+        />
+      ))}
     </BasicPage>
   );
 }

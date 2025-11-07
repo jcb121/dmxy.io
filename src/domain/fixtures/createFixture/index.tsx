@@ -11,6 +11,7 @@ import { FixtureComponent } from "../fixture";
 import { Functions } from "./functions/functions";
 import { ConnectedLight } from "../../../components/connectedLight";
 import { DMXState } from "../../../context/dmx";
+import { Button } from "../../../ui/buttonLink";
 
 export const DEFAULT_DMX_UNIVERSE = 0;
 
@@ -48,130 +49,111 @@ export const CreateFixture = ({
 
   return (
     <div className={styles.root}>
-      <div className={styles.title}>Create Fixture</div>
-      <ConnectedLight
-        fixture={fixture}
-        venueFixture={{
-          channel: dmxChannel,
-          fixtureId: fixture.id,
-          universe: 0,
-          id: "TempFixture",
-          x: 0,
-          y: 0,
-          overwrites: {},
-          tags: [],
-        }}
-      >
-        <FixtureComponent fixture={fixture} />
-      </ConnectedLight>
+      <div className={styles.header}>
+        <ConnectedLight
+          fixture={fixture}
+          venueFixture={{
+            channel: dmxChannel,
+            fixtureId: fixture.id,
+            universe: 0,
+            id: "TempFixture",
+            x: 0,
+            y: 0,
+            overwrites: {},
+            tags: [],
+          }}
+        >
+          <FixtureComponent fixture={fixture} />
+        </ConnectedLight>
+        <input
+          placeholder="Fixture name"
+          className={styles.name}
+          id="fixture_name"
+          name="fixture_name"
+          value={fixture.model}
+          onChange={(e) =>
+            setFixture((state) => ({
+              ...state,
+              model: e.target.value,
+            }))
+          }
+        />
+        <div className={styles.actions}>
+          {original ? (
+            <>
+              <Button primary onClick={() => onSubmit(fixture)}>
+                Save As
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button onClick={() => onClose()}>close</Button>
+              <Button primary onClick={() => onSubmit(fixture)}>
+                Save
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className={styles.meta}>
+        <label htmlFor="fixture_channels">Channels:</label>
+        <input
+          type="number"
+          id="fixture_channels"
+          name="fixture_channels"
+          value={fixture.channelFunctions.length}
+          onChange={(e) => {
+            const target = parseInt(e.target.value);
+
+            if (fixture.channelFunctions.length < target) {
+              setFixture((state) => {
+                while (state.channelFunctions.length < target) {
+                  state.channelFunctions.push([defaultValue]);
+                }
+                return {
+                  ...state,
+                  channelFunctions: [...state.channelFunctions],
+                };
+              });
+            } else if (fixture.channelFunctions.length > target) {
+              setFixture((state) => {
+                return {
+                  ...state,
+                  channelFunctions: state.channelFunctions.slice(0, target),
+                };
+              });
+            }
+          }}
+        />
+        <label htmlFor="fixture_shape">Shape:</label>
+        <select
+          id="fixture_shape"
+          name="fixture_shape"
+          value={fixture.fixtureShape}
+          onChange={(e) => {
+            setFixture((state) => ({
+              ...state,
+              fixtureShape: e.target.value as FixtureShape,
+            }));
+          }}
+        >
+          {Object.values(FixtureShape).map((val) => (
+            <option key={val} value={val}>
+              {val}
+            </option>
+          ))}
+        </select>
+        <label>Channel (Testing only):</label>
+        <input
+          type="number"
+          value={dmxChannel}
+          onChange={(e) => setDmxChannel(parseInt(e.target.value))}
+        />
+      </div>
 
       <table>
         <tbody>
-          <tr>
-            <td>
-              <label htmlFor="fixture_name">Name:</label>
-            </td>
-            <td>
-              <input
-                id="fixture_name"
-                name="fixture_name"
-                value={fixture.model}
-                onChange={(e) =>
-                  setFixture((state) => ({
-                    ...state,
-                    model: e.target.value,
-                  }))
-                }
-              />
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label>Channel (Testing only):</label>
-            </td>
-            <td>
-              <input
-                type="number"
-                value={dmxChannel}
-                onChange={(e) => setDmxChannel(parseInt(e.target.value))}
-              />
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label htmlFor="fixture_channels">Channels:</label>
-            </td>
-            <td>
-              <input
-                type="number"
-                id="fixture_channels"
-                name="fixture_channels"
-                value={fixture.channelFunctions.length}
-                onChange={(e) => {
-                  const target = parseInt(e.target.value);
-
-                  if (fixture.channelFunctions.length < target) {
-                    setFixture((state) => {
-                      while (state.channelFunctions.length < target) {
-                        state.channelFunctions.push([defaultValue]);
-                      }
-                      return {
-                        ...state,
-                        channelFunctions: [...state.channelFunctions],
-                      };
-                    });
-                  } else if (fixture.channelFunctions.length > target) {
-                    setFixture((state) => {
-                      return {
-                        ...state,
-                        channelFunctions: state.channelFunctions.slice(
-                          0,
-                          target
-                        ),
-                      };
-                    });
-                  }
-                }}
-              />
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <label htmlFor="fixture_shape">Shape:</label>
-            </td>
-            <td>
-              <select
-                id="fixture_shape"
-                name="fixture_shape"
-                value={fixture.fixtureShape}
-                onChange={(e) => {
-                  setFixture((state) => ({
-                    ...state,
-                    fixtureShape: e.target.value as FixtureShape,
-                  }));
-                }}
-              >
-                {Object.values(FixtureShape).map((val) => (
-                  <option key={val} value={val}>
-                    {val}
-                  </option>
-                ))}
-              </select>
-            </td>
-          </tr>
-          {/* <tr>
-            <td>
-              <label>Color:</label>
-            </td>
-            <td>
-              <LightMode
-                colourMode={colourMode}
-                setColourMode={setColourMode}
-                setColour={setColour}
-                colour={colour}
-              />
-            </td>
-          </tr> */}
           {fixture.channelFunctions.map((channel, i) => {
             return (
               <Channel
@@ -211,16 +193,6 @@ export const CreateFixture = ({
           }
         }}
       />
-      {original ? (
-        <>
-          <button onClick={() => onSubmit(fixture)}>Save As</button>
-        </>
-      ) : (
-        <>
-          <button onClick={() => onClose()}>close</button>
-          <button onClick={() => onSubmit(fixture)}>Save</button>
-        </>
-      )}
     </div>
   );
 };

@@ -1,3 +1,4 @@
+import { IconButton } from "../../../../ui/buttonLink";
 import styles from "./styles.module.scss";
 
 export const FunctionValue = ({
@@ -46,7 +47,7 @@ export const FunctionValue = ({
             onChange(channel, parseInt(e.target.value));
           }}
         />{" "}
-        <span onClick={onDelete}>🗑</span>
+        <IconButton onClick={onDelete}>🗑</IconButton>
       </td>
     </tr>
   );

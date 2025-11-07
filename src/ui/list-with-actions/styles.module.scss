@@ -5,14 +5,14 @@
 }
 
 .item {
-  padding: 4px 8px;
+  padding: 16px;
   display: flex;
-  border-bottom: 1px solid #161616;
   align-items: center;
   gap: 10px;
 
-  &:last-child {
-    border-bottom: none;
+  &:hover {
+    background-color: var(--color-1);
+    border-radius: var(--small-rad);
   }
 }
 

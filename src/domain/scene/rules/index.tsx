@@ -1,4 +1,5 @@
 import { Scene } from "../../../context/scenes";
+import { IconButton } from "../../../ui/buttonLink";
 import { SceneFrames } from "./frame";
 import styles from "./styles.module.scss";
 
@@ -23,7 +24,7 @@ export const SceneRules = ({
         >
           <div className={styles.header}>
             <div className={styles.sceneName}>{selector}</div>
-            <button
+            <IconButton
               className={styles.delete}
               onClick={() => {
                 setScene((state) => {
@@ -34,7 +35,7 @@ export const SceneRules = ({
               }}
             >
               🗑
-            </button>
+            </IconButton>
           </div>
           <div className={styles.row}>
             <SceneFrames scene={scene.new_profiles[selector]} />

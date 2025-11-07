@@ -1,4 +1,4 @@
-import { Layout } from "./controller";
+import { Layout } from "./layout/layout";
 
 export const LPD8: Layout = {
   type: "row",

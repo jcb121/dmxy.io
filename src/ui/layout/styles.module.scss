@@ -3,19 +3,24 @@
   height: 100vh;
   display: grid;
   grid-template-rows: auto 1fr;
-  grid-template-columns: 1fr 4fr;
+  grid-template-columns: 1fr 6fr;
+  background-color: var(--color-1);
 }
 
 .header {
   grid-column-end: span 2;
+  background-color: var(--color-2);
 }
 
 .left {
+  background-color: var(--color-3);
+  padding: 8px;
   overflow: hidden;
   overflow-y: auto;
 }
 
 .content {
+  padding: 16px;
   grid-column-start: 1;
   grid-column-end: span 2;
 

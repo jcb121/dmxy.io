@@ -1,6 +1,6 @@
 import ReactDOM from "react-dom/client";
 import "../index.css";
-import { useVenues, VenueProvider } from "../context/venues.tsx";
+import { useVenues } from "../context/venues.tsx";
 import { MidiProvider } from "../context/midi.tsx";
 import { BasicPage } from "../ui/layout/basic-page.tsx";
 import { ListWithAction } from "../ui/list-with-actions/index.tsx";
@@ -11,9 +11,9 @@ const VenuesPage = () => {
 
   return (
     <BasicPage
+      header={<h2>Venues</h2>}
       left={
         <>
-          <h2>Saved</h2>
           <ListWithAction
             items={venues}
             actions={[
@@ -72,9 +72,7 @@ const VenuesPage = () => {
 ReactDOM.createRoot(document.getElementById("root")!).render(
   // <React.StrictMode>
   <MidiProvider>
-    <VenueProvider>
-      <VenuesPage />
-    </VenueProvider>
+    <VenuesPage />
   </MidiProvider>
   // </React.StrictMode>
 );

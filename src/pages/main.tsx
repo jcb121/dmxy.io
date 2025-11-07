@@ -2,91 +2,59 @@ import ReactDOM from "react-dom/client";
 import { BasicPage } from "../ui/layout/basic-page";
 import "../index.css";
 import { useVenues } from "../context/venues";
-import { useFixtures } from "../context/fixtures";
 import { ListWithAction } from "../ui/list-with-actions";
 import styles from "./main.module.scss";
 import { registerUsbDevice } from "../context/dmx/usb";
 import { registerSerialDevice } from "../context/dmx/serial";
+import { PadButton } from "../components/pad-button";
+import { Button } from "../ui/buttonLink";
 
 const Main = () => {
   const venues = useVenues((state) => state.venues);
-  const fixtures = useFixtures((state) => state.fixtures);
 
   return (
     <BasicPage
       header={
         <>
-          <button
+          <h2>Gig Lights</h2>
+        </>
+      }
+      headerRight={
+        <>
+          <Button
             onClick={() => {
               registerUsbDevice();
             }}
           >
-            Register USB Device
-          </button>
+            Register USB DMX
+          </Button>
 
-          <button
+          <Button
             onClick={() => {
               registerSerialDevice();
             }}
           >
-            Register Serial Port
-          </button>
+            Register Serial DMX
+          </Button>
         </>
+      }
+      left={
+        <div className={styles.links}>
+          <a href={`/controllers.html`}>Controllers</a>
+
+          <a href={`/fixtures.html`}>Fixtures</a>
+
+          <a href={`/venues.html`}>Venues</a>
+          <p></p>
+        </div>
       }
     >
       <div className={styles.root}>
-        <div>
-          <button>
-            <a href={`/fixtures.html`} target="_blank">
-              Fixures / create
-            </a>
-          </button>
-          <ListWithAction
-            items={fixtures.map((f) => ({ ...f, name: f.model }))}
-            actions={[]}
-          >
-            {(item) => (
-              <button>
-                <a href={`/fixtures.html?fixture_id=${item.id}`} target="_blank">
-                  edit
-                </a>
-              </button>
-            )}
-          </ListWithAction>
-        </div>
-        <div>
-          <button>
-            <a href={`/venues.html`} target="_blank">
-              venues
-            </a>
-          </button>
-          <button>
-            <a href={`/venue.html`} target="_blank">
-              Create venue
-            </a>
-          </button>
-          <ListWithAction items={venues} actions={[]}>
-            {(item) => (
-              <>
-                <button>
-                  <a href={`/venue.html?venue_id=${item.id}`} target="_blank">
-                    edit
-                  </a>
-                </button>
-                <button>
-                  <a href={`/scene.html?venue_id=${item.id}`} target="_blank">
-                    scenes
-                  </a>
-                </button>
-                <button>
-                  <a href={`/main.html?venue_id=${item.id}`} target="_blank">
-                    open
-                  </a>
-                </button>
-              </>
-            )}
-          </ListWithAction>
-        </div>
+        {venues.map((v) => (
+          <a key={v.id} href={`/main.html?venue_id=${v.id}`} target="_blank">
+            <PadButton label="Open Venue">{v.name}</PadButton>
+          </a>
+        ))}
       </div>
     </BasicPage>
   );

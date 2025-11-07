@@ -1,5 +1,5 @@
-import { Layout } from "../../controller/controller";
 import { MPD218 } from "../../controller/controller-json";
+import { Layout } from "../../controller/layout/layout";
 import styles from "./styles.module.scss";
 
 export const MPD218Controller = ({

@@ -6,6 +6,7 @@ import {
 } from "../../../context/fixtures";
 
 import styles from "./channel.module.scss";
+import { Button } from "../../../ui/buttonLink";
 
 export const defaultValue: SubChannelFunction = {
   range: [0, 255],
@@ -28,50 +29,52 @@ export const Channel = ({
   return (
     <tr key={index}>
       <td>
-        <div>{`Channel ${index + 1}: `}</div>
-
-        {channelFunction.map((func, functionIndex) => {
-          return (
-            <div
-              className={styles.function}
-              key={`${func.function}-${functionIndex}`}
-            >
-              {/* <div>Function: {index}</div> */}
-              <button
-                className={styles.delete}
-                onClick={() => {
-                  onChange(
-                    channelFunction.filter(
-                      (_i, _index) => _index !== functionIndex
-                    )
-                  );
-                }}
-              >
-                🗑️
-              </button>
-              <FunctionSelect
-                key={functionIndex}
-                value={func}
-                onChange={(subChannelFunction) => {
-                  onChange(
-                    channelFunction.map((i, _index) =>
-                      _index === functionIndex ? subChannelFunction : i
-                    )
-                  );
-                }}
-              />
-            </div>
-          );
-        })}
-
-        <button
-          className={styles.add}
-          onClick={() => {
-            onChange([...channelFunction, defaultValue]);
-          }}
-        >
-          +
-        </button>
+        <table>
+          <thead>
+            <tr>
+              <th>{`Ch ${index + 1}`}</th>
+              <th>Function</th>
+              <th>from</th>
+              <th>to</th>
+              <th>Map Intensity</th>
+              <th>
+                {" "}
+                <Button
+                  className={styles.add}
+                  onClick={() => {
+                    onChange([...channelFunction, defaultValue]);
+                  }}
+                >
+                  Add row
+                </Button>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {channelFunction.map((func, functionIndex) => {
+              return (
+                <FunctionSelect
+                  key={functionIndex}
+                  value={func}
+                  onRemove={() => {
+                    onChange(
+                      channelFunction.filter(
+                        (_i, _index) => _index !== functionIndex
+                      )
+                    );
+                  }}
+                  onChange={(subChannelFunction) => {
+                    onChange(
+                      channelFunction.map((i, _index) =>
+                        _index === functionIndex ? subChannelFunction : i
+                      )
+                    );
+                  }}
+                />
+              );
+            })}
+          </tbody>
+        </table>
       </td>
 
       <td>

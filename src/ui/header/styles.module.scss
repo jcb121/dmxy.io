@@ -1,13 +1,21 @@
 .header {
   position: relative;
   padding: 16px;
-  border-bottom: 1px solid black;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-}
+  // color: var(--color-5);
 
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  p {
+    margin: 0;
+  }
+}
 
 .spacer {
   flex: 1;

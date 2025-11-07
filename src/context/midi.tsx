@@ -3,6 +3,7 @@ import { SetVar, useEvents } from "./events";
 import { handleEvent } from "../domain/events";
 import { useMidiState } from "./midi-state";
 import { useMidiTriggers } from "./midi-triggers";
+import { useActiveVenue } from "./venues";
 
 export type MIDIMessageEventWithData = MIDIMessageEvent & {
   currentTarget: EventTarget & {
@@ -11,7 +12,6 @@ export type MIDIMessageEventWithData = MIDIMessageEvent & {
   };
   data: [number, number, number];
 };
-
 
 const press: Record<string, number> = {};
 
@@ -42,6 +42,8 @@ export const getMidiEventType = (
 export const MidiProvider = ({ children }: { children: React.ReactNode }) => {
   const eventHandlerRef = useRef<(e: MIDIMessageEventWithData) => void>();
   const [mIDIInputs, setMIDIInputs] = useState<MIDIInputMap>();
+
+  const venueId = useActiveVenue((state) => state.venue?.id);
 
   useEffect(() => {
     (async () => {
@@ -81,7 +83,10 @@ export const MidiProvider = ({ children }: { children: React.ReactNode }) => {
           [id]: value,
         }));
 
-        const payload = buttonFuncs[id];
+        const payload =
+          venueId && buttonFuncs[venueId]
+            ? buttonFuncs[venueId][id]
+            : undefined;
         if (!payload) return;
 
         if (payload.function === MidiCallback.setBeatLength) {

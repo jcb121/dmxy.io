@@ -1,4 +1,5 @@
 import { FixtureFunction } from "../../../../context/fixtures";
+import { IconButton } from "../../../../ui/buttonLink";
 import { FunctionValue } from "./function-value";
 import styles from "./styles.module.scss";
 
@@ -30,7 +31,7 @@ export const DeviceFunction = ({
           }}
         />
 
-        <button onClick={onDelete}>🗑</button>
+        <IconButton onClick={onDelete}>🗑</IconButton>
       </div>
 
       <table>
