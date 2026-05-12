@@ -19,23 +19,25 @@ export const ChannelFunctionsList = ({
             <th>Function</th>
             <th>From</th>
             <th>To</th>
-            <th>Map Intensity</th>
+            <th title=" If your fixture does not have an intensity channel, use a virtual one">
+              Map Intensity
+            </th>
             <th>Value</th>
             <th style={{ width: "1px", whiteSpace: "nowrap" }}></th>
           </tr>
         </thead>
-          {channelFunctions.map((channel, i) => (
-            <Channel
-              key={i}
-              index={i}
-              channelFunction={channel}
-              onChange={(c) =>
-                onChange(
-                  channelFunctions.map((s, index) => (index === i ? c : s)),
-                )
-              }
-            />
-          ))}
+        {channelFunctions.map((channel, i) => (
+          <Channel
+            key={i}
+            index={i}
+            channelFunction={channel}
+            onChange={(c) =>
+              onChange(
+                channelFunctions.map((s, index) => (index === i ? c : s)),
+              )
+            }
+          />
+        ))}
       </table>
       <Button onClick={() => onChange([...channelFunctions, [defaultValue]])}>
         Add Channel

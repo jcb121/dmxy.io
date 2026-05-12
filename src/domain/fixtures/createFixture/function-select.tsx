@@ -130,9 +130,6 @@ export const FunctionSelect = ({
             });
           }}
         />
-        <small>
-          If your fixture does not have an intensity channel, use a virtual one
-        </small>
       </td>
       <td>
         {!isShortcut &&
