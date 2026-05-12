@@ -1,9 +1,9 @@
 import styles from "./controller.module.scss";
 import { MidiCallback } from "../../context/midi";
-import { UserEvent, useEvents } from "../../context/events";
+import { useEvents } from "../../context/events";
 import { AttachMidiButton } from "../attach-midi-button";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { CycleSceneEdit } from "./edit/cycle-scene";
 import { MergeSceneEdit } from "./edit/merge-scene";
 import { SetSceneEdit } from "./edit/set-scene";
@@ -17,11 +17,11 @@ import { CustomController } from "../midi-controllers/custom-controller";
 import { useActiveVenue } from "../../context/venues";
 
 export const Controller = ({
+  onClick,
   controller,
-  onRemove,
 }: {
+  onClick?: (e: React.MouseEvent) => void;
   controller: string;
-  onRemove: () => void;
 }) => {
   const [id, setId] = useState<string>();
   const setButtonFuncs = useEvents((state) => state.setButtonFuncs);
@@ -39,7 +39,7 @@ export const Controller = ({
 
   return (
     <div className={styles.root}>
-      <div className={styles.controller}>
+      <div className={styles.controller} onClick={onClick}>
         {controller === "AKAI_LPD8" && (
           <LDP8Controller
             onClick={(id) => {
@@ -64,14 +64,9 @@ export const Controller = ({
             }}
           />
         )}
-        {editMode && (
-          <button className={styles.remove} onClick={onRemove}>
-            Remove
-          </button>
-        )}
       </div>
 
-      {id && (
+      {editMode && id && (
         <div>
           <div className={styles.edit}>
             <div className={styles.header}>
@@ -80,6 +75,9 @@ export const Controller = ({
                 value={midiTriggers[id]}
                 onMidiDetected={(midiTrigger) => {
                   setMidiTrigger(id, midiTrigger);
+                }}
+                remove={() => {
+                  setMidiTrigger(id, null);
                 }}
                 label={"Attach"}
               />
@@ -93,7 +91,7 @@ export const Controller = ({
                   venueId &&
                     setButtonFuncs(venueId, id, {
                       function: e.target.value as MidiCallback,
-                    } as UserEvent);
+                    });
                 }}
               >
                 <option></option>

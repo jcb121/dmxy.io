@@ -1,27 +1,36 @@
+import { ButtonRow } from "../../../components/buttons/button-row";
+
 export const TagsRow = ({
   tags,
-  onClick,
   active,
+  setActive,
+  "data-testid": testid,
 }: {
+  "data-testid"?: string;
   active?: string;
   tags: { label: string; value: string }[];
-  onClick: (tag: string, shiftKey: boolean) => void;
+  setActive: React.Dispatch<React.SetStateAction<string | undefined>>;
 }) => {
+  const activeTags = active?.split(" ");
   return (
-    <>
-      {tags.map((tag) => (
-        <button
-          style={{
-            borderColor: active?.includes(tag.value) ? "red" : undefined,
-          }}
-          key={tag.value}
-          onClick={(e) => {
-            onClick(tag.value, e.shiftKey);
-          }}
-        >
-          {tag.label}
-        </button>
-      ))}
-    </>
+    <ButtonRow
+      data-testid={testid}
+      items={tags.map((t) => ({ ...t, active: activeTags?.includes(t.value) }))}
+      onClick={(tag, e) => {
+        if (e.shiftKey) {
+          setActive((state) => {
+            const selector = new Set(state?.split(" "));
+            if (selector.has(tag.value)) {
+              selector.delete(tag.value);
+            } else {
+              selector.add(tag.value);
+            }
+            return [...selector].join(" ");
+          });
+        } else {
+          setActive(tag.value);
+        }
+      }}
+    />
   );
 };

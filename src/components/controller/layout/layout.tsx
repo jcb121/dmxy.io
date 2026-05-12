@@ -27,7 +27,7 @@ export const Layout = ({
 }: {
   name?: string;
   editMode?: true;
-  onLayoutChange?: React.Dispatch<React.SetStateAction<Layout>>;
+  onLayoutChange?: (l: Layout) => void;
   id: string;
   layout: Layout;
   onClick: (id: string) => void;
@@ -46,21 +46,25 @@ export const Layout = ({
               <Button
                 onClick={() => {
                   onLayoutChange &&
-                    onLayoutChange((state) => {
-                      if (state.type === "row" || state.type === "column")
-                        return {
-                          ...state,
-                          children: [
-                            ...state.children,
-                            {
-                              type: state.type === "row" ? "column" : "row",
-                              children: [],
-                            },
-                          ],
-                        };
+                    onLayoutChange(
+                      (() => {
+                        const state = layout;
 
-                      return state;
-                    });
+                        if (state.type === "row" || state.type === "column")
+                          return {
+                            ...state,
+                            children: [
+                              ...state.children,
+                              {
+                                type: state.type === "row" ? "column" : "row",
+                                children: [],
+                              },
+                            ],
+                          };
+
+                        return state;
+                      })(),
+                    );
                 }}
               >
                 Add {layout.type === "row" ? "Col" : "Row"}
@@ -68,24 +72,28 @@ export const Layout = ({
               <Button
                 onClick={() => {
                   onLayoutChange &&
-                    onLayoutChange((state) => {
-                      if (state.type === "column" || state.type === "row") {
-                        return {
-                          ...state,
-                          children: [
-                            ...state.children,
-                            {
-                              type: "button",
-                              id:
-                                name !== ""
-                                  ? `${name}_${layout.children.length}`
-                                  : `${layout.children.length}`,
-                            },
-                          ],
-                        };
-                      }
-                      return state;
-                    });
+                    onLayoutChange(
+                      (() => {
+                        const state = layout;
+
+                        if (state.type === "column" || state.type === "row") {
+                          return {
+                            ...state,
+                            children: [
+                              ...state.children,
+                              {
+                                type: "button",
+                                id:
+                                  name !== ""
+                                    ? `${name}_${layout.children.length}`
+                                    : `${layout.children.length}`,
+                              },
+                            ],
+                          };
+                        }
+                        return state;
+                      })(),
+                    );
                 }}
               >
                 Add Button
@@ -93,24 +101,28 @@ export const Layout = ({
               <Button
                 onClick={() => {
                   onLayoutChange &&
-                    onLayoutChange((state) => {
-                      if (state.type === "column" || state.type === "row") {
-                        return {
-                          ...state,
-                          children: [
-                            ...state.children,
-                            {
-                              type: "dial",
-                              id:
-                                name !== ""
-                                  ? `${name}_${layout.children.length}`
-                                  : `${layout.children.length}`,
-                            },
-                          ],
-                        };
-                      }
-                      return state;
-                    });
+                    onLayoutChange(
+                      (() => {
+                        const state = layout;
+
+                        if (state.type === "column" || state.type === "row") {
+                          return {
+                            ...state,
+                            children: [
+                              ...state.children,
+                              {
+                                type: "dial",
+                                id:
+                                  name !== ""
+                                    ? `${name}_${layout.children.length}`
+                                    : `${layout.children.length}`,
+                              },
+                            ],
+                          };
+                        }
+                        return state;
+                      })(),
+                    );
                 }}
               >
                 Add Dial
@@ -131,7 +143,9 @@ export const Layout = ({
             editMode={editMode}
             onLayoutChange={(payload) => {
               onLayoutChange &&
-                onLayoutChange((state) => {
+                onLayoutChange((() => {
+                  const state = layout;
+
                   if (state.type === "row" || state.type === "column") {
                     const layout =
                       typeof payload === "function"
@@ -146,7 +160,7 @@ export const Layout = ({
                   }
 
                   return state;
-                });
+                })());
             }}
           />
         ))}

@@ -8,6 +8,7 @@ import { NewStage } from "../components/stage/new-stage";
 import { useMemo, useState } from "react";
 import { LockChannels } from "../components/lock-channels/lock-channels";
 import { VenueFixtureComp } from "../domain/venue/create/fixture";
+import { Button } from "../ui/buttonLink";
 
 const urlParams = new URLSearchParams(window.location.search);
 const id = urlParams.get("venue_id");
@@ -22,7 +23,7 @@ const CreateVenue = () => {
   const fixtures = useFixtures((s) => s.fixtures);
   const addVenue = useVenues((s) => s.add);
   const original = useVenues((state) =>
-    state.venues.find((a) => a.id == venue.id)
+    state.venues.find((a) => a.id == venue.id),
   );
 
   const [activeArea, setActiveArea] = useState(0);
@@ -37,11 +38,32 @@ const CreateVenue = () => {
     return fixtures.find((vf) => vf.id === activeVenueFixture?.fixtureId);
   }, [fixtures, activeVenueFixture]);
 
+  const overlappingIds = useMemo(() => {
+    const fixtureMap = Object.fromEntries(fixtures.map((f) => [f.id, f]));
+    const ranges = venue.venueFixtures.map((vf) => {
+      const count = fixtureMap[vf.fixtureId]?.channelFunctions.length ?? 1;
+      return { id: vf.id, universe: vf.universe, start: vf.channel, end: vf.channel + count - 1 };
+    });
+    const overlapping = new Set<string>();
+    for (let i = 0; i < ranges.length; i++) {
+      for (let j = i + 1; j < ranges.length; j++) {
+        const a = ranges[i], b = ranges[j];
+        if (a.universe === b.universe && a.start <= b.end && b.start <= a.end) {
+          overlapping.add(a.id);
+          overlapping.add(b.id);
+        }
+      }
+    }
+    return overlapping;
+  }, [venue.venueFixtures, fixtures]);
+
   return (
     <BasicPage
+      back="/"
       header={
         <div>
           <input
+            placeholder="Venue Name"
             onChange={(e) => {
               setVenue((state) => ({
                 ...state,
@@ -50,7 +72,8 @@ const CreateVenue = () => {
             }}
             value={venue.name}
           />
-          <button
+          <Button
+            primary
             onClick={() => {
               const urlParams = new URLSearchParams(window.location.search);
               if (!urlParams.get("venue_id")) {
@@ -61,31 +84,18 @@ const CreateVenue = () => {
             }}
           >
             {original ? "Save" : "Save As"}
-          </button>
+          </Button>
         </div>
       }
       headerRight={
         <>
-          <button
-            onClick={() => {
-              setActiveArea((state) => {
-                if (state < 1) return 0;
-                return state - 1;
-              });
-            }}
-          >
+          <Button onClick={() => setActiveArea((s) => Math.max(0, s - 1))}>
             Prev Area
-          </button>
+          </Button>
           {activeArea}
-          <button
-            onClick={() => {
-              setActiveArea((state) => {
-                return state + 1;
-              });
-            }}
-          >
+          <Button onClick={() => setActiveArea((s) => s + 1)}>
             Next Area
-          </button>
+          </Button>
         </>
       }
       left={
@@ -99,7 +109,7 @@ const CreateVenue = () => {
                     setVenue((venue) => ({
                       ...venue,
                       venueFixtures: venue.venueFixtures.filter(
-                        (v) => v.id !== activeVenueFixture.id
+                        (v) => v.id !== activeVenueFixture.id,
                       ),
                     }));
                   }}
@@ -119,7 +129,7 @@ const CreateVenue = () => {
                         venueFixtures: venue.venueFixtures.map((v) =>
                           v.id === activeVenueFixture.id
                             ? { ...v, area: parseInt(e.target.value) }
-                            : v
+                            : v,
                         ),
                       }));
                     }}
@@ -153,13 +163,11 @@ const CreateVenue = () => {
         onClick={() => {
           setActiveVenueFixtureId(undefined);
         }}
-        onDrop={(e) => {
-          const { top, left } = e.currentTarget.getBoundingClientRect();
+        onDrop={(e, { x, y }) => {
           const fixtureId = e.dataTransfer.getData("fixtureId");
           if (fixtureId) {
             const fixture = fixtures.find((f) => f.id === fixtureId);
             if (!fixture) return;
-            const id = crypto.randomUUID();
             setVenue({
               ...venue,
               venueFixtures: [
@@ -169,10 +177,10 @@ const CreateVenue = () => {
                   overwrites: {},
                   tags: [],
                   channel: 1,
-                  id,
+                  id: crypto.randomUUID(),
                   fixtureId,
-                  x: e.clientX - left,
-                  y: e.clientY - top,
+                  x,
+                  y,
                 },
               ],
             });
@@ -183,9 +191,7 @@ const CreateVenue = () => {
             setVenue({
               ...venue,
               venueFixtures: venue.venueFixtures.map((f) =>
-                f.id === id
-                  ? { ...f, x: e.clientX - left, y: e.clientY - top }
-                  : f
+                f.id === id ? { ...f, x, y } : f,
               ),
             });
           }
@@ -199,6 +205,7 @@ const CreateVenue = () => {
               setActiveVenueFixtureId={setActiveVenueFixtureId}
               venueFixture={venueFixture}
               activeVenueFixtureId={activeVenueFixtureId}
+              hasOverlap={overlappingIds.has(venueFixture.id)}
             />
           ) : null;
         })}

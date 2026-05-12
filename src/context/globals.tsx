@@ -81,6 +81,28 @@ export const GLOBAL_VARS: NewGlobalValues = {
 
 // const active: Partial<Record<keyof typeof Colours, boolean>> = {};
 
+export const usePageGlobals = create<{
+    values: NewGlobalValues;
+    setGlobalValue: SetGlobalValue;
+  }>(
+  (set) => {
+      return {
+        values: GLOBAL_VARS,
+        setGlobalValue: (key, payload) => {
+          // if(GLOBAL_VARS[key])
+          // GLOBAL_VARS[key].value = value;
+          set((state) => ({
+            ...state,
+            values: {
+              ...state.values,
+              [key]: payload,
+            },
+          }));
+        },
+      };
+    }
+)
+
 export const useGlobals = create(
   persist<{
     values: NewGlobalValues;

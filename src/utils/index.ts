@@ -53,6 +53,11 @@ export const findFunction = (
   }
 };
 
+const hasColourHex = (channelFunctions: ChannelFunctions, hex: string) =>
+  channelFunctions.some((ch) =>
+    ch.some((f) => f.function === ChannelSimpleFunction.colour && f.value === hex)
+  );
+
 export const setCSSVarsFromDmx = (
   htmlElement: HTMLDivElement,
   { channelFunctions, deviceFunctions }: Fixture,
@@ -60,82 +65,89 @@ export const setCSSVarsFromDmx = (
   channelNumber: number
 ) => {
   const channels = dmxToFrame(channelFunctions, universe, channelNumber);
-  const { Red, Blue, Green, White, Strobe, Intensity, Colour, UV } = channels;
+  const colourChannels = channels.colourChannels;
+  const Strobe = channels[ChannelSimpleFunction.strobe] as number | undefined;
+  const Intensity = channels[ChannelSimpleFunction.intensity] as number | undefined;
+  const UV = channels[ChannelSimpleFunction.uv] as number | undefined;
 
   const cssStobeTime = getCSSStrobeDuration(Strobe);
   const cssBrightness = getCSSBrightness(Intensity);
   const cssUV = getUVBrightness(UV);
 
+  const isRGBFixture =
+    hasColourHex(channelFunctions, "ff0000") &&
+    hasColourHex(channelFunctions, "00ff00") &&
+    hasColourHex(channelFunctions, "0000ff");
+  const hasWhiteChannel = hasColourHex(channelFunctions, "ffffff");
+
   const activeFunction = deviceFunctions?.find((df) => {
-    return Object.keys(df.values).find((key) => {
-      return channels[key] === df.values[key];
+    const entries = Object.entries(df.values).filter(([key]) => key !== "");
+    if (entries.length === 0) return false;
+    return entries.every(([key, expectedValue]) => {
+      const offset = parseInt(key) - 1;
+      return DMXState[universe][offset + channelNumber - 1] === expectedValue;
     });
   });
 
   htmlElement.style.setProperty("--Label", `"${activeFunction?.label || ""}"`);
-
-  // tilt is from 0 to 255.
-  // htmlElement.style.setProperty("--Tilt", `${(Tilt / 255) * 100 - 50 || 0}px`);
   htmlElement.style.setProperty("--Brightness", `${cssBrightness}`);
   htmlElement.style.setProperty("--StrobeTime", `${cssStobeTime}ms`);
-  // incase it is fixed colour
+
+  // fixed colour channels take priority
   for (
     let channelIndex = 0;
     channelIndex < channelFunctions.length;
     channelIndex++
   ) {
     const channel = channelFunctions[channelIndex];
-
     const channelFunction = channel.find(
       (func) =>
         func.function === ChannelSimpleFunction.fixedColour &&
         func.value &&
-        func.range[0] <=  DMXState[universe][channelIndex + channelNumber - 1] &&
+        func.range[0] <= DMXState[universe][channelIndex + channelNumber - 1] &&
         DMXState[universe][channelIndex + channelNumber - 1] <= func.range[1]
     );
-
     if (channelFunction?.value) {
       const [Red, Green, Blue] = getRGB(channelFunction.value);
-      htmlElement.style.setProperty("--UV", `${cssUV || 0} `);
-      htmlElement.style.setProperty("--Red", `${Red || 0} `);
+      htmlElement.style.setProperty("--UV", `${cssUV || 0}`);
+      htmlElement.style.setProperty("--Red", `${Red || 0}`);
       htmlElement.style.setProperty("--Green", `${Green || 0}`);
       htmlElement.style.setProperty("--Blue", `${Blue || 0}`);
-      htmlElement.style.setProperty("--White", `${White || 0}`);
+      htmlElement.style.setProperty("--White", `0`);
       return;
     }
   }
 
-  if (Colour && Colour > 0) {
-    const color = findFunction(channelFunctions, ChannelSimpleFunction.colour);
-
-    if (color?.value) {
-      const [Red, Green, Blue] = getRGB(color.value);
-      htmlElement.style.setProperty("--UV", `${cssUV || 0} `);
-      htmlElement.style.setProperty("--Red", `${Red || 0} `);
-      htmlElement.style.setProperty("--Green", `${Green || 0}`);
-      htmlElement.style.setProperty("--Blue", `${Blue || 0}`);
-      htmlElement.style.setProperty("--White", `${White || 0}`);
-
-      return;
-    }
-  }
-
+  // strobe with color value
   if (Strobe && Strobe > 0) {
     const strobe = findFunction(channelFunctions, ChannelSimpleFunction.strobe);
     if (strobe?.value) {
       const [Red, Green, Blue] = getRGB(strobe.value);
-      htmlElement.style.setProperty("--UV", `${cssUV || 0} `);
-      htmlElement.style.setProperty("--Red", `${Red || 0} `);
+      htmlElement.style.setProperty("--UV", `${cssUV || 0}`);
+      htmlElement.style.setProperty("--Red", `${Red || 0}`);
       htmlElement.style.setProperty("--Green", `${Green || 0}`);
       htmlElement.style.setProperty("--Blue", `${Blue || 0}`);
-      htmlElement.style.setProperty("--White", `${White || 0}`);
+      htmlElement.style.setProperty("--White", `0`);
       return;
     }
   }
 
-  htmlElement.style.setProperty("--UV", `${cssUV || 0} `);
-  htmlElement.style.setProperty("--Red", `${Red || 0} `);
-  htmlElement.style.setProperty("--Green", `${Green || 0}`);
-  htmlElement.style.setProperty("--Blue", `${Blue || 0}`);
-  htmlElement.style.setProperty("--White", `${White || 0}`);
+  // Additive mixing of all colour channels
+  let r = 0, g = 0, b = 0, w = 0;
+  for (const { hex, dmxValue } of colourChannels) {
+    if (isRGBFixture && hasWhiteChannel && hex === "ffffff") {
+      w = Math.max(w, dmxValue);
+    } else {
+      const [cr, cg, cb] = getRGB(hex);
+      r = Math.min(255, r + cr * (dmxValue / 255));
+      g = Math.min(255, g + cg * (dmxValue / 255));
+      b = Math.min(255, b + cb * (dmxValue / 255));
+    }
+  }
+
+  htmlElement.style.setProperty("--UV", `${cssUV || 0}`);
+  htmlElement.style.setProperty("--Red", `${Math.round(r)}`);
+  htmlElement.style.setProperty("--Green", `${Math.round(g)}`);
+  htmlElement.style.setProperty("--Blue", `${Math.round(b)}`);
+  htmlElement.style.setProperty("--White", `${Math.round(w)}`);
 };

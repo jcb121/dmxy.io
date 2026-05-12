@@ -1,76 +1,72 @@
-import { useMemo } from "react";
-import { Venue, VenueFixture } from "../../../context/venues";
 import { Scene } from "../../../context/scenes";
-import { ChannelSimpleFunction, useFixtures } from "../../../context/fixtures";
+import { ChannelSimpleFunction, Fixture } from "../../../context/fixtures";
 import { New_GenericProfile } from "../../../context/profiles";
 
 import styles from "./styles.module.scss";
 import { Frame } from "./frame";
+import { Button } from "../../../ui/buttonLink";
+
+// const fixtures = useFixtures((state) => state.fixtures);
+
+// const venueFixtures = useMemo<VenueFixture[]>(() => {
+//   if (!activeSelector) return [];
+//   if (activeSelector === "*") {
+//     return venue.venueFixtures;
+//   }
+
+//   const selectors = activeSelector.split(" ");
+
+//   return venue.venueFixtures.reduce((venueFixtures, venueFixture) => {
+//     const matches = selectors.every((activeSelector) => {
+//       if (activeSelector[0] === "@") {
+//         const id = activeSelector.slice(1);
+//         return venueFixture.fixtureId === id;
+//       }
+
+//       if (activeSelector[0] === "#") {
+//         const id = activeSelector.slice(1);
+//         return venueFixture.id === id;
+//       }
+//       if (activeSelector[0] === ".") {
+//         const tag = activeSelector.slice(1);
+//         return venueFixture.tags.includes(tag);
+//       }
+//       return activeSelector === "*";
+//     });
+//     if (matches) {
+//       return [...venueFixtures, venueFixture];
+//     }
+//     return venueFixtures;
+//   }, [] as VenueFixture[]);
+// }, [activeSelector, venue.venueFixtures]);
 
 export const CreateRule = ({
-  venue,
+  fixtures,
   new_profiles: _profiles,
-  activeSelector,
   setProfiles,
+  label,
 }: {
-  activeSelector: string;
   new_profiles?: Scene["new_profiles"][string];
-  venue: Venue;
+  fixtures: Fixture[];
+  label?: string;
   setProfiles: React.Dispatch<
     React.SetStateAction<Scene["new_profiles"][string]>
   >;
 }) => {
-  const venueFixtures = useMemo<VenueFixture[]>(() => {
-    if (!activeSelector) return [];
-    if (activeSelector === "*") {
-      return venue.venueFixtures;
-    }
-
-    const selectors = activeSelector.split(" ");
-
-    return venue.venueFixtures.reduce((venueFixtures, venueFixture) => {
-      const matches = selectors.every((activeSelector) => {
-        if (activeSelector[0] === "@") {
-          const id = activeSelector.slice(1);
-          return venueFixture.fixtureId === id;
-        }
-
-        if (activeSelector[0] === "#") {
-          const id = activeSelector.slice(1);
-          return venueFixture.id === id;
-        }
-        if (activeSelector[0] === ".") {
-          const tag = activeSelector.slice(1);
-          return venueFixture.tags.includes(tag);
-        }
-        return activeSelector === "*";
-      });
-      if (matches) {
-        return [...venueFixtures, venueFixture];
-      }
-      return venueFixtures;
-    }, [] as VenueFixture[]);
-  }, [activeSelector, venue.venueFixtures]);
-
-  const fixtures = useFixtures((state) => state.fixtures);
-
   const functions = [
     ...new Set(
-      venueFixtures.reduce((functions, vFixture) => {
-        const fixture = fixtures.find((f) => f.id === vFixture.fixtureId);
+      fixtures.reduce((functions, fixture) => {
         if (fixture?.deviceFunctions) {
           return [...functions, ...fixture.deviceFunctions.map((f) => f.label)];
         }
         return functions;
-      }, [] as string[])
+      }, [] as string[]),
     ),
   ];
 
   const colourOptions = [
     ...new Set(
-      venueFixtures.reduce((colourOptions, vFixture) => {
-        const fixture = fixtures.find((f) => f.id === vFixture.fixtureId);
-
+      fixtures.reduce((colourOptions, fixture) => {
         if (!fixture) {
           return functions;
         }
@@ -78,7 +74,8 @@ export const CreateRule = ({
         return fixture.channelFunctions.reduce((colourOptions, channel) => {
           return channel.reduce((colourOptions, channelFunction) => {
             if (
-              channelFunction.function === ChannelSimpleFunction.fixedColour &&
+              (channelFunction.function === ChannelSimpleFunction.fixedColour ||
+                channelFunction.function === ChannelSimpleFunction.colour) &&
               channelFunction.value
             ) {
               return [...colourOptions, channelFunction.value];
@@ -87,14 +84,13 @@ export const CreateRule = ({
             return colourOptions;
           }, colourOptions);
         }, colourOptions);
-      }, [] as string[])
+      }, [] as string[]),
     ),
   ];
 
   const options = [
     ...new Set(
-      venueFixtures?.reduce((options, vFixture) => {
-        const fixture = fixtures.find((f) => f.id === vFixture.fixtureId);
+      fixtures?.reduce((options, fixture) => {
         if (!fixture) {
           return options;
         }
@@ -118,14 +114,14 @@ export const CreateRule = ({
             return options;
           }, options);
         }, options);
-      }, [] as ChannelSimpleFunction[])
+      }, [] as ChannelSimpleFunction[]),
     ),
   ];
 
   const defaultOptions: New_GenericProfile = {
     state: options.reduce(
       (init, option) => ({ ...init, [option]: 0 }),
-      {} as Record<string, number>
+      {} as Record<string, number>,
     ),
     globals: {},
   };
@@ -134,37 +130,28 @@ export const CreateRule = ({
     !_profiles || _profiles.length === 0 ? [defaultOptions] : _profiles;
   return (
     <div className={styles.root}>
-      <div>
-        <strong>{activeSelector}</strong>
-      </div>
-
-      <div className={styles.row}>
-        {profiles?.map((frame, step) => {
-          return (
-            <div key={`${step}`} className={styles.frame}>
-              {profiles.length > 1 && (
-                <div className={styles.header}>
-                  <div className={styles.text}>Frame {step + 1}</div>
-                  <button
-                    className={styles.delete}
-                    disabled={profiles.length < 2}
-                    onClick={() => {
-                      setProfiles((profiles) => {
-                        profiles.splice(step, 1);
-                        return [...profiles];
-                      });
-                    }}
-                  >
-                    🗑
-                  </button>
-                </div>
-              )}
-
+      <table>
+        {label && <caption>{label}</caption>}
+        <thead>
+          <tr>
+            <th>Frame</th>
+            <th>State</th>
+            <th>Value</th>
+            <th>Functions</th>
+          </tr>
+        </thead>
+          {profiles?.map((frame, step) => {
+            return (
               <Frame
+                key={`${step}`}
+                index={step}
                 frame={frame}
                 options={options}
                 colourOptions={colourOptions}
                 functions={functions}
+                onDelete={() => {
+                  setProfiles((state) => state.filter((_, i) => i !== step));
+                }}
                 setFrame={(action) => {
                   setProfiles((state) => {
                     if (state.length === 0) {
@@ -182,26 +169,23 @@ export const CreateRule = ({
                   });
                 }}
               />
-            </div>
-          );
-        })}
-        <div>
-          <button
-            className={styles.addFrame}
-            onClick={() => {
-              setProfiles((profiles) => {
-                if (profiles.length === 0) {
-                  return [defaultOptions, defaultOptions];
-                } else {
-                  return [...profiles, defaultOptions];
-                }
-              });
-            }}
-          >
-            +
-          </button>
-        </div>
-      </div>
+            );
+          })}
+      </table>
+      <Button
+        onClick={() => {
+          setProfiles((profiles) => {
+            if (profiles.length === 0) {
+              return [defaultOptions, defaultOptions];
+            } else {
+              return [...profiles, defaultOptions];
+            }
+          });
+        }}
+        title="Add Frame"
+      >
+        Add Frame
+      </Button>
     </div>
   );
 };

@@ -1,3 +1,5 @@
+$dot: 5px;
+
 .root {
   position: absolute;
   top: 0;
@@ -28,35 +30,27 @@
     var(--Brightness)
   );
 
-  // WHITE
+  // WHITE + UV dot grid
   &::after {
     position: absolute;
     content: "";
-    height: 33%;
-    width: 33%;
-    border-radius: 50%;
-    background-color: rgba(
-      var(--White),
-      var(--White),
-      var(--White),
-      var(--Brightness)
-    );
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
-
-  // UV
-  &::before {
-    position: absolute;
-    content: "";
-    height: 66%;
-    width: 66%;
-    border-radius: 50%;
-    background-color: rgba(83, 0, 223, var(--UV));
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+    background-image:
+      radial-gradient(
+        circle,
+        rgba(83, 0, 223, calc(var(--UV) * var(--Brightness))) 35%,
+        transparent 35%
+      ),
+      radial-gradient(
+        circle,
+        rgba(255, 255, 255, calc(var(--White) / 255 * var(--Brightness))) 35%,
+        transparent 35%
+      );
+    background-size: 25% 25%;
+    background-position: 12.5% 12.5%, 0% 0%;
   }
 }
 

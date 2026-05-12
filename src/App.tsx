@@ -6,14 +6,16 @@ import { NewStage } from "./components/stage/new-stage";
 import { NewStageFixture } from "./components/stage/new-state-fixture";
 import { ConnectedLight } from "./components/connectedLight";
 import { useFixtures } from "./context/fixtures";
-import { Controller } from "./components/controller/controller";
 import { SceneGrid } from "./domain/scenes/grid";
 import { useActiveScene } from "./context/active-scene";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useCalcDmx } from "./utils/useCalcDmx";
 import { useEvents } from "./context/events";
-import { useDmx } from "./context/dmx";
-import { useActiveControllers, useControllers } from "./context/controllers";
+import { Button } from "./components/button";
+import { SelectController } from "./domain/controller/select";
+import { Controllers } from "./domain/controller/controllers";
+import { DmxDevicePills } from "./domain/dmx-devices/pills";
 
 const urlParams = new URLSearchParams(window.location.search);
 const venue_id = urlParams.get("venue_id");
@@ -47,70 +49,47 @@ function App() {
   const activeScene = activeScenes[0] as Scene | undefined;
 
   useCalcDmx(activeScene, venue?.venueFixtures);
-  const connect = useDmx(true);
+
+  const { stageWidth = 600, stageHeight = 400 } = useSearch({ from: "/main.html" });
+  const navigate = useNavigate({ from: "/main.html" });
 
   const [showStage, setShowStage] = useState(false);
 
-  const universes = venue?.venueFixtures.reduce((universes, vf) => {
-    if (universes.includes(vf.universe || 0)) {
-      return universes;
-    }
-    return [...universes, vf.universe || 0];
-  }, [] as number[]);
+  const [activeAreaIndex, setActiveAreaIndex] = useState(0);
+  const venueAreas = useMemo(() => {
+    return (
+      venue?.venueFixtures.reduce((acc, vf) => {
+        return [...new Set([...acc, vf.area || 0])];
+      }, [] as number[]) || [0]
+    );
+  }, [venue]);
 
-  const [activeArea, setActiveArea] = useState(0);
-
-  const controllers = useControllers((state) => state.controllers);
-  const activeControlers =
-    useActiveControllers((state) => venue?.id && state[venue?.id]) || [];
+  const editMode = useEvents((state) => state.editMode);
 
   return (
     <BasicPage
       header={
         <>
-          <button>
-            <a href="/fixtures.html" target="_blank">
-              Fixtures
-            </a>
-          </button>
-          <button>
-            <a href={`/venue.html?venue_id=${venue?.id}`} target="_blank">
-              Edit Venue
-            </a>
-          </button>
-          <button>
-            <a target="_blank" href={`/scene.html?venue_id=${venue?.id}`}>
-              Scenes
-            </a>
-          </button>
-          <button
+          <Button href="/fixtures.html" target="_blank">
+            Fixtures
+          </Button>
+          <Button href={`/venue.html?venue_id=${venue?.id}`} target="_blank">
+            Edit Venue
+          </Button>
+          <Button target="_blank" href={`/scene.html?venue_id=${venue?.id}`}>
+            Scenes
+          </Button>
+          <Button
             onClick={() => {
               setShowStage((state) => !state);
             }}
           >
-            Stage
-          </button>
-          <select
-            data-testid="add_controller"
-            value={""}
-            onChange={(e) => {
-              useActiveControllers.setState((state) => {
-                if (!venue?.id || !e) return state;
-                return {
-                  ...state,
-                  [venue.id]: [...(state[venue.id] || []), e.target.value],
-                };
-              });
-            }}
-          >
-            <option value={""}>Add Controller</option>
-            {controllers.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-          <button
+            {showStage ? "hide stage" : "show stage"}
+          </Button>
+
+          <SelectController />
+
+          <Button
             onClick={() => {
               useEvents.setState((state) => ({
                 ...state,
@@ -118,35 +97,11 @@ function App() {
               }));
             }}
           >
-            Edit Controllers
-          </button>
+            {editMode ? "Finish Editing Controllers" : "Edit Controllers"}
+          </Button>
         </>
       }
-      headerRight={
-        <>
-          {connect.devices.map(({ type, deviceIndex }) => (
-            <div key={`${type}_${deviceIndex}`}>
-              {type} Device {deviceIndex} UNI:
-              <select
-                value={connect.connections[`${type}_${deviceIndex}`] ?? ""}
-                onChange={(e) => {
-                  connect.connect(
-                    { type, deviceIndex },
-                    e.target.value == "" ? undefined : parseInt(e.target.value)
-                  );
-                }}
-              >
-                <option value=""></option>
-                {universes?.map((uni) => (
-                  <option key={uni} value={uni}>
-                    {uni}
-                  </option>
-                ))}
-              </select>
-            </div>
-          ))}
-        </>
-      }
+      headerRight={<DmxDevicePills />}
       left={
         <SceneGrid
           scenes={venue?.scenes ? Object.values(venue.scenes) : []}
@@ -156,41 +111,63 @@ function App() {
     >
       {showStage && (
         <>
-          <div>
-            <button
-              onClick={() => {
-                setActiveArea((state) => {
-                  if (state < 1) return 0;
-                  return state - 1;
-                });
-              }}
-            >
-              Prev Area
-            </button>
-            {activeArea}
-            <button
-              onClick={() => {
-                setActiveArea((state) => {
-                  return state + 1;
-                });
-              }}
-            >
-              Next Area
-            </button>
-          </div>
-          <NewStage>
+          {venueAreas.length > 1 && (
+            <div>
+              <button
+                onClick={() => {
+                  setActiveAreaIndex((state) => {
+                    if (state < 1) return 0;
+                    return state - 1;
+                  });
+                }}
+              >
+                Prev Area
+              </button>
+              {venueAreas[activeAreaIndex]}
+              <button
+                onClick={() => {
+                  setActiveAreaIndex((state) => {
+                    if (state < venueAreas.length - 1) {
+                      return state + 1;
+                    }
+                    return state;
+                  });
+                }}
+              >
+                Next Area
+              </button>
+            </div>
+          )}
+          <NewStage
+            resizable
+            width={stageWidth}
+            height={stageHeight}
+            onResize={({ width, height }) =>
+              navigate({
+                search: (prev) => ({ ...prev, stageWidth: width, stageHeight: height }),
+              })
+            }
+            venueFixtures={venue?.venueFixtures.filter(
+              (vf) =>
+                (vf.area === undefined && venueAreas[activeAreaIndex] === 0) ||
+                vf.area === venueAreas[activeAreaIndex],
+            )}
+          >
             {venue?.venueFixtures.map((venueFixture) => {
-              if (venueFixture.area === undefined && activeArea !== 0) {
+              if (
+                venueFixture.area === undefined &&
+                venueAreas[activeAreaIndex] !== 0
+              ) {
                 return null;
               }
               if (
                 venueFixture.area !== undefined &&
-                venueFixture.area !== activeArea
+                venueFixture.area !== venueAreas[activeAreaIndex]
               ) {
                 return null;
               }
               const fixture = fixtures.find(
-                (f) => f.id === venueFixture.fixtureId
+                (f) => f.id === venueFixture.fixtureId,
               );
 
               if (!fixture) {
@@ -214,21 +191,7 @@ function App() {
         </>
       )}
 
-      {activeControlers?.map((controller, index) => (
-        <Controller
-          controller={controller}
-          onRemove={() => {
-            useActiveControllers.setState((state) => {
-              if (!venue?.id) return state;
-              state[venue.id].splice(index, 1);
-              return {
-                ...state,
-                [venue.id]: [...state[venue.id]],
-              };
-            });
-          }}
-        />
-      ))}
+      <Controllers />
     </BasicPage>
   );
 }

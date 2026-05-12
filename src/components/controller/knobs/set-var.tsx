@@ -9,7 +9,7 @@ export const SetVar = ({ payload }: { payload: setVarEvent }) => {
   return (
     <>
       <PadDial
-        value={payload.value}
+        value={payload.value || 0}
         label={payload.function}
         onChange={(e) => {
           handleEvent(

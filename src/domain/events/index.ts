@@ -11,6 +11,7 @@ import {
 import { GlobalTypes, useGlobals } from "../../context/globals";
 import { MidiCallback, MidiEventTypes } from "../../context/midi";
 import { useScenes } from "../../context/scenes";
+import { mergeScenes } from "../scenes/merge";
 
 export const handleEvent = (e: UserEvent, t: MidiEventTypes) => {
   if (e.function === MidiCallback.setBeatLength) {
@@ -29,14 +30,16 @@ export const handleEvent = (e: UserEvent, t: MidiEventTypes) => {
 };
 
 const setChannelValue = (e: SetChannelValue, type: MidiEventTypes) => {
-  if (type === MidiEventTypes.onPress || MidiEventTypes.onTurn) {
+  if (type === MidiEventTypes.onPress || MidiEventTypes.onTurn ) {
+    if(typeof e.value === "undefined") return;
+    const value = e.value;
     useGlobals.setState((state) => ({
       ...state,
       values: {
         ...state.values,
         [`${e.type}_${e.channel}`]: {
           type: GlobalTypes.byte,
-          value: e.value,
+          value: value,
         },
       },
     }));
@@ -89,6 +92,9 @@ const mergeScene = (e: MergeScene, type: MidiEventTypes) => {
 const setVar = (e: SetVar, type: MidiEventTypes) => {
   if (!e.varName || typeof e.value === "undefined") return;
   if (type === MidiEventTypes.onPress || type === MidiEventTypes.onTurn) {
+    const varName = e.varName;
+    const value = e.value;
+
     // sets scene
     useActiveScene.setState((state) => ({
       ...state,
@@ -96,9 +102,10 @@ const setVar = (e: SetVar, type: MidiEventTypes) => {
         ...scene,
         vars: {
           ...scene.vars,
-          [e.varName]: {
+          [varName]: {
             type: GlobalTypes.byte,
-            value: e.value,
+            value: value,
+
           },
         },
       })),
@@ -109,9 +116,9 @@ const setVar = (e: SetVar, type: MidiEventTypes) => {
       ...state,
       values: {
         ...state.values,
-        [e.varName]: {
+        [varName]: {
           type: GlobalTypes.byte,
-          value: e.value,
+          value: value,
         },
       },
     }));
@@ -121,6 +128,8 @@ const setVar = (e: SetVar, type: MidiEventTypes) => {
 const cycleScene = (e: CycleScene, type: MidiEventTypes) =>
   type === MidiEventTypes.onPress &&
   useGlobals.setState((state) => {
+    if (!e.scenes) return state;
+
     const sceneAnimationIndex = `_${e.cycleName}_sceneAnimationIndexKey`;
     const sAIVar = state.values[sceneAnimationIndex];
     const sceneIndex =
@@ -130,13 +139,25 @@ const cycleScene = (e: CycleScene, type: MidiEventTypes) =>
     const nextSceneIndex = e.scenes[sceneIndex + 1] ? sceneIndex + 1 : 0;
 
     const { scenes } = useScenes.getState();
-    const activeScene = scenes.find((s) => s.id === e.scenes[nextSceneIndex]);
+    const activeScene = scenes.find((s) => e.scenes && s.id === e.scenes[nextSceneIndex]);
 
-    activeScene &&
+    if (activeScene && e.areaTag) {
+      // if there is an area tag, merge the selectors
+      useActiveScene.setState((state) => {
+        const [currentScene, ...restScenes] = state.activeScenes;
+        const mergedScene = mergeScenes(currentScene, activeScene, e.areaTag);
+        return {
+          ...state,
+          activeScenes: [mergedScene, ...restScenes],
+        };
+      });
+    } else if (activeScene) {
       useActiveScene.setState({
         activeScenes: [activeScene],
       });
+    }
 
+    // this changes just the metra
     return {
       ...state,
       values: {

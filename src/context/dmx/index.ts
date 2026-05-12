@@ -5,13 +5,16 @@ import { persist } from "zustand/middleware";
 import { create } from "zustand";
 import { getSerialPorts, startDMX as startSerialDMX } from "./serial";
 
+
 export const DMXState: Record<number, Uint8Array<ArrayBuffer>> = {};
 
-export const interval = 46; //46; //options.dmx_speed ? (1000 / options.dmx_speed) : 46;
+export const interval = 46; //options.dmx_speed ? (1000 / options.dmx_speed) : 46;
 
 export const createUniverses = (universes: number[]) => {
-  Object.values(universes).forEach((universe) => {
-    DMXState[universe] = new Uint8Array(512);
+  universes.forEach((universe) => {
+    if (!DMXState[universe]) {
+      DMXState[universe] = new Uint8Array(512);
+    }
   });
 };
 
@@ -67,6 +70,8 @@ export const useDmx = (
   }, [usbDevices, ports]);
 
   const connections = useDmxConnection((state) => state);
+
+  console.log("connections", connections)
 
   const universes = useMemo(() => {
     return (

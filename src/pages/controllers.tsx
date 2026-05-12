@@ -2,77 +2,126 @@ import ReactDOM from "react-dom/client";
 import { BasicPage } from "../ui/layout/basic-page";
 import "../index.css";
 import { ListWithAction } from "../ui/list-with-actions";
-import { useState } from "react";
 import { useControllers } from "../context/controllers";
-import { Layout } from "../components/controller/layout/layout";
-import styles from "./controller.module.scss";
-import { Button } from "../ui/buttonLink";
+
+import { z } from "zod";
+import {
+  createRootRoute,
+  createRoute,
+  createRouter,
+  RouterProvider,
+  useNavigate,
+  useSearch,
+} from "@tanstack/react-router";
+import { EditController } from "../domain/controller/edit";
+import { Button } from "../components/button";
 
 const Controllers = () => {
+  const { controllerId } = useSearch({ from: "/controllers.html" });
+  const navigate = useNavigate({ from: "/controllers.html" });
   const controllers = useControllers((state) => state.controllers);
-
-  const [layout, setLayout] = useState<Layout>({
-    type: "row",
-    children: [],
-    flex: undefined,
-  });
-
-  const [controllerName, setControllerName] = useState("");
 
   return (
     <BasicPage
+      back="/"
       header={<h2>Controllers</h2>}
       left={
-        <ListWithAction
-          items={controllers.map((d) => ({
-            name: d.name,
-            id: d.id,
-          }))}
-          actions={[]}
-        />
+        <>
+          <Button
+            onClick={() => {
+              navigate({
+                search: (prev) => {
+                  return { ...prev, controllerId: undefined };
+                },
+              });
+            }}
+          >
+            New Controller
+          </Button>
+          <ListWithAction
+            items={controllers.map((d) => ({
+              name: d.name,
+              id: d.id,
+            }))}
+            onClick={(e) => {
+              navigate({
+                search: (prev) => ({ ...prev, controllerId: e.id }),
+              });
+            }}
+            actions={[
+              {
+                name: "delete",
+                onClick: (c) => {
+                  useControllers.setState((state) => {
+                    return {
+                      ...state,
+                      controllers: controllers.filter(
+                        (controller) => controller.id !== c.id,
+                      ),
+                    };
+                  });
+                },
+              },
+            ]}
+          />
+        </>
       }
     >
-      <div className={styles.head}>
-        <input
-          className={styles.name}
-          placeholder="Controller Name"
-          value={controllerName}
-          onChange={(e) => {
-            setControllerName(e.target.value);
-          }}
-        />
-        <Button
-          primary
-          disabled={!controllerName}
-          onClick={() => {
+      <EditController
+        controller={controllers.find((c) => c.id === controllerId)}
+        onSave={(c) => {
+          if (!c.id) {
+            const id = crypto.randomUUID();
+
             useControllers.setState((state) => {
               return {
                 ...state,
                 controllers: [
                   ...state.controllers,
-                  { name: controllerName, layout, id: crypto.randomUUID() },
+                  {
+                    ...c,
+                    id,
+                  },
                 ],
               };
             });
-          }}
-        >
-          Save As
-        </Button>
-      </div>
+            navigate({
+              search: (prev) => ({ ...prev, controllerId: id }),
+            });
+          } else {
+            useControllers.setState((state) => {
+              return {
+                ...state,
+                controllers: state.controllers.map((controller) =>
+                  controller.id === c.id ? c : controller,
+                ),
+              };
+            });
+          }
 
-      <Layout
-        id=""
-        layout={layout}
-        onClick={() => {
-          // does nothing
-        }}
-        editMode={true}
-        onLayoutChange={(layout) => {
-          setLayout(layout);
+          // id needed here...ID is the issue...
         }}
       />
     </BasicPage>
   );
 };
 
-ReactDOM.createRoot(document.getElementById("root")!).render(<Controllers />);
+const itemSearchSchema = z.object({
+  controllerId: z.string().optional(),
+});
+
+export const rootRoute = createRootRoute();
+
+export const indexRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/controllers.html",
+  validateSearch: (search) => itemSearchSchema.parse(search), // Validation!
+  component: Controllers,
+});
+
+const routeTree = rootRoute.addChildren([indexRoute]);
+export const router = createRouter({ routeTree });
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <RouterProvider router={router} />,
+);

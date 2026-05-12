@@ -13,7 +13,7 @@ export const SceneVars = ({
 }) => {
   return (
     <div>
-      <h5>Vars</h5>
+      <div>Scene Options</div>
       <div className={styles.row}>
         <input
           type="checkbox"

@@ -3,12 +3,22 @@ import { persist } from "zustand/middleware";
 import { LPD8, MPD218 } from "../components/controller/controller-json";
 import { Layout } from "../components/controller/layout/layout";
 
+
+
+export type Controller = { name: string; id: string; layout: Layout };
+
+export type TempController = Omit<Controller, "id"> & { id?: string; };
+
+export const SAMPLE_CONTROLLER: () => TempController = () => ({
+  name: "",
+  layout: {
+    children: [],
+    type: "row"
+  }
+})
+
 export const useControllers = create<{
-  controllers: {
-    name: string;
-    id: string;
-    layout: Layout;
-  }[];
+  controllers: Controller[];
 }>()(
   persist(
     (_set) => {
@@ -21,8 +31,8 @@ export const useControllers = create<{
     },
     {
       name: "controllers",
-    }
-  )
+    },
+  ),
 );
 
 export const useActiveControllers = create<{
@@ -34,6 +44,6 @@ export const useActiveControllers = create<{
     },
     {
       name: "active-controllers",
-    }
-  )
+    },
+  ),
 );

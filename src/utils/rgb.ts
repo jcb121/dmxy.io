@@ -52,6 +52,15 @@ export const rgbToHex = ([r, g, b]: [number, number, number]) => {
     .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`.toUpperCase();
 };
 
+export const encodeColour = (r: number, g: number, b: number): number =>
+  (r << 16) | (g << 8) | b;
+
+export const decodeColour = (encoded: number): [number, number, number] => [
+  (encoded >> 16) & 0xff,
+  (encoded >> 8) & 0xff,
+  encoded & 0xff,
+];
+
 export const isWhite = (a: string) => {
   return (
     `${a[0]}${a[1]}` === `${a[2]}${a[3]}` &&

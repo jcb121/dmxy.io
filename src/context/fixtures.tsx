@@ -8,11 +8,6 @@ export enum ChannelSimpleFunction {
   colour = "Colour",
   fixedColour = "Fixed Colour",
   uv = "UV",
-  amber = "Amber",
-  red = "Red",
-  white = "White",
-  green = "Green",
-  blue = "Blue",
   intensity = "Intensity",
   strobe = "Strobe",
 
@@ -31,6 +26,14 @@ export enum ChannelSimpleFunction {
   prism = "Prism",
   reset = "Reset",
 }
+
+export const COLOUR_SHORTCUTS: Record<string, string> = {
+  ff0000: "Red",
+  "00ff00": "Green",
+  "0000ff": "Blue",
+  ffffff: "White",
+  ffbf00: "Amber",
+};
 
 export enum ColourMode {
   rgbw = "rgbw",

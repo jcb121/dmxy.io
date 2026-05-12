@@ -1,41 +1,85 @@
 import {
-  SubChannelFunction,
+  COLOUR_SHORTCUTS,
   ChannelSimpleFunction,
+  SubChannelFunction,
 } from "../../../context/fixtures";
 import { IconButton } from "../../../ui/buttonLink";
 
+export const COLOR_SHORTCUT_OPTIONS = [
+  { label: "Red", hex: "ff0000" },
+  { label: "Green", hex: "00ff00" },
+  { label: "Blue", hex: "0000ff" },
+  { label: "White", hex: "ffffff" },
+  { label: "Amber", hex: "ffbf00" },
+];
+
+const SHORTCUT_HEX_SET = new Set(Object.keys(COLOUR_SHORTCUTS));
+
+const getSelectValue = (value: SubChannelFunction) => {
+  if (
+    value.function === ChannelSimpleFunction.colour &&
+    value.value &&
+    SHORTCUT_HEX_SET.has(value.value)
+  ) {
+    return `colour:${value.value}`;
+  }
+  return value.function;
+};
+
 export const FunctionSelect = ({
+  channel,
   onChange,
   onRemove,
   value,
+  functionIndex,
+  totalFunctions,
 }: {
+  channel: number;
   value: SubChannelFunction;
   onRemove: () => void;
   onChange: (e: SubChannelFunction) => void;
+  functionIndex: number;
+  totalFunctions: number;
 }) => {
+  const selectValue = getSelectValue(value);
+  const isShortcut =
+    value.function === ChannelSimpleFunction.colour &&
+    value.value &&
+    SHORTCUT_HEX_SET.has(value.value);
+
   return (
-    <tr>
-      <td>
-        <IconButton onClick={onRemove}>🗑️</IconButton>
-      </td>
+    <tr data-testid="functionSelect">
+      {functionIndex === 0 && <td rowSpan={totalFunctions}>{channel + 1}</td>}
       <td>
         <select
-          value={value.function}
+          value={selectValue}
           onChange={(e) => {
-            onChange({
-              ...value,
-              function: e.target.value as ChannelSimpleFunction,
-            });
+            const v = e.target.value;
+            if (v.startsWith("colour:")) {
+              const hex = v.slice(7);
+              onChange({
+                ...value,
+                function: ChannelSimpleFunction.colour,
+                value: hex,
+              });
+            } else {
+              onChange({ ...value, function: v as ChannelSimpleFunction });
+            }
           }}
         >
+          <optgroup label="Colours">
+            {COLOR_SHORTCUT_OPTIONS.map(({ label, hex }) => (
+              <option key={hex} value={`colour:${hex}`}>
+                {label}
+              </option>
+            ))}
+          </optgroup>
           {Object.keys(ChannelSimpleFunction).map((key) => {
+            const val =
+              ChannelSimpleFunction[key as keyof typeof ChannelSimpleFunction];
             return (
-              <option key={key}>
-                {
-                  ChannelSimpleFunction[
-                    key as keyof typeof ChannelSimpleFunction
-                  ]
-                }
+              <option key={key} value={val}>
+                {val}
               </option>
             );
           })}
@@ -77,6 +121,7 @@ export const FunctionSelect = ({
       <td>
         <input
           type="checkbox"
+          data-testid="mapIntensity"
           checked={value.mapIntensity || false}
           onChange={(e) => {
             onChange({
@@ -85,25 +130,20 @@ export const FunctionSelect = ({
             });
           }}
         />
+        <small>
+          If your fixture does not have an intensity channel, use a virtual one
+        </small>
       </td>
       <td>
-        {(value.function === ChannelSimpleFunction.fixedColour ||
-          value.function === ChannelSimpleFunction.colourWheel ||
-          value.function === ChannelSimpleFunction.strobe ||
-          value.function === ChannelSimpleFunction.colour) && (
-          <span>
-            <span
-              style={{
-                background: `#${value.value}`,
-              }}
-            >
-              #
-            </span>
+        {!isShortcut &&
+          (value.function === ChannelSimpleFunction.fixedColour ||
+            value.function === ChannelSimpleFunction.colourWheel ||
+            value.function === ChannelSimpleFunction.strobe ||
+            value.function === ChannelSimpleFunction.colour) && (
             <input
-              placeholder="HTML color Code"
-              // type="number"
-              prefix="#"
-              value={value.value}
+              type="color"
+              title="Channel Color"
+              value={`#${value.value || "000000"}`}
               onChange={(e) => {
                 onChange({
                   ...value,
@@ -111,8 +151,10 @@ export const FunctionSelect = ({
                 });
               }}
             />
-          </span>
-        )}
+          )}
+      </td>
+      <td>
+        <IconButton onClick={onRemove}>🗑️</IconButton>
       </td>
     </tr>
   );

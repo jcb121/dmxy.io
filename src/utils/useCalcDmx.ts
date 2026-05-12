@@ -2,14 +2,15 @@ import { useRef, useCallback, useEffect } from "react";
 import { Scene } from "../context/scenes";
 import { sceneToDmx } from "./sceneToDmx";
 import { VenueFixture } from "../context/venues";
-import { useGlobals } from "../context/globals";
+import { useGlobals as _useGlobals, usePageGlobals } from "../context/globals";
 
 /**
  * This hook create the DMX state in all universes
  */
 export const useCalcDmx = (
   scene: Scene | undefined,
-  venueFixtures: VenueFixture[] | undefined
+  venueFixtures: VenueFixture[] | undefined,
+  useGlobals: typeof usePageGlobals = _useGlobals,
 ) => {
   const animationRef = useRef<NodeJS.Timeout>();
 
@@ -26,15 +27,14 @@ export const useCalcDmx = (
         timeStamp,
       });
     },
-    [scene, globals, venueFixtures]
+    [scene, globals, venueFixtures],
   );
 
   useEffect(() => {
     animationRef.current && clearInterval(animationRef.current);
-    animationRef.current = setInterval(
-      () => animate(performance.now()),
-      16
-    );
+    animationRef.current = setInterval(() => animate(performance.now()),
+    16
+  );
 
     return () => {
       animationRef.current && clearInterval(animationRef.current);

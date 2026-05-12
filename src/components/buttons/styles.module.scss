@@ -1,0 +1,22 @@
+.root {
+
+}
+
+.button {
+  margin: 2px;
+  background-color: transparent;
+  border: 2px solid white;
+  font-weight: bold;
+  border-radius: 8px;
+}
+
+
+.active {
+  border: 2px solid red;
+  color: red;
+}
+
+.button[data-secondary="true"] {
+  border-color: var(--color-5);
+  color: var(--color-5);
+}

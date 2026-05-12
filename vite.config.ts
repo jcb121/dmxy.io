@@ -4,7 +4,10 @@ import { resolve } from "path";
 import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ command}) => ({
+  preview: {
+    port: 5173,
+  },
   build: {
     rollupOptions: {
       input: {
@@ -14,12 +17,14 @@ export default defineConfig({
         scene: resolve(__dirname, "scene.html"),
         venue: resolve(__dirname, "venue.html"),
         venues: resolve(__dirname, "venues.html"),
+        controllers: resolve(__dirname, "controllers.html"),
+
       },
     },
   },
   plugins: [
     react(),
-    VitePWA({
+    command === "build" && VitePWA({
       injectRegister: "auto",
       registerType: "autoUpdate",
       manifest: {
@@ -36,6 +41,7 @@ export default defineConfig({
           /\/scene/,
           /\/venue/,
           /\/venues/,
+          /\/controllers/, // 1. Added here to stop the fallback
         ],
         globPatterns: [
           "**/*.{js,css,html,ico,png,svg}",
@@ -45,8 +51,9 @@ export default defineConfig({
           "scene.html",
           "venue.html",
           "venues.html",
+          "controllers.html"
         ],
       },
     }),
   ],
-});
+}));

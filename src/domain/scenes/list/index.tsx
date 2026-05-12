@@ -4,13 +4,20 @@ import { ListWithAction } from "../../../ui/list-with-actions";
 export const ScenesList = ({
   scenes,
   setScene,
+  deleteScene,
 }: {
+  deleteScene: (s: Scene) => void;
+
   setScene: (s: Scene) => void;
   scenes: Scene[];
 }) => {
+  const sorteItems = scenes.sort((a, b) => {
+    return a.name.localeCompare(b.name);
+  });
+
   return (
     <ListWithAction
-      items={scenes}
+      items={sorteItems}
       actions={[
         {
           name: "edit",
@@ -23,9 +30,9 @@ export const ScenesList = ({
         },
         {
           name: "delete",
-          // onClick: (scene) => {
-          //   deleteScene(scene);
-          // },
+          onClick: (scene) => {
+            deleteScene(scene);
+          },
         },
       ]}
     />

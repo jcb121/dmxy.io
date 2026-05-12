@@ -10,7 +10,7 @@ export const FixtureItem = ({
   f: Fixture;
 }) => {
   return (
-    <div className={styles.fixture}>
+    <div className={styles.fixture} data-testid="fixture-list-item">
       <div>{`${f.model} (${f.channelFunctions.length}ch)`}</div>
 
       <div className={styles.dragWrapper}>

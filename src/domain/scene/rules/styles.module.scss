@@ -25,7 +25,21 @@
   display: flex;
 }
 
+.deleteRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
 .delete {
   background-color: transparent;
+  border: none;
   padding: 0;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 12px;
+  cursor: pointer;
+
+  &:hover {
+    color: red;
+  }
 }

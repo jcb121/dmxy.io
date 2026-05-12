@@ -1,26 +1,18 @@
 import { ChannelSimpleFunction } from "../../../context/fixtures";
 import { New_GenericProfile } from "../../../context/profiles";
-import { rgbToHex } from "../../../utils/rgb";
-
-const RGB = [
-  ChannelSimpleFunction.red,
-  ChannelSimpleFunction.green,
-  ChannelSimpleFunction.blue,
-];
+import { decodeColour, rgbToHex } from "../../../utils/rgb";
 
 export const SceneFrames = ({ scene }: { scene: New_GenericProfile[] }) => {
   const tableKeys = [
     ...scene.reduce((tableKeys, s) => {
       for (const key in s.state) {
-        tableKeys.add(key as ChannelSimpleFunction);
+        tableKeys.add(key);
       }
       return tableKeys;
-    }, new Set<ChannelSimpleFunction>()),
+    }, new Set<string>()),
   ];
 
-  const isRGB = RGB.every((func) => {
-    return tableKeys.find((key) => key === func);
-  });
+  const isRGB = tableKeys.includes(ChannelSimpleFunction.colour);
 
   return (
     <table>
@@ -34,18 +26,14 @@ export const SceneFrames = ({ scene }: { scene: New_GenericProfile[] }) => {
                 <input
                   readOnly={true}
                   type="color"
-                  value={`#${rgbToHex([
-                    s.state.Red!,
-                    s.state.Green!,
-                    s.state.Blue!,
-                  ])}`}
+                  value={`#${rgbToHex(decodeColour(s.state[ChannelSimpleFunction.colour] ?? 0))}`}
                 />
               </td>
             ))}
           </tr>
         )}
         {tableKeys.map((key) => {
-          if (isRGB && RGB.includes(key)) {
+          if (isRGB && key === ChannelSimpleFunction.colour) {
             return null;
           }
 
@@ -53,7 +41,7 @@ export const SceneFrames = ({ scene }: { scene: New_GenericProfile[] }) => {
             <tr key={key}>
               <th>{key}</th>
               {scene.map((s, index) => (
-                <td key={`${index}-${key}`}>{s.state[key]}</td>
+                <td key={`${index}-${key}`}>{s.state[key as keyof typeof s.state]}</td>
               ))}
             </tr>
           );

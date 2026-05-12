@@ -1,13 +1,13 @@
+import { ButtonRow } from "../../../components/buttons/button-row";
 import { ChannelSimpleFunction } from "../../../context/fixtures";
 import { New_GenericProfile } from "../../../context/profiles";
-import { getRGB, rgbToHex } from "../../../utils/rgb";
-import styles from "./styles.module.scss";
-
-const RGB = [
-  ChannelSimpleFunction.red,
-  ChannelSimpleFunction.green,
-  ChannelSimpleFunction.blue,
-];
+import { Button } from "../../../ui/buttonLink";
+import {
+  decodeColour,
+  encodeColour,
+  getRGB,
+  rgbToHex,
+} from "../../../utils/rgb";
 
 export const Frame = ({
   frame,
@@ -15,175 +15,131 @@ export const Frame = ({
   colourOptions,
   setFrame,
   functions,
+  index,
+  onDelete,
 }: {
   frame: New_GenericProfile;
   options: ChannelSimpleFunction[];
   colourOptions: string[];
   functions: string[];
   setFrame: React.Dispatch<React.SetStateAction<New_GenericProfile>>;
+  index: number;
+  onDelete: () => void;
 }) => {
-  const isRGB = RGB.every((func) => {
-    return options.find((channel) => {
-      return channel === func;
-    });
-  });
+  const isRGB = ["ff0000", "00ff00", "0000ff"].every((hex) =>
+    colourOptions.includes(hex),
+  );
 
-  const hasWhite = options.find(
-    (channel) => channel === ChannelSimpleFunction.white
+  const visibleOptions =
+    options?.filter((fn) => !(isRGB && fn === ChannelSimpleFunction.colour)) ??
+    [];
+  const rowSpan = (isRGB ? 1 : 0) + visibleOptions.length;
+
+  const labelCell = (
+    <td rowSpan={rowSpan}>
+      <span>Frame {index + 1}</span>
+      <Button onClick={onDelete}>Delete Frame</Button>
+    </td>
+  );
+
+  const functionsCell = (
+    <td rowSpan={rowSpan}>
+      <ButtonRow
+        items={functions.map((functionName) => ({
+          label: functionName,
+          functionName,
+          active: frame.targetFunction === functionName,
+        }))}
+        onClick={({ functionName }) => {
+          setFrame((frame) => ({
+            ...frame,
+            targetFunction:
+              frame.targetFunction === functionName ? undefined : functionName,
+          }));
+        }}
+      />
+      <ButtonRow
+        items={colourOptions.map((colour) => ({
+          buttonProps: {
+            style: {
+              background: `#${colour}`,
+            },
+          },
+          colour,
+          label: `#${colour}`,
+        }))}
+        onClick={({ colour }) => {
+          setFrame((frame) => {
+            const [r, g, b] = getRGB(colour);
+            return {
+              ...frame,
+              state: {
+                ...frame.state,
+                [ChannelSimpleFunction.colour]: encodeColour(r, g, b),
+              },
+            };
+          });
+        }}
+      />
+    </td>
   );
 
   return (
-    <div>
-      <table>
-        <tbody>
-          {isRGB && (
-            <tr>
-              <td>Color</td>
-              <td>
+    <tbody data-testid="frame">
+      {isRGB && (
+        <tr>
+          {labelCell}
+          <td>Color</td>
+          <td>
+            <input
+              type="color"
+              value={`#${rgbToHex(decodeColour(frame.state[ChannelSimpleFunction.colour] ?? 0))}`}
+              onChange={(e) => {
+                const [r, g, b] = getRGB(e.target.value.slice(1));
+                setFrame((frame) => ({
+                  ...frame,
+                  state: {
+                    ...frame.state,
+                    [ChannelSimpleFunction.colour]: encodeColour(r, g, b),
+                  },
+                }));
+              }}
+            />
+          </td>
+          {functionsCell}
+        </tr>
+      )}
+
+      {visibleOptions.map((functionName, i) => {
+        return (
+          <tr key={functionName}>
+            {!isRGB && i === 0 && labelCell}
+            <td>{functionName}</td>
+            <td>
+              <div>
                 <input
-                  type="color"
-                  value={`#${rgbToHex([
-                    frame.state.Red!,
-                    frame.state.Green!,
-                    frame.state.Blue!,
-                  ])}`}
-                  onChange={(e) => {
-                    const [Red, Green, Blue] = getRGB(e.target.value.slice(1));
-
-                    if (hasWhite && Red === Green && Red === Blue) {
-                      setFrame((frame) => {
-                        return {
-                          ...frame,
-                          state: {
-                            ...frame.state,
-                            White: Red,
-                            Red: 0,
-                            Green: 0,
-                            Blue: 0,
-                          },
-                        };
-                      });
-                      return;
-                    }
-
+                  min={0}
+                  max={255}
+                  type="range"
+                  value={frame.state[functionName] || 0}
+                  onChange={(e) =>
                     setFrame((frame) => {
                       return {
                         ...frame,
                         state: {
                           ...frame.state,
-                          White: 0,
-                          Red,
-                          Green,
-                          Blue,
+                          [functionName]: parseInt(e.target.value),
                         },
                       };
-                    });
-                  }}
+                    })
+                  }
                 />
-              </td>
-            </tr>
-          )}
-
-          {options?.map((functionName) => {
-            if (RGB.includes(functionName)) {
-              return null;
-            }
-            return (
-              <tr key={functionName}>
-                <td>{functionName}</td>
-                <td>
-                  <div>
-                    <input
-                      min={0}
-                      max={255}
-                      type="range"
-                      value={frame.state[functionName] || 0}
-                      onChange={(e) =>
-                        setFrame((frame) => {
-                          return {
-                            ...frame,
-                            state: {
-                              ...frame.state,
-                              [functionName]: parseInt(e.target.value),
-                            },
-                          };
-                        })
-                      }
-                    />
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-
-      <div className={styles.functions}>
-        {colourOptions?.map((colour) => {
-          return (
-            <button
-              key={colour}
-              onClick={() =>
-                setFrame((frame) => {
-                  const [red, green, Blue] = getRGB(colour);
-
-                  return {
-                    ...frame,
-                    state: {
-                      ...frame.state,
-                      [ChannelSimpleFunction.red]: red,
-                      [ChannelSimpleFunction.green]: green,
-                      [ChannelSimpleFunction.blue]: Blue,
-                    },
-                  };
-                })
-              }
-              style={{
-                background: `#${colour}`,
-              }}
-            >
-              {colour}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className={styles.functions}>
-        {/* <button
-          style={{
-            borderColor: frame.targetFunction === undefined ? "red" : undefined,
-          }}
-          onClick={() => {
-            setFrame((frame) => {
-              return { ...frame, targetFunction: undefined };
-            });
-          }}
-        >
-          none
-        </button> */}
-        {functions.map((functionName) => (
-          <button
-            key={functionName}
-            style={{
-              borderColor:
-                frame.targetFunction === functionName ? "red" : undefined,
-            }}
-            onClick={() => {
-              setFrame((frame) => {
-                return {
-                  ...frame,
-                  targetFunction:
-                    frame.targetFunction === functionName
-                      ? undefined
-                      : functionName,
-                };
-              });
-            }}
-          >
-            {functionName}
-          </button>
-        ))}
-      </div>
-    </div>
+              </div>
+            </td>
+            {!isRGB && i === 0 && functionsCell}
+          </tr>
+        );
+      })}
+    </tbody>
   );
 };

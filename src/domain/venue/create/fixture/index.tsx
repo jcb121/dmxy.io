@@ -9,16 +9,18 @@ export const VenueFixtureComp = ({
   activeVenueFixtureId,
   setActiveVenueFixtureId,
   setVenue,
+  hasOverlap,
 }: {
   venueFixture: VenueFixture;
   activeVenueFixtureId?: string;
+  hasOverlap?: boolean;
   setVenue: React.Dispatch<React.SetStateAction<Venue>>;
   setActiveVenueFixtureId: React.Dispatch<
     React.SetStateAction<string | undefined>
   >;
 }) => {
   const fixture = useFixtures((state) =>
-    state.fixtures.find((f) => f.id === venueFixture.fixtureId)
+    state.fixtures.find((f) => f.id === venueFixture.fixtureId),
   );
   if (!fixture) return;
 
@@ -43,8 +45,7 @@ export const VenueFixtureComp = ({
           <div title={`(ch: ${fixture.channelFunctions.length})`}>
             {`${fixture.model}`}
           </div>
-          <div className={styles.buttons}>
-          </div>
+          <div className={styles.buttons}></div>
 
           <div>
             <Tags
@@ -55,26 +56,27 @@ export const VenueFixtureComp = ({
                 setVenue((venue) => ({
                   ...venue,
                   venueFixtures: venue.venueFixtures.map((v) =>
-                    v.id === venueFixture.id ? { ...v, tags: [..._tags] } : v
+                    v.id === venueFixture.id ? { ...v, tags: [..._tags] } : v,
                   ),
                 }));
               }}
             />
           </div>
 
-          <div className={styles.channel}>
+          <div className={`${styles.channel} ${hasOverlap ? styles.overlap : ""}`}>
             <label>Uni:</label>
             <input
               className={styles.input}
               type="number"
+              title="universe"
               value={venueFixture.universe || 0}
               onChange={(e) => {
+                const value = parseInt(e.target.value);
+                if (isNaN(value)) return;
                 setVenue((venue) => ({
                   ...venue,
                   venueFixtures: venue.venueFixtures.map((v) =>
-                    v.id === venueFixture.id
-                      ? { ...v, universe: parseInt(e.target.value) }
-                      : v
+                    v.id === venueFixture.id ? { ...v, universe: value } : v,
                   ),
                 }));
               }}
@@ -83,19 +85,22 @@ export const VenueFixtureComp = ({
             <input
               className={styles.input}
               type="number"
+              min={1}
+              max={512}
+              title="channel"
               value={venueFixture.channel}
               onChange={(e) => {
+                const value = parseInt(e.target.value);
+                if (isNaN(value)) return;
                 setVenue((venue) => ({
                   ...venue,
                   venueFixtures: venue.venueFixtures.map((v) =>
-                    v.id === venueFixture.id
-                      ? { ...v, channel: parseInt(e.target.value) }
-                      : v
+                    v.id === venueFixture.id ? { ...v, channel: value } : v,
                   ),
                 }));
               }}
             />
-            -{venueFixture.channel + fixture.channelFunctions.length}
+            -{venueFixture.channel + fixture.channelFunctions.length - 1}
           </div>
         </div>
       }

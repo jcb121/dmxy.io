@@ -1,8 +1,7 @@
 import ReactDOM from "react-dom/client";
 import "../index.css";
-import { Fixture, useFixtures } from "../context/fixtures.tsx";
+import { useFixtures } from "../context/fixtures.tsx";
 import { MidiProvider } from "../context/midi.tsx";
-import { useState } from "react";
 import {
   CreateFixture,
   DEFAULT_DMX_UNIVERSE,
@@ -19,17 +18,32 @@ import {
 } from "../context/dmx/usb.ts";
 import { createUniverses } from "../context/dmx/index.ts";
 import { Button } from "../ui/buttonLink/index.tsx";
+import {
+  createRootRoute,
+  createRoute,
+  createRouter,
+  RouterProvider,
+  useNavigate,
+  useSearch,
+} from "@tanstack/react-router";
+import { z } from "zod";
 
 createUniverses([DEFAULT_DMX_UNIVERSE]);
 
 const FixturesPage = () => {
   const { fixtures, add, update, remove } = useFixtures();
 
-  const [fixture, setFixture] = useState<Fixture>();
+  const { fixtureId } = useSearch({ from: "/fixtures.html" });
+  const navigate = useNavigate({ from: "/fixtures.html" });
+  const fixture = fixtures.find((f) => f.id === fixtureId);
+
+  const setFixtureId = (id: string | undefined) =>
+    navigate({ search: (prev: { fixtureId?: string }) => ({ ...prev, fixtureId: id }) });
 
   return (
     <BasicPage
       header={<h2>Fixtures</h2>}
+      back="/"
       headerRight={
         <>
           Connect DMX:
@@ -55,7 +69,7 @@ const FixturesPage = () => {
         <>
           <ListWithAction
             items={fixtures.map((f) => ({ ...f, name: f.model }))}
-            onClick={setFixture}
+            onClick={(f) => setFixtureId(f.id)}
             actions={[
               {
                 name: "🗑",
@@ -68,18 +82,14 @@ const FixturesPage = () => {
     >
       <CreateFixture
         fixture={fixture}
-        onClose={() => setFixture(undefined)}
-        onSubmit={(fixture) => {
-          const existst = fixtures.find((f) => f.id == fixture.id);
-          if (existst) {
-            update({
-              ...fixture,
-            });
+        onClose={() => setFixtureId(undefined)}
+        onSubmit={(f) => {
+          if (f.id) {
+            update({ ...f, id: f.id });
           } else {
-            add({
-              ...fixture,
-              id: crypto.randomUUID(),
-            });
+            const id = crypto.randomUUID();
+            add({ ...f, id });
+            setFixtureId(id);
           }
         }}
       />
@@ -87,10 +97,24 @@ const FixturesPage = () => {
   );
 };
 
+const itemSearchSchema = z.object({
+  fixtureId: z.string().optional(),
+});
+
+export const rootRoute = createRootRoute();
+export const indexRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/fixtures.html",
+  validateSearch: (search) => itemSearchSchema.parse(search), // Validation!
+  component: FixturesPage,
+});
+const routeTree = rootRoute.addChildren([indexRoute]);
+export const router = createRouter({ routeTree });
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   // <React.StrictMode>
   <MidiProvider>
-    <FixturesPage />
-  </MidiProvider>
+    <RouterProvider router={router} />
+  </MidiProvider>,
   // </React.StrictMode>
 );

@@ -1,8 +1,8 @@
 import ReactDOM from "react-dom/client";
 import { BasicPage } from "../ui/layout/basic-page";
 import "../index.css";
-import { useActiveVenue } from "../context/venues";
-import { useFixtures } from "../context/fixtures";
+import { useActiveVenue, useSceneBlocks } from "../context/venues";
+import { Fixture, useFixtures } from "../context/fixtures";
 import { NewStage } from "../components/stage/new-stage";
 import { NewStageFixture } from "../components/stage/new-state-fixture";
 import { useMemo, useState } from "react";
@@ -11,11 +11,14 @@ import { ConnectedLight } from "../components/connectedLight";
 
 import { ScenesList } from "../domain/scenes/list";
 import { TagsRow } from "../domain/tags/row";
-import { SceneRules } from "../domain/scene/rules";
 import { CreateRule } from "../domain/scene/createRule";
 import { SceneVars } from "../domain/scene/sceneVars";
 import { useCalcDmx } from "../utils/useCalcDmx";
 import { useDmx } from "../context/dmx";
+import { usePageGlobals } from "../context/globals";
+import { SceneRules } from "../domain/scene/rules";
+import { ButtonRow } from "../components/buttons/button-row";
+import { mergeScenes } from "../domain/scenes/merge";
 
 const urlParams = new URLSearchParams(window.location.search);
 const venue_id = urlParams.get("venue_id");
@@ -26,12 +29,28 @@ venue_id && useActiveVenue.getState().setActiveVenue(venue_id);
 const CreateScene = () => {
   const venue = useActiveVenue((state) => state.venue);
   const addScene = useActiveVenue((state) => state.addScene);
+  const deleteScene = useActiveVenue((state) => state.deleteScene);
 
   const [scene, setScene] = useState<Scene>(
-    (scene_id && venue?.scenes[scene_id]) || SAMPLE_SCENE()
+    (scene_id && venue?.scenes[scene_id]) || SAMPLE_SCENE(),
   );
 
   const fixtures = useFixtures((s) => s.fixtures);
+  const sceneBlocks = useSceneBlocks((s) => s.blocks);
+  const currentFixtures = useMemo<Fixture[]>(() => {
+    return (
+      venue?.venueFixtures.reduce((acc, vf) => {
+        const found = fixtures.find((f) => f.id === vf.fixtureId);
+
+        if (found && !acc.find((f) => f.id === found.id)) {
+          return [...acc, found];
+        }
+
+        return [...acc];
+      }, [] as Fixture[]) || []
+    );
+  }, [fixtures, venue]);
+
   const [activeSelector, setActiveSelector] = useState<string>();
 
   const original = !!venue?.scenes[scene.id];
@@ -50,7 +69,7 @@ const CreateScene = () => {
             ...tags,
             [tag]: `.${tag}`,
           }),
-          {}
+          {},
         ),
 
       ...venue.venueFixtures
@@ -90,17 +109,23 @@ const CreateScene = () => {
 
   const scenes = (venue?.scenes && Object.values(venue.scenes)) || [];
 
-  useCalcDmx(scene, venue?.venueFixtures);
+  useCalcDmx(scene, venue?.venueFixtures, usePageGlobals);
 
   const { start } = useDmx();
 
   const [activeArea, setActiveArea] = useState(0);
+
+  const [stageSize, setStageSize] = useState(() => ({
+    width: Number(urlParams.get("stageWidth")) || 600,
+    height: Number(urlParams.get("stageHeight")) || 400,
+  }));
 
   return (
     <BasicPage
       header={
         <>
           <input
+            placeholder="Scene Name"
             onChange={(e) => {
               setScene((state) => ({
                 ...state,
@@ -149,28 +174,39 @@ const CreateScene = () => {
       left={
         <>
           <div>
-            <ScenesList scenes={scenes} setScene={setScene} />
+            <ScenesList
+              scenes={scenes}
+              setScene={setScene}
+              deleteScene={deleteScene}
+            />
           </div>
         </>
       }
     >
-      <div>
-        <h5>Selectors {activeSelector}</h5>
-        <TagsRow
-          active={activeSelector}
-          tags={tags}
-          onClick={(selector, shiftKey) => {
-            setActiveSelector((state) => {
-              if (shiftKey && state) {
-                return `${state} ${selector}`;
-              }
-              return selector;
-            });
-          }}
-        />
-      </div>
+      <TagsRow
+        data-testid="all-tags"
+        active={activeSelector}
+        tags={tags}
+        setActive={setActiveSelector}
+      />
 
-      <NewStage>
+      <NewStage
+        resizable
+        width={stageSize.width}
+        height={stageSize.height}
+        onResize={({ width, height }) => {
+          setStageSize({ width, height });
+          const url = new URL(window.location.href);
+          url.searchParams.set("stageWidth", String(width));
+          url.searchParams.set("stageHeight", String(height));
+          window.history.replaceState(null, "", url);
+        }}
+        venueFixtures={venue?.venueFixtures.filter(
+          (vf) =>
+            (vf.area === undefined && activeArea === 0) ||
+            vf.area === activeArea,
+        )}
+      >
         {venue?.venueFixtures.map((venueFixture) => {
           if (venueFixture.area === undefined && activeArea !== 0) {
             return null;
@@ -203,9 +239,7 @@ const CreateScene = () => {
                         value: `.${t}`,
                         label: t,
                       }))}
-                      onClick={(selector) => {
-                        setActiveSelector(selector);
-                      }}
+                      setActive={setActiveSelector}
                     />
                   </>
                 }
@@ -220,10 +254,56 @@ const CreateScene = () => {
         <SceneVars vars={scene.vars} setScene={setScene} />
       </div>
 
+      <ButtonRow
+        items={Object.values(sceneBlocks).map((s) => ({
+          ...s,
+          label: s.name,
+          value: s.id,
+        }))}
+        onClick={({ value }) => {
+          if (!activeSelector) return;
+
+          const sceneBlock = sceneBlocks[value];
+
+          // const newProfiles = Object.keys(sceneBlock.new_profiles).reduce(
+          //   (rules, selector) => {
+          //     let newSelector = selector;
+
+          //     if (activeSelector !== selector) {
+          //       if (selector === "*") {
+          //         newSelector = activeSelector;
+          //       } else if (activeSelector === "*") {
+          //         newSelector = selector; // already being set
+          //       } else {
+          //         newSelector = `${activeSelector} ${selector}`;
+          //       }
+          //     }
+
+          //     return {
+          //       [newSelector]: sceneBlock.new_profiles[selector],
+          //       ...rules,
+          //     };
+          //   },
+          //   {} as Scene["new_profiles"],
+          // );
+
+          setScene((state) => {
+            return mergeScenes(state, sceneBlock, activeSelector);
+
+            // return {
+            //   ...state,
+            //   new_profiles: {
+            //     ...state.new_profiles,
+            //     ...newProfiles,
+            //   },
+            // };
+          });
+        }}
+      />
+
       {venue && activeSelector && (
         <CreateRule
-          venue={venue}
-          activeSelector={activeSelector}
+          fixtures={currentFixtures}
           new_profiles={scene.new_profiles[activeSelector]}
           setProfiles={(profilesFunc) => {
             setScene((state) => {
@@ -248,9 +328,17 @@ const CreateScene = () => {
         <h5>Rules</h5>
         <SceneRules
           scene={scene}
-          setScene={setScene}
-          onClick={(selector) => {
-            setActiveSelector(selector);
+          activeSelector={activeSelector}
+          secondarySelector={undefined}
+          setSecondarySelector={() => {}}
+          onClick={(selector) => setActiveSelector(selector)}
+          onDelete={(selector) => {
+            setScene((state) => {
+              const new_profiles = { ...state.new_profiles };
+              delete new_profiles[selector];
+              return { ...state, new_profiles };
+            });
+            if (selector === activeSelector) setActiveSelector(undefined);
           }}
         />
       </div>

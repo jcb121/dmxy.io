@@ -25,7 +25,7 @@ export const SetChannelValue = ({ payload }: { payload: SetChannelEvent }) => {
           );
         }}
       />
-      <div>{`${valMap[payload.type]} ${payload.channel}` || "NONE"}</div>
+      <div>{`${payload.type && valMap[payload.type]} ${payload.channel}` || "NONE"}</div>
     </>
   );
 };

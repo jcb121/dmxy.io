@@ -6,7 +6,7 @@ import {
   FixtureFunction,
 } from "../../context/fixtures";
 import { ProfileState } from "../../context/profiles";
-import { rgbToHex } from "../rgb";
+import { decodeColour, getRGB, rgbToHex } from "../rgb";
 
 export const frameToDmx = (
   channelFunctions: ChannelFunctions,
@@ -27,35 +27,60 @@ export const frameToDmx = (
 
       if (
         channelFunction.function === ChannelSimpleFunction.fixedColour &&
-        profileSate.Red &&
-        profileSate.Green &&
-        profileSate.Blue
+        channelFunction.value &&
+        profileSate.Colour !== undefined
       ) {
+        const [r, g, b] = decodeColour(profileSate.Colour);
         if (
-          channelFunction.value ===
-          rgbToHex([profileSate.Red, profileSate.Green, profileSate.Blue])
+          channelFunction.value.toLowerCase() ===
+          rgbToHex([r, g, b]).toLowerCase()
         ) {
           return channelFunction.range[0] + 1;
         }
       }
-      // everything else acts the same...
+
+      if (
+        channelFunction.function === ChannelSimpleFunction.colour &&
+        channelFunction.value &&
+        profileSate.Colour !== undefined
+      ) {
+        const [r, g, b] = decodeColour(profileSate.Colour);
+        const [cr, cg, cb] = getRGB(channelFunction.value);
+
+        let component: number;
+        if (cr === 255 && cg === 255 && cb === 255) {
+          component = Math.min(r, g, b); // white channel: use neutral component
+        } else {
+          const total = cr + cg + cb;
+          component = total > 0 ? (cr * r + cg * g + cb * b) / total : 0;
+        }
+        component = Math.round(Math.min(255, component));
+
+        const finalVal =
+          channelFunction.mapIntensity && profileSate.Intensity !== undefined
+            ? mapNumbers(0, 255, component, 0, profileSate.Intensity)
+            : component;
+
+        return mapNumbers(
+          0,
+          255,
+          finalVal,
+          channelFunction.range[0],
+          channelFunction.range[1]
+        );
+      }
+
       const targetState = profileSate[channelFunction.function];
       if (typeof targetState === "undefined") {
-        return channelValue; // return last set value so 0
+        return channelValue;
       }
 
       if (
         [
           ChannelSimpleFunction.speed,
-          ChannelSimpleFunction.red,
-          ChannelSimpleFunction.white,
           ChannelSimpleFunction.uv,
-          ChannelSimpleFunction.green,
-          ChannelSimpleFunction.blue,
           ChannelSimpleFunction.strobe,
-          ChannelSimpleFunction.amber,
           ChannelSimpleFunction.intensity,
-          ChannelSimpleFunction.colour,
         ].includes(channelFunction.function)
       ) {
         const finalVal =

@@ -2,7 +2,6 @@ import ReactDOM from "react-dom/client";
 import { BasicPage } from "../ui/layout/basic-page";
 import "../index.css";
 import { useVenues } from "../context/venues";
-import { ListWithAction } from "../ui/list-with-actions";
 import styles from "./main.module.scss";
 import { registerUsbDevice } from "../context/dmx/usb";
 import { registerSerialDevice } from "../context/dmx/serial";
@@ -45,6 +44,8 @@ const Main = () => {
           <a href={`/fixtures.html`}>Fixtures</a>
 
           <a href={`/venues.html`}>Venues</a>
+
+          <a href={`/scene_blocks.html`}>Scene Blocks</a>
           <p></p>
         </div>
       }

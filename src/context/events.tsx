@@ -7,8 +7,8 @@ export type UserEvent = ValueOf<UserEventMap>;
 
 export type SetBeatLength = {
   function: MidiCallback.setBeatLength;
-  globalVar: string | undefined; // this is BeatLength
-  timeStamp: number | undefined;
+  globalVar?: string | undefined; // this is BeatLength
+  timeStamp?: number | undefined;
 };
 
 export type SetScene = {
@@ -18,27 +18,28 @@ export type SetScene = {
 
 export type CycleScene = {
   function: MidiCallback.cycleScene;
-  scenes: string[];
-  cycleName: string;
+  areaTag?: string;
+  scenes?: string[];
+  cycleName?: string;
 };
 
 export type MergeScene = {
   function: MidiCallback.mergeScene;
-  scene: string;
+  scene?: string;
 };
 
 export type SetVar = {
   function: MidiCallback.setVar;
-  varName: string;
-  value: number;
+  varName?: string;
+  value?: number;
   functionId?: string;
 };
 export type SetChannelValue = {
   function: MidiCallback.setChannelValue;
-  channel: ChannelSimpleFunction;
-  value: number;
+  channel?: ChannelSimpleFunction;
+  value?: number;
   functionId?: string;
-  type: "MAX" | "MIN";
+  type?: "MAX" | "MIN";
 };
 
 export type UserEventMap = {

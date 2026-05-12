@@ -3,6 +3,8 @@ import { CycleScene as CycleSceneEvent } from "../../../context/events";
 import { MidiCallback } from "../../../context/midi";
 import { useScenes } from "../../../context/scenes";
 import styles from "./styles.module.scss";
+import { ButtonRow } from "../../buttons/button-row";
+import { useTagsStore } from "../../stage/tags/tags";
 
 export const CycleSceneEdit = ({
   onEventChange,
@@ -13,6 +15,7 @@ export const CycleSceneEdit = ({
   name: string;
   payload?: CycleSceneEvent;
 }) => {
+  const tags = useTagsStore((tags) => tags.tags["stage-fixture"]);
   useEffect(() => {
     if (!payload?.cycleName) {
       onEventChange({
@@ -24,7 +27,6 @@ export const CycleSceneEdit = ({
   }, [payload, name, onEventChange]);
 
   const scenes = useScenes((s) => s.scenes);
-
   return (
     <div className={styles.root}>
       <label>Select Scene:</label>
@@ -43,29 +45,58 @@ export const CycleSceneEdit = ({
       >
         <option value="">Select Scene</option>
         {scenes &&
-          scenes.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
+          scenes
+            .sort((a, b) => {
+              return a.name.localeCompare(b.name);
+            })
+            .map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+      </select>
+
+      <label>Tag modifier:</label>
+      <select
+        value={payload?.areaTag}
+        onChange={(e) => {
+          if (payload && e.target.value) {
+            onEventChange({
+              function: MidiCallback.cycleScene,
+              cycleName: payload.cycleName,
+              scenes: payload.scenes,
+              areaTag: e.target.value,
+            });
+          }
+        }}
+      >
+        <option value=""></option>
+        {tags &&
+          tags.map((tag) => (
+            <option key={tag} value={`.${tag}`}>
+              {tag}
             </option>
           ))}
       </select>
-      <div className={styles.span2}>
-        {payload?.scenes?.map((sId, index) => (
-          <button
-            key={`${sId}-${index}`}
-            onClick={() => {
-              payload.scenes.splice(index);
-              onEventChange({
-                function: MidiCallback.cycleScene,
-                cycleName: payload.cycleName,
-                scenes: [...payload.scenes],
-              });
-            }}
-          >
-            {scenes.find((s) => s.id == sId)?.name}
-          </button>
-        ))}
-      </div>
+
+      <ButtonRow
+        items={
+          payload?.scenes?.map((id, index) => ({
+            label: scenes.find((s) => s.id == id)?.name || "ERROR",
+            index,
+          })) || []
+        }
+        onClick={({ index }) => {
+          if (!payload) return;
+
+          payload.scenes?.splice(index);
+          onEventChange({
+            function: MidiCallback.cycleScene,
+            cycleName: payload.cycleName,
+            scenes: [...(payload.scenes || [])],
+          });
+        }}
+      />
     </div>
   );
 };

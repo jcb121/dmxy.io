@@ -1,5 +1,4 @@
 import { IconButton } from "../../../../ui/buttonLink";
-import styles from "./styles.module.scss";
 
 export const FunctionValue = ({
   disabled,
@@ -17,7 +16,7 @@ export const FunctionValue = ({
   onChange: (channel: string, value: number) => void;
 }) => {
   return (
-    <tr className={styles.functionValue}>
+    <>
       <td>
         <select
           name="functionChannel"
@@ -31,7 +30,7 @@ export const FunctionValue = ({
           <option value="">none</option>
           {channelOptions.map((o) => (
             <option value={o} key={o}>
-              {o}
+              Ch {o}
             </option>
           ))}
         </select>
@@ -43,12 +42,16 @@ export const FunctionValue = ({
           disabled={disabled}
           type="number"
           value={value}
+          min={0}
+          max={255}
           onChange={(e) => {
             onChange(channel, parseInt(e.target.value));
           }}
-        />{" "}
+        />
+      </td>
+      <td>
         <IconButton onClick={onDelete}>🗑</IconButton>
       </td>
-    </tr>
+    </>
   );
 };

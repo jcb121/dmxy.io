@@ -26,11 +26,15 @@ export const MergeSceneEdit = ({
       >
         <option value="">None</option>
         {scenes &&
-          scenes.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
+          scenes
+            .sort((a, b) => {
+              return a.name.localeCompare(b.name);
+            })
+            .map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
       </select>
     </div>
   );

@@ -33,6 +33,21 @@ export const sampleVenue = (name?: string): Venue => ({
   scenes: {},
 });
 
+export const useSceneBlocks = create<{
+  blocks: Record<string, Scene>;
+}>()(
+  persist(
+    () => {
+      return {
+        blocks: {},
+      };
+    },
+    {
+      name: "scene-blocks",
+    },
+  ),
+);
+
 export const useVenues = create<{
   venues: Venue[];
   add: (f: Venue) => void;
@@ -70,8 +85,8 @@ export const useVenues = create<{
     },
     {
       name: "venues",
-    }
-  )
+    },
+  ),
 );
 
 window.addEventListener("storage", (e: StorageEvent) => {
@@ -83,8 +98,28 @@ window.addEventListener("storage", (e: StorageEvent) => {
 export const useActiveVenue = create<{
   venue?: Venue;
   setActiveVenue: (id: string) => void;
+  deleteScene: (s: Scene) => void;
   addScene: (s: Scene) => void;
 }>((set) => ({
+  deleteScene: (scene) => {
+    set((state) => {
+      if (state.venue) {
+        const venuesState = useVenues.getState();
+        const venue = {
+          ...state.venue,
+          scenes: state.venue.scenes,
+        };
+        delete venue.scenes[scene.id];
+        venuesState.update(venue);
+        return {
+          ...state,
+          venue,
+        };
+      }
+
+      return state;
+    });
+  },
   addScene: (scene) => {
     set((state) => {
       if (state.venue) {

@@ -3,7 +3,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import styles from "./styles.module.scss";
 
-const useTagsStore = create(
+export const useTagsStore = create(
   persist<{
     tags: Record<string, Array<string> | undefined>;
     addTag: (cat: string, tag: string) => void;
@@ -98,6 +98,7 @@ export const TagSelect = ({
         className={styles.input}
         list={id.current}
         value={value}
+        title="tag"
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             const newTags = value.split(" ");

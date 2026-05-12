@@ -1,5 +1,10 @@
 import { DMXState } from "../../context/dmx";
-import { ChannelSimpleFunction, useFixtures } from "../../context/fixtures";
+import { ChannelSimpleFunction, Fixture, useFixtures } from "../../context/fixtures";
+
+const hasColourHex = (fixture: Fixture, hex: string) =>
+  fixture.channelFunctions.some((ch) =>
+    ch.some((f) => f.function === ChannelSimpleFunction.colour && f.value === hex)
+  );
 import {
   GlobalTypes,
   NewGlobalValues,
@@ -12,11 +17,6 @@ import { animateRGBFade } from "./animateRBGFade";
 import { frameToDmx } from "./frameToDmx";
 import { getActiveRule } from "./rules";
 
-const RGB = [
-  ChannelSimpleFunction.red,
-  ChannelSimpleFunction.green,
-  ChannelSimpleFunction.blue,
-];
 
 export const sceneToDmx = ({
   scene,
@@ -39,21 +39,21 @@ export const sceneToDmx = ({
       typeof scene?.vars?.["Beatlength"]?.value !== "undefined"
         ? scene?.vars?.["Beatlength"]?.value
         : globals["Beatlength"]?.value || 1000
-    }`
+    }`,
   );
   const fade = parseInt(
     `${
       typeof scene?.vars?.["Fade"]?.value !== "undefined"
         ? scene?.vars?.["Fade"]?.value
         : globals["Fade"]?.value || 0
-    }`
+    }`,
   );
   const fadeGap = parseInt(
     `${
       typeof scene?.vars?.["FadeGap"]?.value !== "undefined"
         ? scene?.vars?.["FadeGap"]?.value
         : globals["FadeGap"]?.value || 0
-    }`
+    }`,
   );
 
   venueFixtures.forEach((venueFixture) => {
@@ -63,11 +63,10 @@ export const sceneToDmx = ({
 
     if (!fixture) return;
 
-    const isRGB = RGB.every((func) => {
-      return fixture.channelFunctions.find((channel) => {
-        return channel.find((f) => f.function === func);
-      });
-    });
+    const isRGB =
+      hasColourHex(fixture, "ff0000") &&
+      hasColourHex(fixture, "00ff00") &&
+      hasColourHex(fixture, "0000ff");
 
     const profiles: New_GenericProfile[] = (() => {
       if (!scene || !scene?.new_profiles) return [];
@@ -81,10 +80,9 @@ export const sceneToDmx = ({
 
     const profile = profiles[frameIndex];
 
-    const targetColour =
-      (isRGB &&
-        animateRGBFade(timeStamp, profiles, stepDuration, fade, fadeGap)) ||
-      undefined;
+    const targetColour = isRGB
+      ? animateRGBFade(timeStamp, profiles, stepDuration, fade, fadeGap)
+      : undefined;
 
     const overwrites = venueFixture.overwrites;
 
@@ -101,12 +99,10 @@ export const sceneToDmx = ({
       },
       {
         ...profile?.state,
-        ...(targetColour && {
-          Red: targetColour[0],
-          Green: targetColour[1],
-          Blue: targetColour[2],
+        ...(targetColour !== undefined && {
+          [ChannelSimpleFunction.colour]: targetColour,
         }),
-      } satisfies Partial<ProfileState>
+      } satisfies Partial<ProfileState>,
     );
 
     // Track min/max globals
@@ -138,7 +134,7 @@ export const sceneToDmx = ({
       fixture.channelFunctions,
       state,
       profile?.targetFunction,
-      fixture.deviceFunctions
+      fixture.deviceFunctions,
     );
 
     if (typeof venueFixture.channel !== "undefined") {

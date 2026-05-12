@@ -11,6 +11,7 @@ const VenuesPage = () => {
 
   return (
     <BasicPage
+      back="/"
       header={<h2>Venues</h2>}
       left={
         <>
@@ -40,14 +41,7 @@ const VenuesPage = () => {
         </>
       }
     >
-      <button
-        onClick={() => {
-          // @ts-expect-error this works
-          globalThis.open(`/venue`, "_blank").focus();
-        }}
-      >
-        Create Venue
-      </button>
+      <a href="/venue.html">Create Venue</a>
       {/* <CreateFixture
         fixture={fixture}
         onChange={setFixture}
@@ -73,6 +67,6 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   // <React.StrictMode>
   <MidiProvider>
     <VenuesPage />
-  </MidiProvider>
+  </MidiProvider>,
   // </React.StrictMode>
 );

@@ -17,7 +17,7 @@ export const CycleScene = ({
   const sAIVar = useGlobals((state) =>
     payload?.cycleName
       ? state.values[`_${payload.cycleName}_sceneAnimationIndexKey`]
-      : undefined
+      : undefined,
   );
 
   const sceneIndex =
@@ -37,6 +37,7 @@ export const CycleScene = ({
         if (payload?.cycleName) handleEvent(payload, MidiEventTypes.onPress);
       }}
     >
+      <div>{payload?.areaTag ? `TAG: ${payload.areaTag}` : ""}</div>
       {`Next:`} {scenes.find((s) => s.id == nextSceneId)?.name}
     </PadButton>
   );

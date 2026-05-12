@@ -1,0 +1,47 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shapeRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  background-color: rgb(24, 24, 24);
+  border-radius: var(--small-rad);
+}
+
+.shapeDivider {
+  width: 1px;
+  align-self: stretch;
+  background-color: var(--color-4);
+  margin: 0 4px;
+}
+
+.shapeOptions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.shapeOption {
+  cursor: pointer;
+  zoom: 0.5;
+  opacity: 0.5;
+  border-radius: var(--small-rad);
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.functionsRow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 6px 8px;
+  border-top: 1px solid var(--color-4);
+}
