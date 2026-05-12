@@ -16,6 +16,7 @@ export const SceneVars = ({
       <div>Scene Options</div>
       <div className={styles.row}>
         <input
+          data-testid="bpm-checkbox"
           type="checkbox"
           checked={!!vars?.["Beatlength"]?.value}
           onChange={(e) => {

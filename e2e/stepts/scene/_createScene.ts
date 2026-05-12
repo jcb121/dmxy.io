@@ -2,6 +2,7 @@ import { Page, test } from "@playwright/test";
 
 export type _createSceneProps = {
   sceneName: string;
+  bpm?: number;
   fade?: number;
   fadeGap?: number;
   rules: {
@@ -15,13 +16,17 @@ export type _createSceneProps = {
 
 export const _createScene = async (
   page: Page,
-  { sceneName, fade, fadeGap, rules }: _createSceneProps,
+  { sceneName, bpm, fade, fadeGap, rules }: _createSceneProps,
 ) => {
   await test.step("Create a scene", async () => {
 
     await page.getByText("New").click();
     await page.getByPlaceholder("Scene Name").fill(sceneName);
 
+    if (bpm !== undefined) {
+      await page.getByTestId("bpm-checkbox").check();
+      await page.getByLabel("BPM").fill(`${bpm}`);
+    }
     if (fade !== undefined) {
       await page.getByLabel("Fade", { exact: true }).fill(`${fade}`);
     }
